@@ -1,0 +1,11 @@
+streamlit
+langchain
+langchain-google-genai
+langchain-huggingface
+langchain-groq
+langchain-community
+chromadb
+gitpython
+tree-sitter-languages
+sentence-transformers
+pypdf
