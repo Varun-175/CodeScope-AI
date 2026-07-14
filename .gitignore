@@ -1,0 +1,63 @@
+# ===========================
+# Python
+# ===========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python Build
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+log.txt
+
+# Environment Variables
+.env
+.env.*
+
+# Streamlit
+.streamlit/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ChromaDB
+chroma/
+chromadb/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Node (future React frontend)
+node_modules/
+frontend/node_modules/
+
+# React Build
+frontend/dist/
+frontend/.vite/
+
+# Misc
+.cache/

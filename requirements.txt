@@ -1,11 +1,13 @@
 streamlit
 langchain
-langchain-google-genai
+langchain-google-genai>=4.2.3
+google-genai
 langchain-huggingface
 langchain-groq
 langchain-community
 chromadb
 gitpython
+tree-sitter==0.21.3
 tree-sitter-languages
 sentence-transformers
 pypdf
