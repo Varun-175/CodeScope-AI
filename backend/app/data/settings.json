@@ -1,0 +1,22 @@
+{
+  "github_token": "",
+  "github_base_url": "https://api.github.com",
+  "gemini_api_key": "",
+  "groq_api_key": "",
+  "huggingface_api_key": "",
+  "openai_api_key": "",
+  "anthropic_api_key": "",
+  "openrouter_api_key": "",
+  "ollama_url": "http://localhost:11434",
+  "local_model": "llama3:8b",
+  "embedding_model": "",
+  "llm_provider": "huggingface",
+  "temperature": 0.2,
+  "max_tokens": 4096,
+  "top_p": 0.95,
+  "repository_cache": true,
+  "chunk_size": 800,
+  "chunk_overlap": 120,
+  "embedding_provider": "huggingface",
+  "vector_store": "chromadb"
+}

@@ -31,10 +31,44 @@ warnings.filterwarnings(
 logging.getLogger("transformers").setLevel(logging.ERROR)
 
 import git
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint, ChatHuggingFace
-from langchain_groq import ChatGroq
-from langchain_community.vectorstores import Chroma
+
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except Exception:  # pragma: no cover - optional dependency
+    ChatGoogleGenerativeAI = None
+
+try:
+    from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint, ChatHuggingFace
+except Exception:  # pragma: no cover - optional dependency
+    HuggingFaceEmbeddings = None
+    HuggingFaceEndpoint = None
+    ChatHuggingFace = None
+
+try:
+    from langchain_groq import ChatGroq
+except Exception:  # pragma: no cover - optional dependency
+    ChatGroq = None
+
+try:
+    from langchain_openai import ChatOpenAI
+except Exception:  # pragma: no cover - optional dependency
+    ChatOpenAI = None
+
+try:
+    from langchain_anthropic import ChatAnthropic
+except Exception:  # pragma: no cover - optional dependency
+    ChatAnthropic = None
+
+try:
+    from langchain_community.chat_models import ChatOllama
+except Exception:  # pragma: no cover - optional dependency
+    ChatOllama = None
+
+try:
+    from langchain_community.vectorstores import Chroma
+except Exception:  # pragma: no cover - optional dependency
+    Chroma = None
+
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -134,6 +168,10 @@ LLM_PROVIDERS = {
     "groq":        "Groq (Free — Llama 3.3-70B)",
     "gemini":      "Google Gemini",
     "huggingface": "HuggingFace Inference API",
+    "openai":      "OpenAI",
+    "anthropic":   "Anthropic",
+    "openrouter":  "OpenRouter",
+    "ollama":      "Ollama",
 }
 
 # Groq model options
@@ -163,6 +201,10 @@ PROVIDER_MODELS = {
     "groq": GROQ_MODELS,
     "gemini": GEMINI_MODELS,
     "huggingface": HF_MODELS,
+    "openai": ["gpt-4o-mini", "gpt-4.1-mini", "gpt-4o"],
+    "anthropic": ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest"],
+    "openrouter": ["openai/gpt-4o-mini", "anthropic/claude-3.5-sonnet", "meta-llama/llama-3.3-70b-instruct"],
+    "ollama": ["llama3.2", "llama3.1", "qwen2.5"],
 }
 
 
@@ -207,10 +249,12 @@ def validate_llm_config(provider: str, api_key: str, model: str) -> LLMConfig:
 
     allowed_models = PROVIDER_MODELS[provider]
     if model not in allowed_models:
-        raise ValueError(
-            f"Unsupported model {model!r} for provider {provider!r}. "
-            f"Allowed models: {', '.join(allowed_models)}"
+        fallback = allowed_models[0]
+        print(
+            f"[CodeScope AI] Warning: unsupported model {model!r} for provider {provider!r}. "
+            f"Falling back to default model {fallback!r}."
         )
+        model = fallback
 
     return LLMConfig(provider=provider, model=model, api_key_present=True)
 
@@ -220,35 +264,43 @@ def build_llm(provider: str, api_key: str, model: str = ""):
     config = validate_llm_config(provider, api_key, model)
 
     if config.provider == "groq":
-        return ChatGroq(
-            model=config.model,
-            api_key=api_key,
-            temperature=0.15,
-        )
-    elif config.provider == "gemini":
+        if ChatGroq is None:
+            raise ValueError("Groq support requires the langchain-groq package.")
+        return ChatGroq(model=config.model, api_key=api_key, temperature=0.15)
+    if config.provider == "gemini":
+        if ChatGoogleGenerativeAI is None:
+            raise ValueError("Gemini support requires the langchain-google-genai package.")
         os.environ["GOOGLE_API_KEY"] = api_key
-        return ChatGoogleGenerativeAI(
-            model=config.model,
-            temperature=0.15,
-            api_key=api_key,
-            request_timeout=60,
-            retries=2,
-        )
-    elif config.provider == "huggingface":
-        # Ensure the token is set in the environment for underlying HF utilities
+        return ChatGoogleGenerativeAI(model=config.model, temperature=0.15, api_key=api_key, request_timeout=60, retries=2)
+    if config.provider == "huggingface":
+        if HuggingFaceEndpoint is None or ChatHuggingFace is None:
+            raise ValueError("Hugging Face support requires the langchain-huggingface package.")
         os.environ["HUGGINGFACEHUB_API_TOKEN"] = api_key
-        
         endpoint = HuggingFaceEndpoint(
             repo_id=config.model,
             huggingfacehub_api_token=api_key,
-            task="text-generation",  # Explicitly set task to avoid auto-detect issues
+            task="text-generation",
             temperature=0.15,
             max_new_tokens=1024,
         )
-        # ChatHuggingFace wraps the text-LLM into a chat model
         return ChatHuggingFace(llm=endpoint, huggingfacehub_api_token=api_key)
-    else:
-        raise ValueError(f"Unknown provider: {config.provider}")
+    if config.provider == "openai":
+        if ChatOpenAI is None:
+            raise ValueError("OpenAI support requires the langchain-openai package.")
+        return ChatOpenAI(model=config.model, api_key=api_key, temperature=0.15)
+    if config.provider == "anthropic":
+        if ChatAnthropic is None:
+            raise ValueError("Anthropic support requires the langchain-anthropic package.")
+        return ChatAnthropic(model=config.model, api_key=api_key, temperature=0.15)
+    if config.provider == "openrouter":
+        if ChatOpenAI is None:
+            raise ValueError("OpenRouter support requires the langchain-openai package.")
+        return ChatOpenAI(model=config.model, api_key=api_key, temperature=0.15, base_url="https://openrouter.ai/api/v1")
+    if config.provider == "ollama":
+        if ChatOllama is None:
+            raise ValueError("Ollama support requires the langchain-community package.")
+        return ChatOllama(model=config.model, base_url=os.getenv("CODESCOPE_OLLAMA_URL", "http://localhost:11434"))
+    raise ValueError(f"Unknown provider: {config.provider}")
 
 
 def clean_markdown(text: str) -> str:
@@ -542,6 +594,8 @@ def build_rag_chain(
 
     # ── 3. Local embeddings (all-MiniLM-L6-v2 — 22 MB, CPU-fast) ────────────
     _p(f"🧠 Embedding {len(docs)} AST chunks locally…", 50)
+    if HuggingFaceEmbeddings is None:
+        raise ValueError("Embedding support requires the langchain-huggingface package.")
     embeddings = HuggingFaceEmbeddings(
         model_name="all-MiniLM-L6-v2",
         model_kwargs={"device": "cpu"},
@@ -550,11 +604,9 @@ def build_rag_chain(
 
     # ── 4. ChromaDB (In-Memory for speed and fresh starts) ───────────────────
     _p("🗄️  Building ephemeral vector store…", 75)
-    # No persist_directory means it lives only in RAM for this session
-    vectorstore = Chroma.from_documents(
-        documents=docs, 
-        embedding=embeddings
-    )
+    if Chroma is None:
+        raise ValueError("ChromaDB support requires the langchain-community package.")
+    vectorstore = Chroma.from_documents(documents=docs, embedding=embeddings)
     retriever   = vectorstore.as_retriever(
         search_type="similarity",
         search_kwargs={"k": 4},
