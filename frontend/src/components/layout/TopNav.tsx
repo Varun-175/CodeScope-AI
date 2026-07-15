@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Activity,
   PanelLeft,
@@ -5,8 +6,10 @@ import {
   Search,
   SidebarClose,
   SidebarOpen,
+  LogOut,
 } from 'lucide-react'
 import { useRepositoryAnalysis } from '../../contexts/RepositoryAnalysisContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 type TopNavProps = {
   isSidebarCollapsed: boolean
@@ -20,6 +23,18 @@ export function TopNav({
   onToggleSidebar,
 }: TopNavProps) {
   const { openAnalyzeModal } = useRepositoryAnalysis()
+  const { user, logout } = useAuth()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  // Get user initials (e.g. Varun A K -> VK or VA)
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'US'
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-zinc-800/80 bg-[#09090b]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
@@ -75,13 +90,43 @@ export function TopNav({
         <span className="sm:hidden">Analyze</span>
       </button>
 
-      <button
-        type="button"
-        aria-label="User profile"
-        className="grid size-9 shrink-0 place-items-center rounded-full border border-zinc-800 bg-zinc-900 text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white"
-      >
-        VA
-      </button>
+      <div className="relative">
+        <button
+          type="button"
+          aria-label="User profile"
+          onClick={() => setIsDropdownOpen((v) => !v)}
+          className="grid size-9 shrink-0 place-items-center rounded-full border border-zinc-800 bg-zinc-900 text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white"
+        >
+          {initials}
+        </button>
+
+        {isDropdownOpen && (
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-40 bg-transparent cursor-default"
+              onClick={() => setIsDropdownOpen(false)}
+            />
+            <div className="absolute right-0 mt-2 z-50 w-56 rounded-lg border border-zinc-800 bg-zinc-950 p-1.5 shadow-xl">
+              <div className="px-3 py-2 border-b border-zinc-800/60 mb-1.5">
+                <p className="text-xs font-semibold text-white truncate">{user?.name}</p>
+                <p className="text-[10px] text-zinc-500 truncate">{user?.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDropdownOpen(false)
+                  logout()
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-400 hover:bg-red-950/20"
+              >
+                <LogOut className="size-3.5" /> Sign Out
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </header>
   )
 }
+

@@ -1,13 +1,16 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { analyzeRepository } from '../services/api/analysis'
+import type { AnalysisResponse } from '../types/analysis'
 
 type AnalysisStatus = 'idle' | 'analyzing' | 'complete'
 
 type RepositoryAnalysisContextValue = {
   status: AnalysisStatus
+  data: AnalysisResponse | null
+  error: string
   openAnalyzeModal: () => void
   closeAnalyzeModal: () => void
-  startAnalysis: () => void
-  completeAnalysis: () => void
+  runAnalysis: (repoUrl: string, branch?: string) => Promise<void>
   isAnalyzeModalOpen: boolean
 }
 
@@ -21,17 +24,39 @@ export function RepositoryAnalysisProvider({
 }) {
   const [status, setStatus] = useState<AnalysisStatus>('idle')
   const [isAnalyzeModalOpen, setIsAnalyzeModalOpen] = useState(false)
+  const [data, setData] = useState<AnalysisResponse | null>(null)
+  const [error, setError] = useState('')
+
+  async function runAnalysis(repoUrl: string, branch?: string) {
+    setStatus('analyzing')
+    setError('')
+    try {
+      const result = await analyzeRepository({
+        repo_url: repoUrl,
+        branch: branch || undefined,
+      })
+      setData(result)
+      setStatus('complete')
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : 'Repository analysis failed.'
+      setError(message)
+      setStatus(data ? 'complete' : 'idle')
+      throw caught
+    }
+  }
 
   const value = useMemo<RepositoryAnalysisContextValue>(
     () => ({
       status,
+      data,
+      error,
       isAnalyzeModalOpen,
       openAnalyzeModal: () => setIsAnalyzeModalOpen(true),
       closeAnalyzeModal: () => setIsAnalyzeModalOpen(false),
-      startAnalysis: () => setStatus('analyzing'),
-      completeAnalysis: () => setStatus('complete'),
+      runAnalysis,
     }),
-    [isAnalyzeModalOpen, status],
+    [data, error, isAnalyzeModalOpen, status],
   )
 
   return (

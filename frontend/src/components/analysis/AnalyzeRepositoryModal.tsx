@@ -17,9 +17,8 @@ function isValidRepositoryUrl(value: string) {
 export function AnalyzeRepositoryModal() {
   const {
     closeAnalyzeModal,
-    completeAnalysis,
     isAnalyzeModalOpen,
-    startAnalysis,
+    runAnalysis,
   } = useRepositoryAnalysis()
   const [repositoryUrl, setRepositoryUrl] = useState('')
   const [branch, setBranch] = useState('')
@@ -40,27 +39,25 @@ export function AnalyzeRepositoryModal() {
     closeAnalyzeModal()
   }
 
-  function handleAnalyze() {
+  async function handleAnalyze() {
     if (!isValidRepositoryUrl(repositoryUrl.trim())) {
       setError('Enter a valid GitHub repository URL.')
       return
     }
 
     setError('')
-    startAnalysis()
     setIsAnalyzing(true)
-  }
-
-  function handleComplete() {
-    completeAnalysis()
-    window.setTimeout(() => {
+    try {
+      await runAnalysis(repositoryUrl.trim(), branch.trim())
       setRepositoryUrl('')
       setBranch('')
       setMode('quick')
-      setError('')
       setIsAnalyzing(false)
       closeAnalyzeModal()
-    }, 700)
+    } catch {
+      setError('Analysis failed. Check the repository URL and backend server.')
+      setIsAnalyzing(false)
+    }
   }
 
   return (
@@ -93,7 +90,7 @@ export function AnalyzeRepositoryModal() {
         </div>
 
         {isAnalyzing ? (
-          <AnalysisProgress onComplete={handleComplete} />
+          <AnalysisProgress />
         ) : (
           <div className="space-y-5">
             <label className="block">

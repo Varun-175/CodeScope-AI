@@ -1,4 +1,6 @@
 streamlit
+fastapi
+uvicorn
 langchain
 langchain-google-genai>=4.2.3
 google-genai

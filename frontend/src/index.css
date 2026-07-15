@@ -11,6 +11,19 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --accent-color: #8b5cf6;
+  --accent-soft: rgba(139, 92, 246, 0.14);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  background: #f8fafc;
+  color: #111827;
+}
+
+:root[data-theme='light'] body {
+  background: #f8fafc;
+  color: #111827;
 }
 
 * {
@@ -36,4 +49,44 @@ a {
 
 button {
   font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(161, 161, 170, 0.55);
+  outline-offset: 2px;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 220ms ease-out both;
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  animation: shimmer 1.4s infinite;
 }

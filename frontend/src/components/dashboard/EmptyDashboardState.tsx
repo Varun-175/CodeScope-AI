@@ -6,7 +6,7 @@ export function EmptyDashboardState() {
 
   return (
     <div className="flex min-h-[calc(100vh-12rem)] items-center justify-center">
-      <section className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-950/70 p-8 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <section className="animate-fade-in-up w-full max-w-md rounded-xl border border-zinc-800/90 bg-zinc-950/90 p-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.045)]">
         <div className="mx-auto grid size-12 place-items-center rounded-lg border border-zinc-800 bg-zinc-950">
           <GitBranch className="size-5 text-zinc-300" aria-hidden="true" />
         </div>
