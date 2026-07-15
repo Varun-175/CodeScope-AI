@@ -6,6 +6,7 @@ import {
   SidebarClose,
   SidebarOpen,
 } from 'lucide-react'
+import { useRepositoryAnalysis } from '../../contexts/RepositoryAnalysisContext'
 
 type TopNavProps = {
   isSidebarCollapsed: boolean
@@ -18,6 +19,8 @@ export function TopNav({
   onMenuClick,
   onToggleSidebar,
 }: TopNavProps) {
+  const { openAnalyzeModal } = useRepositoryAnalysis()
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-zinc-800/80 bg-[#09090b]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <button
@@ -65,6 +68,7 @@ export function TopNav({
       <button
         type="button"
         className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-700 bg-zinc-100 px-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
+        onClick={openAnalyzeModal}
       >
         <Play className="size-4" aria-hidden="true" />
         <span className="hidden sm:inline">Analyze Repository</span>

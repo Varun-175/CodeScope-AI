@@ -1,6 +1,6 @@
-import { DashboardCard, EmptyCardContent } from './DashboardCard'
+import { CardSkeleton, DashboardCard } from './DashboardCard'
 
-export function DashboardRowTwo() {
+export function DashboardRowTwo({ isLoading = false }: { isLoading?: boolean }) {
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
       <div className="space-y-4 xl:col-span-8">
@@ -9,7 +9,7 @@ export function DashboardRowTwo() {
           description="Module dependency map placeholder"
           className="min-h-[400px]"
         >
-          <EmptyCardContent />
+          {isLoading && <CardSkeleton />}
         </DashboardCard>
 
         <DashboardCard
@@ -17,21 +17,21 @@ export function DashboardRowTwo() {
           description="AI-generated repository brief placeholder"
           className="min-h-52"
         >
-          <EmptyCardContent />
+          {isLoading && <CardSkeleton />}
         </DashboardCard>
       </div>
 
       <div className="space-y-4 xl:col-span-4">
         <DashboardCard title="Repository DNA" className="min-h-72">
-          <EmptyCardContent />
+          {isLoading && <CardSkeleton />}
         </DashboardCard>
 
         <DashboardCard title="Top Risks" className="min-h-52">
-          <EmptyCardContent />
+          {isLoading && <CardSkeleton />}
         </DashboardCard>
 
         <DashboardCard title="Dependency Health" className="min-h-40">
-          <EmptyCardContent />
+          {isLoading && <CardSkeleton />}
         </DashboardCard>
       </div>
     </div>

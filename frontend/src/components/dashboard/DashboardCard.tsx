@@ -31,10 +31,12 @@ export function DashboardCard({
   )
 }
 
-export function EmptyCardContent() {
+export function CardSkeleton() {
   return (
-    <div className="mt-6 flex min-h-16 items-center rounded-md border border-dashed border-zinc-800 px-4 text-sm text-zinc-600">
-      Waiting for repository analysis
+    <div className="mt-6 space-y-3">
+      <div className="h-8 w-24 animate-pulse rounded-md bg-zinc-900" />
+      <div className="h-3 w-full animate-pulse rounded-full bg-zinc-900" />
+      <div className="h-3 w-2/3 animate-pulse rounded-full bg-zinc-900" />
     </div>
   )
 }
