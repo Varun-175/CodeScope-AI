@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useRepositoryAnalysis } from '../../contexts/RepositoryAnalysisContext'
 import { useAuth } from '../../contexts/AuthContext'
+import { Logo } from '../shared/Logo'
 
 type TopNavProps = {
   isSidebarCollapsed: boolean
@@ -37,11 +38,11 @@ export function TopNav({
     : 'US'
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-zinc-800/80 bg-[#09090b]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-zinc-200 dark:border-zinc-800/80 bg-white/90 dark:bg-[#09090b]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <button
         type="button"
         aria-label="Open navigation"
-        className="rounded-md p-2 text-zinc-400 hover:bg-zinc-900 hover:text-white lg:hidden"
+        className="rounded-md p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white lg:hidden"
         onClick={onMenuClick}
       >
         <PanelLeft className="size-5" aria-hidden="true" />
@@ -50,7 +51,7 @@ export function TopNav({
       <button
         type="button"
         aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        className="hidden rounded-md p-2 text-zinc-400 hover:bg-zinc-900 hover:text-white lg:inline-flex"
+        className="hidden rounded-md p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white lg:inline-flex"
         onClick={onToggleSidebar}
       >
         {isSidebarCollapsed ? (
@@ -61,21 +62,21 @@ export function TopNav({
       </button>
 
       <div className="flex min-w-0 items-center gap-3 lg:hidden">
-        <span className="grid size-8 shrink-0 place-items-center rounded-md border border-zinc-800 bg-zinc-950 text-xs font-semibold text-white">
-          CS
-        </span>
-        <span className="hidden truncate text-sm font-semibold text-white sm:block">
+        <div className="grid size-8 shrink-0 place-items-center rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm">
+          <Logo size={20} />
+        </div>
+        <span className="hidden truncate text-sm font-semibold text-zinc-900 dark:text-white sm:block">
           CodeScope AI
         </span>
       </div>
 
-      <div className="hidden min-w-0 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm sm:flex">
+      <div className="hidden min-w-0 items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-sm sm:flex">
         <Activity className="size-4 text-emerald-400" aria-hidden="true" />
         <span className="hidden text-zinc-500 md:inline">Repository</span>
         <span className="font-medium text-zinc-200">Connected</span>
       </div>
 
-      <div className="ml-auto hidden h-9 w-full max-w-sm items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/70 px-3 text-sm text-zinc-500 md:flex">
+      <div className="ml-auto hidden h-9 w-full max-w-sm items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/70 px-3 text-sm text-zinc-500 md:flex">
         <Search className="size-4" aria-hidden="true" />
         <span className="truncate">Search repositories, files, symbols</span>
       </div>
@@ -95,7 +96,7 @@ export function TopNav({
           type="button"
           aria-label="User profile"
           onClick={() => setIsDropdownOpen((v) => !v)}
-          className="grid size-9 shrink-0 place-items-center rounded-full border border-zinc-800 bg-zinc-900 text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white"
+          className="grid size-9 shrink-0 place-items-center rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-white"
         >
           {initials}
         </button>
@@ -107,9 +108,9 @@ export function TopNav({
               className="fixed inset-0 z-40 bg-transparent cursor-default"
               onClick={() => setIsDropdownOpen(false)}
             />
-            <div className="absolute right-0 mt-2 z-50 w-56 rounded-lg border border-zinc-800 bg-zinc-950 p-1.5 shadow-xl">
-              <div className="px-3 py-2 border-b border-zinc-800/60 mb-1.5">
-                <p className="text-xs font-semibold text-white truncate">{user?.name}</p>
+            <div className="absolute right-0 mt-2 z-50 w-56 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-1.5 shadow-xl">
+              <div className="px-3 py-2 border-b border-zinc-150 dark:border-zinc-800/60 mb-1.5">
+                <p className="text-xs font-semibold text-zinc-900 dark:text-white truncate">{user?.name}</p>
                 <p className="text-[10px] text-zinc-500 truncate">{user?.email}</p>
               </div>
               <button
@@ -118,7 +119,7 @@ export function TopNav({
                   setIsDropdownOpen(false)
                   logout()
                 }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-400 hover:bg-red-950/20"
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20"
               >
                 <LogOut className="size-3.5" /> Sign Out
               </button>

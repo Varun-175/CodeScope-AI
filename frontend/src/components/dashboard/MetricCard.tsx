@@ -25,7 +25,7 @@ export function MetricCard({
     }
     const target = Number(numericValue)
     const started = performance.now()
-    const duration = 700
+    const duration = 400
     let frame = 0
     const tick = (time: number) => {
       const progress = Math.min((time - started) / duration, 1)

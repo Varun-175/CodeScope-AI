@@ -118,3 +118,40 @@ export type AnalyzeRepositoryPayload = {
   repo_url: string
   branch?: string
 }
+
+export type SettingsPayload = {
+  github_token?: string
+  github_base_url?: string
+  gemini_api_key?: string
+  groq_api_key?: string
+  huggingface_api_key?: string
+  openai_api_key?: string
+  anthropic_api_key?: string
+  openrouter_api_key?: string
+  ollama_url?: string
+  local_model?: string
+  embedding_model?: string
+  llm_provider?: string
+  temperature?: number
+  max_tokens?: number
+  top_p?: number
+  repository_cache?: boolean
+  chunk_size?: number
+  chunk_overlap?: number
+  embedding_provider?: string
+  vector_store?: string
+}
+
+export type RepositoryIndexStatus = {
+  indexed: boolean
+  repo_url?: string | null
+  repo_name?: string | null
+  doc_count?: number
+  progress_message?: string
+  progress_pct?: number
+  last_error?: string | null
+}
+
+export type ChatResponse = {
+  answer: string
+}

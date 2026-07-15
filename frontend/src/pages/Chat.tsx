@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
+import { chatWithRepository } from '../services/api/analysis'
 
 type Message = {
   id: string
@@ -222,19 +223,35 @@ export function Chat() {
     setError(null)
     setIsTyping(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 900 + Math.random() * 600))
+    try {
+      const response = await chatWithRepository(text)
+      const assistantMessage: Message = {
+        id: generateId(),
+        role: 'assistant',
+        content: response.answer || buildAssistantReply(text, data),
+        timestamp: new Date(),
+      }
 
-    const assistantMessage: Message = {
-      id: generateId(),
-      role: 'assistant',
-      content: buildAssistantReply(text, data),
-      timestamp: new Date(),
+      const finalMessages = [...nextMessages, assistantMessage]
+      setMessages(finalMessages)
+      updateActiveConversation(finalMessages)
+    } catch (caught) {
+      const fallback = caught instanceof Error ? caught.message : 'The chat service is unavailable right now.'
+      const assistantMessage: Message = {
+        id: generateId(),
+        role: 'assistant',
+        content: `I couldn't reach the repository reasoning service. ${fallback}`,
+        timestamp: new Date(),
+        error: true,
+      }
+      const finalMessages = [...nextMessages, assistantMessage]
+      setMessages(finalMessages)
+      updateActiveConversation(finalMessages)
+      pushToast('Chat request failed', 'error')
+    } finally {
+      setIsTyping(false)
     }
 
-    const finalMessages = [...nextMessages, assistantMessage]
-    setMessages(finalMessages)
-    updateActiveConversation(finalMessages)
-    setIsTyping(false)
   }
 
   function handleSubmit(e: FormEvent) {

@@ -16,12 +16,12 @@ type AnalysisProgressProps = {
 }
 
 export function AnalysisProgress({ onComplete }: AnalysisProgressProps) {
-  const [progress, setProgress] = useState(8)
+  const [progress, setProgress] = useState(12)
 
   useEffect(() => {
     const interval = window.setInterval(() => {
       setProgress((current) => {
-        const next = Math.min(current + 4, 100)
+        const next = Math.min(current + 5, 100)
 
         if (next === 100) {
           window.clearInterval(interval)
@@ -30,7 +30,7 @@ export function AnalysisProgress({ onComplete }: AnalysisProgressProps) {
 
         return next
       })
-    }, 420)
+    }, 280)
 
     return () => window.clearInterval(interval)
   }, [onComplete])
@@ -54,13 +54,13 @@ export function AnalysisProgress({ onComplete }: AnalysisProgressProps) {
       <div className="space-y-2">
         <div className="h-2 overflow-hidden rounded-full bg-zinc-900">
           <div
-            className="h-full rounded-full bg-zinc-100 transition-all duration-500 ease-out"
+            className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-sky-500 transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
         <div className="flex items-center justify-between text-xs text-zinc-500">
           <span className="font-mono">{progress}%</span>
-          <span>Mock progress</span>
+          <span>Analysis progress</span>
         </div>
       </div>
 

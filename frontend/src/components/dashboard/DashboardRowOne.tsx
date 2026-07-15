@@ -17,12 +17,12 @@ export function DashboardRowOne({
     {
       title: 'Files',
       value: data ? String(data.repository.files) : undefined,
-      detail: data ? `${data.repository.lines_of_code} LOC` : undefined,
+      detail: data ? `${data.repository.lines_of_code.toLocaleString()} LOC` : undefined,
     },
     {
-      title: 'Issues',
+      title: 'Risks',
       value: data ? String(data.risks.critical.length + data.risks.warnings.length) : undefined,
-      detail: data ? `${data.risks.largest_files.length} file risks` : undefined,
+      detail: data ? `${data.risks.largest_files.length} hotspots` : undefined,
     },
     {
       title: 'Languages',

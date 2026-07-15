@@ -11,7 +11,7 @@ export function AppLayout() {
 
   return (
     <RepositoryAnalysisProvider>
-      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
         <Sidebar
           isCollapsed={isSidebarCollapsed}
           isOpen={isSidebarOpen}

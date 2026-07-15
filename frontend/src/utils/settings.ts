@@ -141,7 +141,18 @@ export function resetSettings(): AppSettings {
 }
 
 export function applySettings(settings: Partial<AppSettings> | AppSettings) {
-  const resolved = mergeSettings(settings)
+  // Merge against current saved settings, NOT defaults, so partial
+  // updates (e.g. just accent) don't reset other fields like theme.
+  const current = loadSettings()
+  const resolved: AppSettings = {
+    ...current,
+    ...settings,
+    profile: { ...current.profile, ...(settings.profile ?? {}) },
+    ai: { ...current.ai, ...(settings.ai ?? {}) },
+    local: { ...current.local, ...(settings.local ?? {}) },
+    github: { ...current.github, ...(settings.github ?? {}) },
+    preferences: { ...current.preferences, ...(settings.preferences ?? {}) },
+  }
   if (typeof document === 'undefined') return
 
   const root = document.documentElement
@@ -149,6 +160,18 @@ export function applySettings(settings: Partial<AppSettings> | AppSettings) {
   root.dataset.accent = resolved.accent
   root.dataset.sidebarDensity = resolved.sidebarDensity
   root.dataset.animations = resolved.animations ? 'true' : 'false'
+
+  // Sync Tailwind dark mode class
+  const isDark = resolved.theme === 'dark' || (resolved.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  if (isDark) {
+    root.classList.add('dark')
+    root.style.setProperty('--bg-color', '#09090b')
+    root.style.setProperty('--text-color', '#f4f4f5')
+  } else {
+    root.classList.remove('dark')
+    root.style.setProperty('--bg-color', '#f8fafc')
+    root.style.setProperty('--text-color', '#111827')
+  }
 
   const accentMap: Record<AccentColor, string> = {
     violet: '#8b5cf6',
