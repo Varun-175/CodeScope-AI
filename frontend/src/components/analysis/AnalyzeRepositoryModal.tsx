@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRepositoryAnalysis } from '../../contexts/RepositoryAnalysisContext'
 import { AnalysisProgress } from './AnalysisProgress'
 
@@ -25,6 +25,20 @@ export function AnalyzeRepositoryModal() {
   const [mode, setMode] = useState<AnalysisMode>('quick')
   const [error, setError] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isApiFinished, setIsApiFinished] = useState(false)
+  const [isProgressFinished, setIsProgressFinished] = useState(false)
+
+  useEffect(() => {
+    if (isApiFinished && isProgressFinished) {
+      setRepositoryUrl('')
+      setBranch('')
+      setMode('quick')
+      setIsAnalyzing(false)
+      setIsApiFinished(false)
+      setIsProgressFinished(false)
+      closeAnalyzeModal()
+    }
+  }, [isApiFinished, isProgressFinished, closeAnalyzeModal])
 
   if (!isAnalyzeModalOpen) {
     return null
@@ -36,6 +50,8 @@ export function AnalyzeRepositoryModal() {
     setMode('quick')
     setError('')
     setIsAnalyzing(false)
+    setIsApiFinished(false)
+    setIsProgressFinished(false)
     closeAnalyzeModal()
   }
 
@@ -47,17 +63,19 @@ export function AnalyzeRepositoryModal() {
 
     setError('')
     setIsAnalyzing(true)
-    try {
-      await runAnalysis(repositoryUrl.trim(), branch.trim())
-      setRepositoryUrl('')
-      setBranch('')
-      setMode('quick')
-      setIsAnalyzing(false)
-      closeAnalyzeModal()
-    } catch {
-      setError('Analysis failed. Check the repository URL and backend server.')
-      setIsAnalyzing(false)
-    }
+    setIsApiFinished(false)
+    setIsProgressFinished(false)
+
+    runAnalysis(repositoryUrl.trim(), branch.trim())
+      .then(() => {
+        setIsApiFinished(true)
+      })
+      .catch(() => {
+        setError('Analysis failed. Check the repository URL and backend server.')
+        setIsAnalyzing(false)
+        setIsApiFinished(false)
+        setIsProgressFinished(false)
+      })
   }
 
   return (
@@ -90,7 +108,7 @@ export function AnalyzeRepositoryModal() {
         </div>
 
         {isAnalyzing ? (
-          <AnalysisProgress />
+          <AnalysisProgress onComplete={() => setIsProgressFinished(true)} />
         ) : (
           <div className="space-y-5">
             <label className="block">

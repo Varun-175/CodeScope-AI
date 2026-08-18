@@ -32,6 +32,8 @@ def index_repository(repo_url: str, branch: str | None = None) -> dict[str, Any]
     provider = str(settings.get("llm_provider") or "groq").strip().lower()
     api_key = _resolve_api_key(provider, settings)
     model = _resolve_model(provider, settings)
+    if provider == "ollama":
+        os.environ["CODESCOPE_OLLAMA_URL"] = str(settings.get("ollama_url") or "http://localhost:11434")
 
     def _progress(message: str, pct: int) -> None:
         _RAG_STATE["last_error"] = None
@@ -88,6 +90,8 @@ def reload_chain_from_settings() -> dict[str, Any]:
     provider = str(settings.get("llm_provider") or "groq").strip().lower()
     api_key = _resolve_api_key(provider, settings)
     model = _resolve_model(provider, settings)
+    if provider == "ollama":
+        os.environ["CODESCOPE_OLLAMA_URL"] = str(settings.get("ollama_url") or "http://localhost:11434")
     if not _RAG_STATE.get("retriever"):
         raise RuntimeError("No retriever available to rebuild the RAG chain")
     chain = rebuild_rag_chain(_RAG_STATE["retriever"], provider, api_key, model)

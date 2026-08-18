@@ -33,39 +33,65 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 import git
 
 try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_google_genai import ChatGoogleGenerativeAI  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     ChatGoogleGenerativeAI = None
 
 try:
-    from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint, ChatHuggingFace
+    from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint, ChatHuggingFace  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     HuggingFaceEmbeddings = None
     HuggingFaceEndpoint = None
     ChatHuggingFace = None
 
+_EMBEDDINGS_CACHE = None
+
+def _get_embeddings():
+    global _EMBEDDINGS_CACHE
+    if _EMBEDDINGS_CACHE is None:
+        if HuggingFaceEmbeddings is None:
+            raise ValueError("Embedding support requires the langchain-huggingface package.")
+        
+        try:
+            from app.core.config import load_settings
+            settings = load_settings()
+            hf_key = str(settings.get("huggingface_api_key") or "").strip()
+            if hf_key:
+                os.environ["HF_TOKEN"] = hf_key
+                os.environ["HUGGINGFACECO_API_TOKEN"] = hf_key
+        except Exception:
+            pass
+
+        _EMBEDDINGS_CACHE = HuggingFaceEmbeddings(
+            model_name="all-MiniLM-L6-v2",
+            model_kwargs={"device": "cpu"},
+            encode_kwargs={"normalize_embeddings": True, "batch_size": 64},
+        )
+    return _EMBEDDINGS_CACHE
+
+
 try:
-    from langchain_groq import ChatGroq
+    from langchain_groq import ChatGroq  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     ChatGroq = None
 
 try:
-    from langchain_openai import ChatOpenAI
+    from langchain_openai import ChatOpenAI  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     ChatOpenAI = None
 
 try:
-    from langchain_anthropic import ChatAnthropic
+    from langchain_anthropic import ChatAnthropic  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     ChatAnthropic = None
 
 try:
-    from langchain_community.chat_models import ChatOllama
+    from langchain_community.chat_models import ChatOllama  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     ChatOllama = None
 
 try:
-    from langchain_community.vectorstores import Chroma
+    from langchain_community.vectorstores import Chroma  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     Chroma = None
 
@@ -242,7 +268,7 @@ def validate_llm_config(provider: str, api_key: str, model: str) -> LLMConfig:
 
     if provider not in LLM_PROVIDERS:
         raise ValueError(f"Unsupported provider: {provider!r}")
-    if not api_key or not api_key.strip():
+    if provider != "ollama" and (not api_key or not api_key.strip()):
         raise ValueError(f"Missing API key for provider: {provider}")
     if not model:
         raise ValueError(f"No model selected for provider: {provider}")
@@ -256,7 +282,7 @@ def validate_llm_config(provider: str, api_key: str, model: str) -> LLMConfig:
         )
         model = fallback
 
-    return LLMConfig(provider=provider, model=model, api_key_present=True)
+    return LLMConfig(provider=provider, model=model, api_key_present=bool(api_key and api_key.strip()))
 
 
 def build_llm(provider: str, api_key: str, model: str = ""):
@@ -594,13 +620,7 @@ def build_rag_chain(
 
     # ── 3. Local embeddings (all-MiniLM-L6-v2 — 22 MB, CPU-fast) ────────────
     _p(f"🧠 Embedding {len(docs)} AST chunks locally…", 50)
-    if HuggingFaceEmbeddings is None:
-        raise ValueError("Embedding support requires the langchain-huggingface package.")
-    embeddings = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2",
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True, "batch_size": 64},
-    )
+    embeddings = _get_embeddings()
 
     # ── 4. ChromaDB (In-Memory for speed and fresh starts) ───────────────────
     _p("🗄️  Building ephemeral vector store…", 75)

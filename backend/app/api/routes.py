@@ -107,10 +107,10 @@ def analyze(request: AnalyzeRepositoryRequest) -> dict:
             branch=request.branch.strip() if request.branch else None,
         )
     except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Repository indexing failed: {type(exc).__name__} - {str(exc)}",
-        ) from exc
+        import logging
+        logging.getLogger("uvicorn.error").error(
+            f"Repository indexing failed: {type(exc).__name__} - {str(exc)}"
+        )
 
     return result
 

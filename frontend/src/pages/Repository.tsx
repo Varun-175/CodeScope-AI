@@ -48,8 +48,8 @@ type CodeInsights = {
   sizeStr: string
   sizeBytes: number
   imports: string[]
-  functions: string[]
-  classes: string[]
+  functions: Array<{ name: string; line: number }>
+  classes: Array<{ name: string; line: number }>
   todoCount: number
   commentRatio: number
   complexityPoints: number
@@ -75,31 +75,56 @@ function getFileIcon(name: string) {
 function highlightCodeLine(line: string) {
   if (!line.trim()) return <span>&nbsp;</span>
 
-  // Escape HTML entities to prevent injection
-  let escaped = line
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  const tokenRegex = /(?:\/\/*|#.*|\/\*[\s\S]*?\*\/)|(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\b(?:const|let|var|function|return|import|from|export|default|class|extends|def|if|else|for|while|try|catch|finally|async|await|type|interface|enum|public|private|protected|package|as|self|this|with|yield|fn|impl|struct|trait|pub|use|mut|match|break|continue|in|and|or|not|is|lambda|pass|assert|raise|except|switch|case)\b)|(\b[\w_]+(?=\s*\())|(\b\d+(?:\.\d+)?\b)|([{}[\]()])|([+\-*/%&|^!~=<>?:]+|[,;])/g
 
-  // Double quotes strings, single quotes strings, template literals
-  escaped = escaped.replace(/(["'`])(.*?)\1/g, '<span class="text-emerald-400">$1$2$1</span>')
+  let lastIndex = 0
+  let html = ''
 
-  // Comments
-  if (escaped.trim().startsWith('//') || escaped.trim().startsWith('#') || escaped.trim().startsWith('/*')) {
-    return <span className="text-zinc-500 font-mono select-text" dangerouslySetInnerHTML={{ __html: escaped }} />
+  const escapeHtml = (text: string) => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
   }
 
-  // Keywords regex matching js/py/go/rust etc
-  const keywords = /\b(const|let|var|function|return|import|from|export|default|class|extends|def|if|else|for|while|try|catch|finally|async|await|type|interface|enum|public|private|protected|package|as|self|this|with|yield)\b/g
-  escaped = escaped.replace(keywords, '<span class="text-violet-400 font-semibold">$1</span>')
+  line.replace(tokenRegex, (match, keyword, fn, num, bracket, op, index) => {
+    if (index > lastIndex) {
+      html += escapeHtml(line.slice(lastIndex, index))
+    }
 
-  // Function calls and names
-  escaped = escaped.replace(/\b([\w_]+)(?=\s*\()/g, '<span class="text-blue-400">$1</span>')
+    const escapedMatch = escapeHtml(match)
 
-  // Numbers
-  escaped = escaped.replace(/\b(\d+)\b/g, '<span class="text-amber-400">$1</span>')
+    if (match.startsWith('//') || match.startsWith('#') || match.startsWith('/*')) {
+      html += `<span class="text-zinc-500 font-mono italic">${escapedMatch}</span>`
+    } else if (match.startsWith('"') || match.startsWith("'") || match.startsWith('`')) {
+      html += `<span class="text-emerald-400 font-mono">${escapedMatch}</span>`
+    } else if (keyword !== undefined) {
+      html += `<span class="text-violet-400 font-semibold">${escapedMatch}</span>`
+    } else if (fn !== undefined) {
+      html += `<span class="text-blue-400">${escapedMatch}</span>`
+    } else if (num !== undefined) {
+      html += `<span class="text-amber-400">${escapedMatch}</span>`
+    } else if (bracket !== undefined) {
+      let bracketClass = 'text-zinc-400'
+      if (['{', '}'].includes(match)) bracketClass = 'text-amber-500 font-semibold'
+      else if (['(', ')'].includes(match)) bracketClass = 'text-sky-400 font-semibold'
+      else if (['[', ']'].includes(match)) bracketClass = 'text-pink-400 font-semibold'
+      html += `<span class="${bracketClass}">${escapedMatch}</span>`
+    } else if (op !== undefined) {
+      html += `<span class="text-fuchsia-500/90">${escapedMatch}</span>`
+    } else {
+      html += escapedMatch
+    }
 
-  return <span className="font-mono text-zinc-300 select-text" dangerouslySetInnerHTML={{ __html: escaped }} />
+    lastIndex = index + match.length
+    return match
+  })
+
+  if (lastIndex < line.length) {
+    html += escapeHtml(line.slice(lastIndex))
+  }
+
+  return <span className="font-mono text-zinc-300 select-text" dangerouslySetInnerHTML={{ __html: html }} />
 }
 
 // ---------- Client-side Code Parser ----------
@@ -112,13 +137,14 @@ function parseCodeContent(filename: string, content: string): CodeInsights {
   let commentLines = 0
   let todoCount = 0
   const imports: string[] = []
-  const functions: string[] = []
-  const classes: string[] = []
+  const functions: Array<{ name: string; line: number }> = []
+  const classes: Array<{ name: string; line: number }> = []
 
   let inBlockComment = false
   const ext = filename.split('.').pop()?.toLowerCase() || ''
 
-  for (let line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
     const trimmed = line.trim()
 
     if (inBlockComment) {
@@ -151,10 +177,10 @@ function parseCodeContent(filename: string, content: string): CodeInsights {
         imports.push((pyImport[1] || pyImport[2]).trim())
       }
       const pyFunc = trimmed.match(/^def\s+([\w_]+)\s*\(/)
-      if (pyFunc) functions.push(pyFunc[1])
+      if (pyFunc) functions.push({ name: pyFunc[1], line: i + 1 })
 
       const pyClass = trimmed.match(/^class\s+([\w_]+)/)
-      if (pyClass) classes.push(pyClass[1])
+      if (pyClass) classes.push({ name: pyClass[1], line: i + 1 })
     }
     // JS/TS Imports and Symbols
     else if (['js', 'jsx', 'ts', 'tsx'].includes(ext)) {
@@ -164,10 +190,10 @@ function parseCodeContent(filename: string, content: string): CodeInsights {
       }
       const jsFunc = trimmed.match(/(?:function\s+([\w_]+)|const\s+([\w_]+)\s*=\s*(?:\([^)]*\)|[\w_]+)\s*=>)/)
       if (jsFunc) {
-        functions.push(jsFunc[1] || jsFunc[2])
+        functions.push({ name: jsFunc[1] || jsFunc[2], line: i + 1 })
       }
       const jsClass = trimmed.match(/^class\s+([\w_]+)/)
-      if (jsClass) classes.push(jsClass[1])
+      if (jsClass) classes.push({ name: jsClass[1], line: i + 1 })
     }
   }
 
@@ -190,13 +216,31 @@ function parseCodeContent(filename: string, content: string): CodeInsights {
   if (complexityLabel === 'High' || todoCount > 4) riskLevel = 'High'
   else if (complexityLabel === 'Moderate' || todoCount > 1) riskLevel = 'Medium'
 
+  const uniqueFunctions: Array<{ name: string; line: number }> = []
+  const seenFuncs = new Set<string>()
+  for (const f of functions) {
+    if (!seenFuncs.has(f.name)) {
+      seenFuncs.add(f.name)
+      uniqueFunctions.push(f)
+    }
+  }
+
+  const uniqueClasses: Array<{ name: string; line: number }> = []
+  const seenClasses = new Set<string>()
+  for (const c of classes) {
+    if (!seenClasses.has(c.name)) {
+      seenClasses.add(c.name)
+      uniqueClasses.push(c)
+    }
+  }
+
   return {
     loc,
     sizeStr,
     sizeBytes,
     imports: Array.from(new Set(imports)).slice(0, 8),
-    functions: Array.from(new Set(functions)).slice(0, 10),
-    classes: Array.from(new Set(classes)).slice(0, 6),
+    functions: uniqueFunctions.slice(0, 10),
+    classes: uniqueClasses.slice(0, 6),
     todoCount,
     commentRatio,
     complexityPoints,
@@ -222,7 +266,7 @@ function getAiFileSummary(filename: string, insights: CodeInsights): string {
 
   let desc = `This is a ${ext.toUpperCase()} file with ${insights.loc} lines.`
   if (insights.classes.length > 0) {
-    desc += ` Defines classes like [${insights.classes.slice(0, 2).join(', ')}].`
+    desc += ` Defines classes like [${insights.classes.slice(0, 2).map((c) => c.name).join(', ')}].`
   }
   if (insights.functions.length > 0) {
     desc += ` Orchestrates logic through ${insights.functions.length} functions.`
@@ -260,6 +304,25 @@ function getAllDirectories(nodes: FileNode[], paths: string[] = []): string[] {
   return paths
 }
 
+// ---------- Highlight Search Helper ----------
+function highlightText(text: string, query: string) {
+  if (!query) return text
+  const parts = text.split(new RegExp(`(${query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi'))
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <mark key={i} className="bg-violet-500/40 text-violet-200 rounded-[2px] px-0.5 font-semibold">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  )
+}
+
 // ---------- Tree Item Component ----------
 function TreeItem({
   node,
@@ -268,6 +331,7 @@ function TreeItem({
   onSelect,
   expandedPaths,
   onToggle,
+  searchQuery,
 }: {
   node: FileNode
   depth: number
@@ -275,6 +339,7 @@ function TreeItem({
   onSelect: (node: FileNode) => void
   expandedPaths: Set<string>
   onToggle: (path: string) => void
+  searchQuery?: string
 }) {
   const isExpanded = expandedPaths.has(node.path)
   const isSelected = selectedPath === node.path
@@ -289,10 +354,10 @@ function TreeItem({
           else onSelect(node)
         }}
         className={[
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition duration-150 outline-none',
+          'flex w-full items-center gap-2 rounded-r-md py-1.5 pr-2 text-left text-xs transition duration-150 outline-none cursor-pointer border-l-2',
           isSelected
-            ? 'bg-zinc-800 text-white font-medium shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]'
-            : 'text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200',
+            ? 'bg-violet-500/10 border-l-violet-500 text-violet-200 font-medium'
+            : 'border-l-transparent text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200',
         ].join(' ')}
         style={{ paddingLeft: `${depth * 14 + 6}px` }}
       >
@@ -315,7 +380,7 @@ function TreeItem({
             {getFileIcon(node.name)}
           </>
         )}
-        <span className="truncate">{node.name}</span>
+        <span className="truncate">{highlightText(node.name, searchQuery ?? '')}</span>
       </button>
 
       {isDir && isExpanded && node.children && (
@@ -329,6 +394,7 @@ function TreeItem({
               onSelect={onSelect}
               expandedPaths={expandedPaths}
               onToggle={onToggle}
+              searchQuery={searchQuery}
             />
           ))}
         </div>
@@ -618,6 +684,16 @@ export function Repository() {
     }
   }
 
+  function handleSymbolClick(lineNum: number) {
+    setHighlightedLine(lineNum)
+    setTimeout(() => {
+      const lineEl = document.getElementById(`line-${lineNum}`)
+      if (lineEl) {
+        lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 50)
+  }
+
   // Render Breadcrumb details
   const renderBreadcrumbs = () => {
     if (!selectedFile) return null
@@ -757,6 +833,7 @@ export function Repository() {
                   onSelect={(file) => setSelectedFile(file)}
                   expandedPaths={expandedPaths}
                   onToggle={handleToggle}
+                  searchQuery={searchQuery}
                 />
               ))
             )}
@@ -776,77 +853,81 @@ export function Repository() {
               </p>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col rounded-lg border border-zinc-800 bg-zinc-950/80 overflow-hidden">
-              {/* Sticky File Header */}
-              <div className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/95 p-3 space-y-2 backdrop-blur">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    {renderBreadcrumbs()}
-                    <h2 className="mt-1 flex items-center gap-2 text-xs font-semibold text-white font-mono truncate">
-                      {getFileIcon(selectedFile.name)}
-                      {selectedFile.name}
-                    </h2>
-                  </div>
-
-                  {/* Top tool buttons */}
-                  <div className="flex items-center gap-1 shrink-0">
+            <div className="flex-1 flex flex-col rounded-lg border border-zinc-800 bg-zinc-950/80 overflow-hidden shadow-2xl backdrop-blur-md">
+              {/* IDE-like Tab Bar */}
+              <div className="flex items-center justify-between border-b border-zinc-850 bg-zinc-950/90">
+                {/* Active Tab */}
+                <div className="flex items-center">
+                  <div className="bg-zinc-900 border-t-2 border-t-violet-500 border-r border-zinc-850 px-4 py-2.5 text-xs font-medium text-white font-mono flex items-center gap-2 select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    {getFileIcon(selectedFile.name)}
+                    <span>{selectedFile.name}</span>
                     <button
                       type="button"
-                      onClick={handleCopyPath}
-                      className="px-2.5 py-1.5 rounded-md border border-zinc-850 hover:bg-zinc-900 text-[10px] text-zinc-400 hover:text-white transition flex items-center gap-1"
-                      title="Copy relative file path"
+                      onClick={() => setSelectedFile(null)}
+                      className="ml-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 p-0.5 rounded transition"
+                      title="Close file"
                     >
-                      {copiedPath ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
-                      {copiedPath ? 'Copied' : 'Copy Path'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDownloadFile}
-                      disabled={fileContent === null}
-                      className="px-2.5 py-1.5 rounded-md border border-zinc-850 hover:bg-zinc-900 text-[10px] text-zinc-400 hover:text-white transition flex items-center gap-1 disabled:opacity-30"
-                      title="Download raw file"
-                    >
-                      <Download className="size-3.5" />
+                      <Minimize2 className="size-3" />
                     </button>
                   </div>
                 </div>
 
-                {/* Sub headers details */}
-                <div className="flex flex-wrap items-center gap-3 text-[10px] text-zinc-500 font-mono">
-                  {selectedFile.size && (
-                    <span>Size: <strong className="text-zinc-400">{selectedFile.size}</strong></span>
-                  )}
-                  {insights && (
-                    <>
-                      <span className="text-zinc-800">•</span>
-                      <span>LOC: <strong className="text-zinc-400">{insights.loc}</strong></span>
-                      <span className="text-zinc-800">•</span>
-                      <span>Type: <strong className="text-zinc-400">{selectedFile.language || 'Plain Text'}</strong></span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* View options bar */}
-              <div className="flex items-center justify-between border-b border-zinc-850/60 bg-zinc-900/20 px-3 py-1.5 text-[10px]">
-                <div className="flex items-center gap-2">
+                {/* File Action Controls */}
+                <div className="flex items-center gap-1.5 pr-2">
                   <button
                     type="button"
-                    onClick={() => setWrapLines((v) => !v)}
-                    className={['px-2 py-0.5 rounded transition', wrapLines ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}
+                    onClick={handleCopyPath}
+                    className="px-2 py-1 rounded border border-zinc-850 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-[10px] text-zinc-400 hover:text-white transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
+                    title="Copy relative file path"
                   >
-                    Wrap Lines
+                    {copiedPath ? <Check className="size-3 text-emerald-400 animate-pulse" /> : <Copy className="size-3" />}
+                    <span>{copiedPath ? 'Copied' : 'Copy Path'}</span>
                   </button>
-                </div>
-                {fileContent !== null && (
                   <button
                     type="button"
                     onClick={handleCopyCode}
-                    className="text-zinc-500 hover:text-zinc-300 flex items-center gap-1"
+                    disabled={fileContent === null}
+                    className="px-2 py-1 rounded border border-zinc-850 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-[10px] text-zinc-400 hover:text-white transition-all flex items-center gap-1 shadow-sm disabled:opacity-30 active:scale-95 cursor-pointer"
+                    title="Copy code content"
                   >
-                    {copiedCode ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
-                    Copy Code
+                    {copiedCode ? <Check className="size-3 text-emerald-400 animate-pulse" /> : <Copy className="size-3" />}
+                    <span>{copiedCode ? 'Copied Code' : 'Copy Code'}</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadFile}
+                    disabled={fileContent === null}
+                    className="p-1 rounded border border-zinc-850 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-405 hover:text-white transition-all flex items-center justify-center disabled:opacity-30 active:scale-95 cursor-pointer"
+                    title="Download raw file"
+                  >
+                    <Download className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Breadcrumb & Meta info bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-zinc-850/60 bg-zinc-900/30 px-3 py-1.5 text-[10px] gap-2">
+                <div className="flex items-center gap-2">
+                  {renderBreadcrumbs()}
+                  <button
+                    type="button"
+                    onClick={() => setWrapLines((v) => !v)}
+                    className={['px-2 py-0.5 rounded border border-zinc-850/60 transition text-[9px] cursor-pointer', wrapLines ? 'bg-violet-500/20 text-violet-300 border-violet-500/30 font-medium' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}
+                  >
+                    {wrapLines ? 'Lines Wrapped' : 'Wrap Lines'}
+                  </button>
+                </div>
+
+                {insights && (
+                  <div className="flex items-center gap-3 text-[10px] text-zinc-500 font-mono shrink-0">
+                    {selectedFile.size && (
+                      <span>Size: <strong className="text-zinc-400 font-semibold">{selectedFile.size}</strong></span>
+                    )}
+                    <span className="text-zinc-850">•</span>
+                    <span>LOC: <strong className="text-zinc-400 font-semibold">{insights.loc}</strong></span>
+                    <span className="text-zinc-850">•</span>
+                    <span>Type: <strong className="text-zinc-400 font-semibold">{selectedFile.language || 'Plain Text'}</strong></span>
+                  </div>
                 )}
               </div>
 
@@ -867,6 +948,7 @@ export function Repository() {
                           return (
                             <tr
                               key={i}
+                              id={`line-${i + 1}`}
                               onClick={() => setHighlightedLine(i + 1)}
                               className={[
                                 'transition duration-150',
@@ -998,10 +1080,15 @@ export function Repository() {
                           <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Functions ({insights.functions.length})</h4>
                           <div className="max-h-24 overflow-y-auto space-y-1 rounded border border-zinc-900 p-1.5">
                             {insights.functions.map((func) => (
-                              <div key={func} className="flex items-center gap-1 font-mono text-[10px] text-blue-400">
+                              <button
+                                key={func.name}
+                                type="button"
+                                onClick={() => handleSymbolClick(func.line)}
+                                className="flex items-center gap-1 font-mono text-[10px] text-blue-400 hover:text-blue-300 hover:underline transition text-left w-full cursor-pointer"
+                              >
                                 <span className="font-bold text-zinc-700">•</span>
-                                {func}()
-                              </div>
+                                {func.name}()
+                              </button>
                             ))}
                           </div>
                         </div>
@@ -1011,10 +1098,15 @@ export function Repository() {
                           <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Classes ({insights.classes.length})</h4>
                           <div className="max-h-24 overflow-y-auto space-y-1 rounded border border-zinc-900 p-1.5">
                             {insights.classes.map((cls) => (
-                              <div key={cls} className="flex items-center gap-1 font-mono text-[10px] text-violet-400">
+                              <button
+                                key={cls.name}
+                                type="button"
+                                onClick={() => handleSymbolClick(cls.line)}
+                                className="flex items-center gap-1 font-mono text-[10px] text-violet-400 hover:text-violet-300 hover:underline transition text-left w-full cursor-pointer"
+                              >
                                 <span className="font-bold text-zinc-700">•</span>
-                                {cls}
-                              </div>
+                                {cls.name}
+                              </button>
                             ))}
                           </div>
                         </div>
@@ -1082,10 +1174,15 @@ export function Repository() {
                   <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Functions ({insights.functions.length})</h4>
                   <div className="max-h-24 overflow-y-auto space-y-1 pr-1 border border-zinc-900 rounded p-1.5">
                     {insights.functions.map((func) => (
-                      <div key={func} className="font-mono text-[10px] text-blue-400 truncate flex items-center gap-1">
+                      <button
+                        key={func.name}
+                        type="button"
+                        onClick={() => handleSymbolClick(func.line)}
+                        className="font-mono text-[10px] text-blue-400 truncate flex items-center gap-1 hover:text-blue-300 hover:underline transition text-left w-full cursor-pointer animate-fade-in"
+                      >
                         <span className="text-zinc-700 font-bold">•</span>
-                        {func}()
-                      </div>
+                        {func.name}()
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1097,10 +1194,15 @@ export function Repository() {
                   <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Classes ({insights.classes.length})</h4>
                   <div className="max-h-24 overflow-y-auto space-y-1 pr-1 border border-zinc-900 rounded p-1.5">
                     {insights.classes.map((cls) => (
-                      <div key={cls} className="font-mono text-[10px] text-violet-400 truncate flex items-center gap-1">
+                      <button
+                        key={cls.name}
+                        type="button"
+                        onClick={() => handleSymbolClick(cls.line)}
+                        className="font-mono text-[10px] text-violet-400 truncate flex items-center gap-1 hover:text-violet-300 hover:underline transition text-left w-full cursor-pointer animate-fade-in"
+                      >
                         <span className="text-zinc-700 font-bold">•</span>
-                        {cls}
-                      </div>
+                        {cls.name}
+                      </button>
                     ))}
                   </div>
                 </div>
