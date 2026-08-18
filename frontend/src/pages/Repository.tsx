@@ -853,7 +853,7 @@ export function Repository() {
               </p>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col rounded-lg border border-zinc-800 bg-zinc-950/80 overflow-hidden shadow-2xl backdrop-blur-md">
+              <div className="flex-1 flex flex-col rounded-lg border border-zinc-800 bg-zinc-950/80 overflow-hidden shadow-2xl backdrop-blur-md">
               {/* IDE-like Tab Bar */}
               <div className="flex items-center justify-between border-b border-zinc-850 bg-zinc-950/90">
                 {/* Active Tab */}
@@ -897,7 +897,7 @@ export function Repository() {
                     type="button"
                     onClick={handleDownloadFile}
                     disabled={fileContent === null}
-                    className="p-1 rounded border border-zinc-850 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-405 hover:text-white transition-all flex items-center justify-center disabled:opacity-30 active:scale-95 cursor-pointer"
+                    className="p-1 rounded border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all flex items-center justify-center disabled:opacity-30 active:scale-95 cursor-pointer"
                     title="Download raw file"
                   >
                     <Download className="size-3.5" />
