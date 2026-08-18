@@ -9,7 +9,7 @@ export function RepositoryHeader({ repository }: { repository: RepositoryMetadat
   ]
 
   return (
-    <section className="animate-fade-in-up flex flex-col gap-4 rounded-lg border border-zinc-800/90 bg-zinc-950/90 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.045)] sm:flex-row sm:items-center sm:justify-between">
+    <section className="animate-fade-in-up flex flex-col gap-4 rounded-lg border border-zinc-800 bg-zinc-900/40 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-xs font-medium uppercase tracking-wider text-zinc-600">
           Repository
@@ -23,7 +23,7 @@ export function RepositoryHeader({ repository }: { repository: RepositoryMetadat
         {repositoryStats.map((stat) => (
           <span
             key={stat}
-            className="rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-sm font-medium text-zinc-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]"
+            className="rounded-md border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-sm font-medium text-zinc-300"
           >
             {stat}
           </span>

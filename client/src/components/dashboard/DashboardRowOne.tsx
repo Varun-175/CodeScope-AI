@@ -13,21 +13,25 @@ export function DashboardRowOne({
       title: 'Repository Health',
       value: data ? `${data.health.score}/100` : undefined,
       detail: data?.health.status,
+      tone: 'emerald' as const,
     },
     {
       title: 'Files',
       value: data ? String(data.repository.files) : undefined,
       detail: data ? `${data.repository.lines_of_code.toLocaleString()} LOC` : undefined,
+      tone: 'blue' as const,
     },
     {
       title: 'Risks',
       value: data ? String(data.risks.critical.length + data.risks.warnings.length) : undefined,
       detail: data ? `${data.risks.largest_files.length} hotspots` : undefined,
+      tone: 'amber' as const,
     },
     {
       title: 'Languages',
       value: data ? String(data.repository.languages.length) : undefined,
       detail: data?.repository.primary_language,
+      tone: 'violet' as const,
     },
   ]
 

@@ -16,19 +16,19 @@ export function DashboardCard({
   return (
     <section
       className={[
-        'surface-glass animate-fade-in-up rounded-3xl p-6 transition duration-200 hover:-translate-y-0.5 hover:border-violet-500/40',
+        'surface-glass animate-fade-in-up relative overflow-hidden rounded-lg p-5 transition duration-200 hover:border-violet-400/50',
         className,
       ].join(' ')}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="mb-4 flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
         <div>
-          <h2 className="text-sm font-semibold tracking-tight text-white">{title}</h2>
+          <h2 className="text-sm font-semibold tracking-tight text-zinc-100">{title}</h2>
           {description && (
             <p className="mt-1 text-xs leading-5 text-zinc-500">{description}</p>
           )}
         </div>
       </div>
-      {children}
+      <div className="relative">{children}</div>
     </section>
   )
 }

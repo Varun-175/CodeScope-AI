@@ -38,7 +38,7 @@ export function TopNav({
     : 'US'
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/10 bg-[#0b0b10]/84 px-4 shadow-[0_12px_35px_rgba(0,0,0,.18)] backdrop-blur-2xl sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-zinc-800 bg-[#0d1117] px-4 sm:px-6 lg:px-8">
       <button
         type="button"
         aria-label="Open navigation"
@@ -83,7 +83,7 @@ export function TopNav({
 
       <button
         type="button"
-        className="tactile-control inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 px-3 text-sm font-semibold text-white"
+        className="inline-flex h-9 items-center gap-2 rounded-md border border-violet-400/30 bg-violet-600 px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500"
         onClick={openAnalyzeModal}
       >
         <Play className="size-4" aria-hidden="true" />

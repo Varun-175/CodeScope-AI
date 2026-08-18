@@ -58,14 +58,14 @@ export function Sidebar({ isCollapsed, isOpen, onClose }: SidebarProps) {
 
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-[120%] flex-col overflow-hidden rounded-none border-y border-r border-white/10 bg-[#101017]/94 shadow-[18px_24px_70px_rgba(0,0,0,.38),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-2xl transition duration-300 lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-[120%] flex-col overflow-hidden border-y border-r border-zinc-800 bg-[#010409] transition duration-300 lg:translate-x-0',
           widthClass,
           isOpen ? 'translate-x-0' : '',
         ].join(' ')}
       >
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+        <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-4">
           <NavLink to="/" className="flex min-w-0 items-center gap-3" onClick={onClose}>
-            <div className="grid size-9 shrink-0 place-items-center rounded-xl border border-violet-400/25 bg-gradient-to-br from-violet-500/20 to-cyan-400/10 shadow-[0_8px_24px_rgba(124,58,237,.22),inset_0_1px_0_rgba(255,255,255,.12)]">
+            <div className="grid size-9 shrink-0 place-items-center rounded-md border border-zinc-700 bg-zinc-900">
               <Logo size={24} />
             </div>
             {!isCollapsed && (

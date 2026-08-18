@@ -15,9 +15,9 @@
   -moz-osx-font-smoothing: grayscale;
   --accent-color: #8b5cf6;
   --accent-soft: rgba(139, 92, 246, 0.14);
-  --surface: rgba(18, 18, 24, 0.78);
-  --surface-strong: rgba(24, 24, 32, 0.92);
-  --surface-border: rgba(255, 255, 255, 0.09);
+  --surface: #161b22;
+  --surface-strong: #0d1117;
+  --surface-border: #30363d;
 }
 
 :root[data-theme='light'] {
@@ -39,39 +39,24 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(circle at 9% 0%, rgba(124, 58, 237, 0.16), transparent 30rem),
-    radial-gradient(circle at 92% 12%, rgba(14, 165, 233, 0.11), transparent 28rem),
-    linear-gradient(135deg, #08080b 0%, #0d0d13 48%, #09090b 100%);
+  background: #0d1117;
   color: var(--text-color);
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.18;
-  background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(to bottom, black, transparent 78%);
-}
-
 .surface-glass {
-  background: linear-gradient(145deg, rgba(255,255,255,.085), rgba(255,255,255,.025)), var(--surface);
+  background: var(--surface);
   border: 1px solid var(--surface-border);
-  box-shadow: 0 24px 70px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.08);
-  backdrop-filter: blur(22px) saturate(135%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.03);
 }
 
 .tactile-control {
   border: 1px solid rgba(255,255,255,.12);
-  box-shadow: 5px 5px 14px rgba(0,0,0,.28), -4px -4px 12px rgba(255,255,255,.035), inset 0 1px 0 rgba(255,255,255,.08);
+  box-shadow: 0 1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.28);
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }
 
-.tactile-control:hover { transform: translateY(-1px); border-color: rgba(167,139,250,.48); }
-.tactile-control:active { transform: translateY(1px) scale(.985); box-shadow: inset 3px 3px 8px rgba(0,0,0,.28); }
+.tactile-control:hover { border-color: rgba(167,139,250,.6); }
+.tactile-control:active { transform: translateY(1px); box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
 
 button,
 a {

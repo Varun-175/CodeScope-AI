@@ -22,6 +22,7 @@ import { FaGithub } from 'react-icons/fa'
 import { useToast } from '../contexts/ToastContext'
 import { applySettings, exportSettings, loadSettings, resetSettings, saveSettings as persistLocalSettings, importSettings } from '../utils/settings'
 import { getSettings, saveSettings as saveSettingsApi, testProvider } from '../services/api/analysis'
+import { Logo } from '../components/shared/Logo'
 
 type SettingsTab = 'profile' | 'theme' | 'ai' | 'local' | 'github' | 'preferences' | 'about'
 
@@ -38,6 +39,7 @@ export function Settings() {
   const [github, setGithub] = useState(initialSettings.github)
   const [preferences, setPreferences] = useState(initialSettings.preferences)
   const [isSaved, setIsSaved] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [isTestingAi, setIsTestingAi] = useState(false)
   const [isTestingLocal, setIsTestingLocal] = useState(false)
   const [isConnectingGithub, setIsConnectingGithub] = useState(false)
@@ -173,15 +175,11 @@ export function Settings() {
 
   async function handleConnectGithub() {
     setIsConnectingGithub(true)
-    pushToast('Initiating GitHub OAuth connection...', 'info')
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setGithub({
-      connected: true,
-      username: 'varun-175',
-      token: 'ghp_mocktokenforvarun175'
-    })
-    setIsConnectingGithub(false)
-    pushToast('Successfully connected to GitHub as @varun-175', 'success')
+    try {
+      pushToast('GitHub OAuth is not configured. Add a personal access token below, then save settings.', 'info')
+    } finally {
+      setIsConnectingGithub(false)
+    }
   }
 
   function handleDisconnectGithub() {
@@ -237,6 +235,7 @@ export function Settings() {
   }, [])
 
   async function handleSave() {
+    setIsSaving(true)
     persistLocalSettings({ theme, accent, sidebarDensity, animations, profile, ai: aiConfig, local: localConfig, github, preferences })
     try {
       await saveSettingsApi({
@@ -267,6 +266,8 @@ export function Settings() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to save settings.'
       pushToast(`Save failed: ${message}`, 'error')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -325,18 +326,25 @@ export function Settings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <Sliders className="size-5 text-violet-600 dark:text-violet-400" />
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">Settings</h1>
+          <div className="grid size-10 place-items-center rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+            <Sliders className="size-5 text-violet-600 dark:text-violet-400" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">Settings</h1>
+            <p className="mt-0.5 text-sm text-zinc-500">Manage your workspace, integrations, and preferences.</p>
+          </div>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={handleSave}
-          className="flex h-9 items-center gap-2 rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-900 dark:bg-zinc-100 px-4 text-sm font-medium text-white dark:text-zinc-950 transition hover:bg-zinc-800 dark:hover:bg-white"
+          className="flex h-9 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 dark:border-zinc-200 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
         >
-          {isSaved ? <Check className="size-4 text-emerald-600" /> : null}
-          {isSaved ? 'Settings Saved' : 'Save Changes'}
+          {isSaving ? <RefreshCw className="size-4 animate-spin" /> : isSaved ? <Check className="size-4 text-emerald-600" /> : null}
+          {isSaving ? 'Saving...' : isSaved ? 'Settings Saved' : 'Save Changes'}
         </button>
         <button
           type="button"
@@ -369,11 +377,13 @@ export function Settings() {
           <RefreshCw className="size-4" />
           Reset
         </button>
+        </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
         {/* Navigation Tabs */}
-        <nav className="space-y-1 md:col-span-3">
+        <nav className="h-fit rounded-xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80 md:col-span-3">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -383,10 +393,10 @@ export function Settings() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={[
-                  'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition',
+                  'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition',
                   isActive
-                    ? 'bg-zinc-200 dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/40 dark:hover:bg-zinc-900/40 hover:text-zinc-900 dark:hover:text-zinc-200',
+                    ? 'bg-violet-50 text-violet-700 shadow-[inset_0_0_0_1px_rgba(124,58,237,.18)] dark:bg-violet-500/15 dark:text-violet-200'
+                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/70 dark:hover:text-zinc-200',
                 ].join(' ')}
               >
                 <Icon className={['size-4 shrink-0', isActive ? 'text-violet-400' : 'text-zinc-500'].join(' ')} />
@@ -397,7 +407,7 @@ export function Settings() {
         </nav>
 
         {/* Content Pane */}
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 p-6 md:col-span-9 text-zinc-800 dark:text-zinc-100">
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80 md:col-span-9 text-zinc-800 dark:text-zinc-100">
           {activeTab === 'profile' && (
             <div className="space-y-5">
               <div>
@@ -570,8 +580,6 @@ export function Settings() {
                     <option value="gemini">Google Gemini (1.5 Pro / Flash)</option>
                     <option value="groq">Groq</option>
                     <option value="huggingface">Hugging Face</option>
-                    <option value="openai">OpenAI</option>
-                    <option value="anthropic">Anthropic</option>
                     <option value="openrouter">OpenRouter</option>
                     <option value="ollama">Ollama</option>
                   </select>
@@ -767,7 +775,7 @@ export function Settings() {
                     ) : (
                       <FaGithub className="size-4" />
                     )}
-                    {isConnectingGithub ? 'Connecting...' : 'Connect with OAuth'}
+                    {isConnectingGithub ? 'Checking...' : 'OAuth setup info'}
                   </button>
 
                   <div className="flex items-center gap-2 py-2">
@@ -844,8 +852,8 @@ export function Settings() {
           {activeTab === 'about' && (
             <div className="space-y-5">
               <div className="flex items-start gap-4">
-                <div className="grid size-12 place-items-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 text-sm font-bold text-zinc-900 dark:text-white shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  CS
+                <div className="grid size-12 place-items-center rounded-xl border border-violet-400/30 bg-zinc-900 shadow-sm">
+                  <Logo size={38} aria-label="CodeScope AI logo" />
                 </div>
                 <div>
                   <h2 className="text-base font-semibold text-zinc-900 dark:text-white">CodeScope AI</h2>

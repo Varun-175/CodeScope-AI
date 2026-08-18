@@ -6,6 +6,7 @@ type MetricCardProps = {
   value?: string
   detail?: string
   isLoading?: boolean
+  tone?: 'violet' | 'emerald' | 'amber' | 'blue'
 }
 
 export function MetricCard({
@@ -13,6 +14,7 @@ export function MetricCard({
   value,
   detail,
   isLoading = false,
+  tone = 'violet',
 }: MetricCardProps) {
   const numericValue = value?.match(/^\d+/)?.[0]
   const suffix = value && numericValue ? value.slice(numericValue.length) : ''
@@ -40,12 +42,15 @@ export function MetricCard({
     <DashboardCard title={title} className="min-h-32 xl:col-span-3">
       {isLoading && <CardSkeleton />}
       {!isLoading && value && (
-        <div className="mt-5">
-          <p className="font-mono text-3xl font-semibold tracking-tight text-white">
-            {displayValue !== null ? `${displayValue}${suffix}` : value}
-          </p>
+        <>
+          <div className="flex items-end justify-between gap-3">
+            <p className="text-3xl font-semibold tracking-tight text-white">
+              {displayValue !== null ? `${displayValue}${suffix}` : value}
+            </p>
+            <span className={['mb-1 size-2 rounded-full', { violet: 'bg-violet-400', emerald: 'bg-emerald-400', amber: 'bg-amber-400', blue: 'bg-sky-400' }[tone]].join(' ')} />
+          </div>
           {detail && <p className="mt-2 text-sm text-zinc-500">{detail}</p>}
-        </div>
+        </>
       )}
     </DashboardCard>
   )

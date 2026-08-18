@@ -2,7 +2,7 @@ import { AlertCircle, CheckCircle2, Loader2, Sparkles } from 'lucide-react'
 
 export function LoadingState({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-6">
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-6">
       <div className="flex items-center gap-3">
         <Loader2 className="size-4 animate-spin text-violet-400" />
         <div>
@@ -16,8 +16,8 @@ export function LoadingState({ title, hint }: { title: string; hint?: string }) 
 
 export function EmptyState({ title, description, icon: Icon = Sparkles }: { title: string; description: string; icon?: typeof Sparkles }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50 px-6 py-12 text-center">
-      <div className="grid size-12 place-items-center rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-500">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-700 bg-zinc-900/30 px-6 py-12 text-center">
+      <div className="grid size-12 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-500">
         <Icon className="size-5" />
       </div>
       <h3 className="mt-4 text-sm font-semibold text-zinc-200">{title}</h3>

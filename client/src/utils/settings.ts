@@ -7,27 +7,10 @@ export type AppSettings = {
   accent: AccentColor
   sidebarDensity: SidebarDensity
   animations: boolean
-  profile: {
-    name: string
-    email: string
-    role: string
-  }
-  ai: {
-    provider: string
-    apiKey: string
-    temperature: number
-    maxTokens: number
-  }
-  local: {
-    enabled: boolean
-    endpoint: string
-    model: string
-  }
-  github: {
-    connected: boolean
-    username: string
-    token: string
-  }
+  profile: { name: string; email: string; role: string }
+  ai: { provider: string; apiKey: string; temperature: number; maxTokens: number }
+  local: { enabled: boolean; endpoint: string; model: string }
+  github: { connected: boolean; username: string; token: string }
   preferences: {
     autoAnalyze: boolean
     telemetry: boolean
@@ -44,27 +27,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   accent: 'violet',
   sidebarDensity: 'comfortable',
   animations: true,
-  profile: {
-    name: 'Varun A K',
-    email: 'varun@codescope.ai',
-    role: 'Lead Frontend Engineer',
-  },
-  ai: {
-    provider: 'anthropic',
-    apiKey: '',
-    temperature: 0.2,
-    maxTokens: 4096,
-  },
-  local: {
-    enabled: false,
-    endpoint: 'http://localhost:11434',
-    model: 'llama3:8b',
-  },
-  github: {
-    connected: true,
-    username: 'varun-175',
-    token: '',
-  },
+  profile: { name: 'Varun A K', email: 'varun@codescope.ai', role: 'Lead Frontend Engineer' },
+  ai: { provider: 'anthropic', apiKey: '', temperature: 0.2, maxTokens: 4096 },
+  local: { enabled: false, endpoint: 'http://localhost:11434', model: 'llama3:8b' },
+  github: { connected: true, username: 'varun-175', token: '' },
   preferences: {
     autoAnalyze: true,
     telemetry: false,
@@ -74,118 +40,172 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
 }
 
-function getSafeStorage() {
-  if (typeof window === 'undefined') return null
-  return window.localStorage
+const THEMES: SettingsTheme[] = ['dark', 'light', 'system']
+const ACCENTS: AccentColor[] = ['violet', 'blue', 'emerald']
+const DENSITIES: SidebarDensity[] = ['compact', 'comfortable', 'spacious']
+const ACCENT_COLORS: Record<AccentColor, string> = {
+  violet: '#8b5cf6',
+  blue: '#60a5fa',
+  emerald: '#34d399',
 }
 
-function mergeSettings(partial: Partial<AppSettings>): AppSettings {
+let systemThemeQuery: MediaQueryList | null = null
+let systemThemeListener: ((event: MediaQueryListEvent) => void) | null = null
+
+function cloneDefaults(): AppSettings {
   return {
     ...DEFAULT_SETTINGS,
-    ...partial,
+    profile: { ...DEFAULT_SETTINGS.profile },
+    ai: { ...DEFAULT_SETTINGS.ai },
+    local: { ...DEFAULT_SETTINGS.local },
+    github: { ...DEFAULT_SETTINGS.github },
+    preferences: { ...DEFAULT_SETTINGS.preferences },
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function stringValue(value: unknown, fallback: string): string {
+  return typeof value === 'string' ? value.trim() : fallback
+}
+
+function booleanValue(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback
+}
+
+function numberValue(value: unknown, fallback: number, minimum: number, maximum: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(maximum, Math.max(minimum, value))
+    : fallback
+}
+
+function oneOf<T extends string>(value: unknown, values: readonly T[], fallback: T): T {
+  return typeof value === 'string' && values.includes(value as T) ? (value as T) : fallback
+}
+
+function normalizeSettings(value: unknown, base: AppSettings = cloneDefaults()): AppSettings {
+  if (!isRecord(value)) return base
+  const profile = isRecord(value.profile) ? value.profile : {}
+  const ai = isRecord(value.ai) ? value.ai : {}
+  const local = isRecord(value.local) ? value.local : {}
+  const github = isRecord(value.github) ? value.github : {}
+  const preferences = isRecord(value.preferences) ? value.preferences : {}
+
+  return {
+    theme: oneOf(value.theme, THEMES, base.theme),
+    accent: oneOf(value.accent, ACCENTS, base.accent),
+    sidebarDensity: oneOf(value.sidebarDensity, DENSITIES, base.sidebarDensity),
+    animations: booleanValue(value.animations, base.animations),
     profile: {
-      ...DEFAULT_SETTINGS.profile,
-      ...(partial.profile ?? {}),
+      name: stringValue(profile.name, base.profile.name),
+      email: stringValue(profile.email, base.profile.email),
+      role: stringValue(profile.role, base.profile.role),
     },
     ai: {
-      ...DEFAULT_SETTINGS.ai,
-      ...(partial.ai ?? {}),
+      provider: stringValue(ai.provider, base.ai.provider),
+      apiKey: stringValue(ai.apiKey, base.ai.apiKey),
+      temperature: numberValue(ai.temperature, base.ai.temperature, 0, 1),
+      maxTokens: Math.round(numberValue(ai.maxTokens, base.ai.maxTokens, 1, 128000)),
     },
     local: {
-      ...DEFAULT_SETTINGS.local,
-      ...(partial.local ?? {}),
+      enabled: booleanValue(local.enabled, base.local.enabled),
+      endpoint: stringValue(local.endpoint, base.local.endpoint),
+      model: stringValue(local.model, base.local.model),
     },
     github: {
-      ...DEFAULT_SETTINGS.github,
-      ...(partial.github ?? {}),
+      connected: booleanValue(github.connected, base.github.connected),
+      username: stringValue(github.username, base.github.username),
+      token: stringValue(github.token, base.github.token),
     },
     preferences: {
-      ...DEFAULT_SETTINGS.preferences,
-      ...(partial.preferences ?? {}),
+      autoAnalyze: booleanValue(preferences.autoAnalyze, base.preferences.autoAnalyze),
+      telemetry: booleanValue(preferences.telemetry, base.preferences.telemetry),
+      notifications: booleanValue(preferences.notifications, base.preferences.notifications),
+      defaultBranch: stringValue(preferences.defaultBranch, base.preferences.defaultBranch),
+      defaultRepository: stringValue(preferences.defaultRepository, base.preferences.defaultRepository),
     },
+  }
+}
+
+function getStorage(): Storage | null {
+  try {
+    return typeof window === 'undefined' ? null : window.localStorage
+  } catch {
+    return null
   }
 }
 
 export function loadSettings(): AppSettings {
-  const storage = getSafeStorage()
-  if (!storage) return DEFAULT_SETTINGS
-
+  const storage = getStorage()
+  if (!storage) return cloneDefaults()
   try {
     const raw = storage.getItem(STORAGE_KEY)
-    if (!raw) return DEFAULT_SETTINGS
-    const parsed = JSON.parse(raw) as Partial<AppSettings>
-    return mergeSettings(parsed)
+    return raw ? normalizeSettings(JSON.parse(raw)) : cloneDefaults()
   } catch {
-    storage.removeItem(STORAGE_KEY)
-    return DEFAULT_SETTINGS
+    try { storage.removeItem(STORAGE_KEY) } catch { /* storage is unavailable */ }
+    return cloneDefaults()
   }
 }
 
+function persist(settings: AppSettings) {
+  try { getStorage()?.setItem(STORAGE_KEY, JSON.stringify(settings)) } catch { /* keep settings usable without storage */ }
+}
+
+function syncDocument(settings: AppSettings) {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return
+  const root = document.documentElement
+  const isDark = settings.theme === 'dark' || (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  root.dataset.theme = settings.theme
+  root.dataset.accent = settings.accent
+  root.dataset.sidebarDensity = settings.sidebarDensity
+  root.dataset.animations = String(settings.animations)
+  root.classList.toggle('dark', isDark)
+  root.style.setProperty('--bg-color', isDark ? '#0d1117' : '#f6f8fa')
+  root.style.setProperty('--text-color', isDark ? '#f0f6fc' : '#1f2328')
+  root.style.setProperty('--accent-color', ACCENT_COLORS[settings.accent])
+  root.style.setProperty('--accent-soft', `${ACCENT_COLORS[settings.accent]}22`)
+}
+
+function watchSystemTheme(settings: AppSettings) {
+  if (typeof window === 'undefined') return
+  if (systemThemeQuery && systemThemeListener) systemThemeQuery.removeEventListener('change', systemThemeListener)
+  systemThemeQuery = null
+  systemThemeListener = null
+  if (settings.theme !== 'system') return
+  systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  systemThemeListener = () => syncDocument(settings)
+  systemThemeQuery.addEventListener('change', systemThemeListener)
+}
+
+export function applySettings(partial: Partial<AppSettings> | AppSettings): AppSettings {
+  const resolved = normalizeSettings(partial, loadSettings())
+  syncDocument(resolved)
+  watchSystemTheme(resolved)
+  return resolved
+}
+
 export function saveSettings(partial: Partial<AppSettings>): AppSettings {
-  const storage = getSafeStorage()
-  const next = mergeSettings(partial)
-  if (storage) {
-    storage.setItem(STORAGE_KEY, JSON.stringify(next))
-  }
-  applySettings(next)
+  const next = normalizeSettings(partial, loadSettings())
+  persist(next)
+  syncDocument(next)
+  watchSystemTheme(next)
   return next
 }
 
 export function resetSettings(): AppSettings {
-  const storage = getSafeStorage()
-  if (storage) {
-    storage.removeItem(STORAGE_KEY)
-  }
-  applySettings(DEFAULT_SETTINGS)
-  return DEFAULT_SETTINGS
-}
-
-export function applySettings(settings: Partial<AppSettings> | AppSettings) {
-  // Merge against current saved settings, NOT defaults, so partial
-  // updates (e.g. just accent) don't reset other fields like theme.
-  const current = loadSettings()
-  const resolved: AppSettings = {
-    ...current,
-    ...settings,
-    profile: { ...current.profile, ...(settings.profile ?? {}) },
-    ai: { ...current.ai, ...(settings.ai ?? {}) },
-    local: { ...current.local, ...(settings.local ?? {}) },
-    github: { ...current.github, ...(settings.github ?? {}) },
-    preferences: { ...current.preferences, ...(settings.preferences ?? {}) },
-  }
-  if (typeof document === 'undefined') return
-
-  const root = document.documentElement
-  root.dataset.theme = resolved.theme
-  root.dataset.accent = resolved.accent
-  root.dataset.sidebarDensity = resolved.sidebarDensity
-  root.dataset.animations = resolved.animations ? 'true' : 'false'
-
-  // Sync Tailwind dark mode class
-  const isDark = resolved.theme === 'dark' || (resolved.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  if (isDark) {
-    root.classList.add('dark')
-    root.style.setProperty('--bg-color', '#09090b')
-    root.style.setProperty('--text-color', '#f4f4f5')
-  } else {
-    root.classList.remove('dark')
-    root.style.setProperty('--bg-color', '#f8fafc')
-    root.style.setProperty('--text-color', '#111827')
-  }
-
-  const accentMap: Record<AccentColor, string> = {
-    violet: '#8b5cf6',
-    blue: '#60a5fa',
-    emerald: '#34d399',
-  }
-
-  root.style.setProperty('--accent-color', accentMap[resolved.accent])
-  root.style.setProperty('--accent-soft', `${accentMap[resolved.accent]}22`)
+  const settings = cloneDefaults()
+  try { getStorage()?.removeItem(STORAGE_KEY) } catch { /* storage is unavailable */ }
+  syncDocument(settings)
+  watchSystemTheme(settings)
+  return settings
 }
 
 export function exportSettings() {
   const settings = loadSettings()
-  const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' })
+  const safeSettings: AppSettings = { ...settings, ai: { ...settings.ai, apiKey: '' }, github: { ...settings.github, token: '' } }
+  const blob = new Blob([JSON.stringify(safeSettings, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -195,6 +215,7 @@ export function exportSettings() {
 }
 
 export function importSettings(rawText: string): AppSettings {
-  const parsed = JSON.parse(rawText) as Partial<AppSettings>
-  return saveSettings(parsed)
+  const parsed: unknown = JSON.parse(rawText)
+  if (!isRecord(parsed)) throw new Error('Settings import must contain a JSON object.')
+  return saveSettings(parsed as Partial<AppSettings>)
 }
