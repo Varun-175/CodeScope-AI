@@ -27,11 +27,11 @@ function SidebarLink({
       onClick={onClose}
       className={({ isActive }) =>
         [
-          'group relative flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium tracking-normal transition',
+          'group relative flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium tracking-normal transition duration-200',
           isCollapsed ? 'justify-center' : '',
           isActive
-            ? 'bg-zinc-200 dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
-            : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-900/70 hover:text-zinc-900 dark:hover:text-zinc-100',
+            ? 'bg-gradient-to-r from-violet-500/25 via-violet-500/10 to-transparent text-white shadow-[inset_0_1px_0_rgba(255,255,255,.12),0_8px_22px_rgba(124,58,237,.12)] before:absolute before:left-0 before:h-6 before:w-1 before:rounded-r-full before:bg-violet-400'
+            : 'text-zinc-500 hover:bg-white/[.06] hover:text-zinc-100 hover:translate-x-0.5',
         ].join(' ')
       }
       title={isCollapsed ? item.label : undefined}
@@ -58,14 +58,14 @@ export function Sidebar({ isCollapsed, isOpen, onClose }: SidebarProps) {
 
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#09090b] transition duration-200 lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-[120%] flex-col overflow-hidden rounded-none border-y border-r border-white/10 bg-[#101017]/94 shadow-[18px_24px_70px_rgba(0,0,0,.38),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-2xl transition duration-300 lg:translate-x-0',
           widthClass,
           isOpen ? 'translate-x-0' : '',
         ].join(' ')}
       >
-        <div className="flex h-16 items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 px-4">
+        <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
           <NavLink to="/" className="flex min-w-0 items-center gap-3" onClick={onClose}>
-            <div className="grid size-9 shrink-0 place-items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="grid size-9 shrink-0 place-items-center rounded-xl border border-violet-400/25 bg-gradient-to-br from-violet-500/20 to-cyan-400/10 shadow-[0_8px_24px_rgba(124,58,237,.22),inset_0_1px_0_rgba(255,255,255,.12)]">
               <Logo size={24} />
             </div>
             {!isCollapsed && (
@@ -97,7 +97,7 @@ export function Sidebar({ isCollapsed, isOpen, onClose }: SidebarProps) {
             </p>
           )}
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             {primaryNavigation.map((item) => (
               <SidebarLink
                 key={item.path}

@@ -62,6 +62,7 @@ log.txt
 # Secrets & Local Configuration
 # ==========================================================
 backend/app/data/settings.json
+server/app/data/settings.json
 backend/app/data/settings.local.json
 backend/app/data/*.secret.json
 backend/app/data/*.token.json

@@ -11,7 +11,7 @@ export function AppLayout() {
 
   return (
     <RepositoryAnalysisProvider>
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
+      <div className="min-h-screen bg-transparent text-zinc-900 dark:text-zinc-100">
         <Sidebar
           isCollapsed={isSidebarCollapsed}
           isOpen={isSidebarOpen}
@@ -32,7 +32,7 @@ export function AppLayout() {
           />
 
           <main className="min-h-[calc(100vh-4rem)] px-4 py-6 sm:px-6 lg:px-8">
-            <div className="mx-auto w-full max-w-7xl">
+            <div className="mx-auto w-full max-w-7xl animate-fade-in-up">
               <Outlet />
             </div>
           </main>

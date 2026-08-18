@@ -16,7 +16,7 @@ export function DashboardCard({
   return (
     <section
       className={[
-        'animate-fade-in-up rounded-3xl border border-zinc-800/80 bg-zinc-950/95 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.04)] transition duration-200 hover:-translate-y-0.5 hover:border-violet-500/40 hover:bg-zinc-950',
+        'surface-glass animate-fade-in-up rounded-3xl p-6 transition duration-200 hover:-translate-y-0.5 hover:border-violet-500/40',
         className,
       ].join(' ')}
     >

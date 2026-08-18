@@ -38,7 +38,7 @@ export function TopNav({
     : 'US'
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-zinc-200 dark:border-zinc-800/80 bg-white/90 dark:bg-[#09090b]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/10 bg-[#0b0b10]/84 px-4 shadow-[0_12px_35px_rgba(0,0,0,.18)] backdrop-blur-2xl sm:px-6 lg:px-8">
       <button
         type="button"
         aria-label="Open navigation"
@@ -70,20 +70,20 @@ export function TopNav({
         </span>
       </div>
 
-      <div className="hidden min-w-0 items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-sm sm:flex">
+      <div className="surface-glass hidden min-w-0 items-center gap-2 rounded-xl px-3 py-1.5 text-sm sm:flex">
         <Activity className="size-4 text-emerald-400" aria-hidden="true" />
         <span className="hidden text-zinc-500 md:inline">Repository</span>
         <span className="font-medium text-zinc-200">Connected</span>
       </div>
 
-      <div className="ml-auto hidden h-9 w-full max-w-sm items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/70 px-3 text-sm text-zinc-500 md:flex">
+      <div className="ml-auto hidden h-9 w-full max-w-sm items-center gap-2 rounded-xl border border-white/10 bg-white/[.045] px-3 text-sm text-zinc-500 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] md:flex">
         <Search className="size-4" aria-hidden="true" />
         <span className="truncate">Search repositories, files, symbols</span>
       </div>
 
       <button
         type="button"
-        className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-700 bg-zinc-100 px-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
+        className="tactile-control inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 px-3 text-sm font-semibold text-white"
         onClick={openAnalyzeModal}
       >
         <Play className="size-4" aria-hidden="true" />
@@ -96,7 +96,7 @@ export function TopNav({
           type="button"
           aria-label="User profile"
           onClick={() => setIsDropdownOpen((v) => !v)}
-          className="grid size-9 shrink-0 place-items-center rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-white"
+          className="tactile-control grid size-9 shrink-0 place-items-center rounded-full border-violet-400/30 bg-gradient-to-br from-violet-500/30 to-cyan-400/10 text-xs font-semibold text-zinc-200"
         >
           {initials}
         </button>
@@ -130,4 +130,3 @@ export function TopNav({
     </header>
   )
 }
-
