@@ -38,7 +38,7 @@ export function TopNav({
     : 'US'
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-zinc-800 bg-[#0d1117] px-4 sm:px-6 lg:px-8">
+    <header className="neo-flat sticky top-0 z-30 flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8 mb-4 border-none">
       <button
         type="button"
         aria-label="Open navigation"
@@ -76,7 +76,7 @@ export function TopNav({
         <span className="font-medium text-zinc-200">Connected</span>
       </div>
 
-      <div className="ml-auto hidden h-9 w-full max-w-sm items-center gap-2 rounded-xl border border-white/10 bg-white/[.045] px-3 text-sm text-zinc-500 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] md:flex">
+      <div className="neo-pressed ml-auto hidden h-9 w-full max-w-sm items-center gap-2 px-3 text-sm md:flex">
         <Search className="size-4" aria-hidden="true" />
         <span className="truncate">Search repositories, files, symbols</span>
       </div>

@@ -27,11 +27,11 @@ function SidebarLink({
       onClick={onClose}
       className={({ isActive }) =>
         [
-          'group relative flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium tracking-normal transition duration-200',
+          'group relative flex h-11 items-center gap-3 px-3 text-sm font-medium tracking-normal transition duration-200',
           isCollapsed ? 'justify-center' : '',
           isActive
-            ? 'bg-gradient-to-r from-violet-500/25 via-violet-500/10 to-transparent text-white shadow-[inset_0_1px_0_rgba(255,255,255,.12),0_8px_22px_rgba(124,58,237,.12)] before:absolute before:left-0 before:h-6 before:w-1 before:rounded-r-full before:bg-violet-400'
-            : 'text-zinc-500 hover:bg-white/[.06] hover:text-zinc-100 hover:translate-x-0.5',
+            ? 'neo-pressed text-violet-500 before:absolute before:left-0 before:h-6 before:w-1 before:rounded-r-full before:bg-violet-500'
+            : 'neo-convex text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100',
         ].join(' ')
       }
       title={isCollapsed ? item.label : undefined}
@@ -58,14 +58,14 @@ export function Sidebar({ isCollapsed, isOpen, onClose }: SidebarProps) {
 
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-[120%] flex-col overflow-hidden border-y border-r border-zinc-800 bg-[#010409] transition duration-300 lg:translate-x-0',
+          'neo-flat rounded-none border-none fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-[120%] flex-col overflow-hidden transition duration-300 lg:translate-x-0',
           widthClass,
           isOpen ? 'translate-x-0' : '',
         ].join(' ')}
       >
         <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-4">
           <NavLink to="/" className="flex min-w-0 items-center gap-3" onClick={onClose}>
-            <div className="grid size-9 shrink-0 place-items-center rounded-md border border-zinc-700 bg-zinc-900">
+            <div className="neo-pressed grid size-9 shrink-0 place-items-center">
               <Logo size={24} />
             </div>
             {!isCollapsed && (
