@@ -738,13 +738,13 @@ export function Repository() {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Active branch indicator */}
-          <span className="inline-flex h-8 items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-1 text-xs font-mono text-zinc-300">
+          <span className="neo-pressed inline-flex h-8 items-center gap-1.5 px-3 py-1 text-xs font-mono text-zinc-600 dark:text-zinc-300">
             <GitBranch className="size-3.5 text-zinc-500" />
           </span>
           <select
             value={selectedBranch}
             onChange={(event) => setSelectedBranch(event.target.value)}
-            className="h-8 rounded-md border border-zinc-800 bg-zinc-950 px-2 text-xs font-mono text-zinc-300 outline-none hover:border-zinc-700"
+            className="neo-pressed h-8 px-2 text-xs font-mono text-zinc-900 dark:text-zinc-300 outline-none transition"
           >
             {[selectedBranch, ...branchOptions.filter((branch) => branch !== selectedBranch)].filter(Boolean).map((branch) => (
               <option key={branch} value={branch}>{branch}</option>
@@ -754,7 +754,7 @@ export function Repository() {
             type="button"
             onClick={fetchTree}
             disabled={isLoadingTree}
-            className="flex h-8 items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-xs text-zinc-400 hover:text-white transition disabled:opacity-30"
+            className="neo-convex flex h-8 items-center gap-1.5 px-3 text-xs text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition disabled:opacity-30"
           >
             <RefreshCw className={['size-3.5', isLoadingTree ? 'animate-spin' : ''].join(' ')} />
             Refresh
@@ -795,7 +795,7 @@ export function Repository() {
                 <button
                   type="button"
                   onClick={handleExpandAll}
-                  className="px-1.5 py-0.5 rounded border border-zinc-850 hover:bg-zinc-900 hover:text-white text-zinc-400 flex items-center gap-1"
+                  className="neo-convex px-1.5 py-0.5 flex items-center gap-1 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
                   title="Expand all folders"
                 >
                   <Expand className="size-3" /> Expand
@@ -803,7 +803,7 @@ export function Repository() {
                 <button
                   type="button"
                   onClick={handleCollapseAll}
-                  className="px-1.5 py-0.5 rounded border border-zinc-850 hover:bg-zinc-900 hover:text-white text-zinc-400 flex items-center gap-1"
+                  className="neo-convex px-1.5 py-0.5 flex items-center gap-1 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
                   title="Collapse all folders"
                 >
                   <ListCollapse className="size-3" /> Collapse
@@ -844,7 +844,7 @@ export function Repository() {
         <section className="flex flex-col lg:col-span-6 min-w-0">
           {!selectedFile ? (
             <div className="neo-flat flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[300px]">
-              <div className="mx-auto grid size-12 place-items-center rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-550">
+              <div className="neo-pressed mx-auto grid size-12 place-items-center rounded-xl text-zinc-500">
                 <Eye className="size-5" />
               </div>
               <h2 className="mt-4 text-sm font-semibold text-zinc-350">Select a file</h2>
@@ -855,10 +855,10 @@ export function Repository() {
           ) : (
               <div className="neo-flat flex-1 flex flex-col overflow-hidden backdrop-blur-md">
               {/* IDE-like Tab Bar */}
-              <div className="flex items-center justify-between border-b border-zinc-850 bg-zinc-950/90">
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/50 bg-[var(--surface)]">
                 {/* Active Tab */}
                 <div className="flex items-center">
-                  <div className="bg-zinc-900 border-t-2 border-t-violet-500 border-r border-zinc-850 px-4 py-2.5 text-xs font-medium text-white font-mono flex items-center gap-2 select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                  <div className="neo-pressed border-t-2 border-t-violet-500 border-r-0 px-4 py-2.5 text-xs font-medium text-zinc-900 dark:text-white font-mono flex items-center gap-2 select-none rounded-t-lg">
                     {getFileIcon(selectedFile.name)}
                     <span>{selectedFile.name}</span>
                     <button
@@ -877,7 +877,7 @@ export function Repository() {
                   <button
                     type="button"
                     onClick={handleCopyPath}
-                    className="px-2 py-1 rounded border border-zinc-850 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-[10px] text-zinc-400 hover:text-white transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
+                    className="neo-convex px-2 py-1 text-[10px] text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
                     title="Copy relative file path"
                   >
                     {copiedPath ? <Check className="size-3 text-emerald-400 animate-pulse" /> : <Copy className="size-3" />}
@@ -887,7 +887,7 @@ export function Repository() {
                     type="button"
                     onClick={handleCopyCode}
                     disabled={fileContent === null}
-                    className="px-2 py-1 rounded border border-zinc-850 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-[10px] text-zinc-400 hover:text-white transition-all flex items-center gap-1 shadow-sm disabled:opacity-30 active:scale-95 cursor-pointer"
+                    className="neo-convex px-2 py-1 text-[10px] text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-all flex items-center gap-1 disabled:opacity-30 active:scale-95 cursor-pointer"
                     title="Copy code content"
                   >
                     {copiedCode ? <Check className="size-3 text-emerald-400 animate-pulse" /> : <Copy className="size-3" />}
@@ -897,7 +897,7 @@ export function Repository() {
                     type="button"
                     onClick={handleDownloadFile}
                     disabled={fileContent === null}
-                    className="p-1 rounded border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all flex items-center justify-center disabled:opacity-30 active:scale-95 cursor-pointer"
+                    className="neo-convex p-1 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-all disabled:opacity-30 active:scale-95 cursor-pointer"
                     title="Download raw file"
                   >
                     <Download className="size-3.5" />
@@ -906,13 +906,13 @@ export function Repository() {
               </div>
 
               {/* Breadcrumb & Meta info bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-zinc-850/60 bg-zinc-900/30 px-3 py-1.5 text-[10px] gap-2">
+              <div className="neo-flat border-x-0 border-t-0 flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 py-1.5 text-[10px] gap-2 rounded-none">
                 <div className="flex items-center gap-2">
                   {renderBreadcrumbs()}
                   <button
                     type="button"
                     onClick={() => setWrapLines((v) => !v)}
-                    className={['px-2 py-0.5 rounded border border-zinc-850/60 transition text-[9px] cursor-pointer', wrapLines ? 'bg-violet-500/20 text-violet-300 border-violet-500/30 font-medium' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}
+                    className={['px-2 py-0.5 transition text-[9px] cursor-pointer', wrapLines ? 'neo-pressed text-violet-600 dark:text-violet-300 font-medium' : 'neo-convex text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'].join(' ')}
                   >
                     {wrapLines ? 'Lines Wrapped' : 'Wrap Lines'}
                   </button>
@@ -936,7 +936,7 @@ export function Repository() {
                 {isLoadingContent ? (
                   <div className="flex-1 space-y-3 p-6">
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                      <div key={n} className="h-4 w-full animate-pulse rounded bg-zinc-900/60" />
+                      <div key={n} className="neo-pressed h-4 w-full animate-pulse" />
                     ))}
                   </div>
                 ) : fileContent !== null ? (
@@ -952,7 +952,7 @@ export function Repository() {
                               onClick={() => setHighlightedLine(i + 1)}
                               className={[
                                 'transition duration-150',
-                                isLineHighlighted ? 'bg-zinc-800/60 border-l-2 border-violet-500' : 'hover:bg-zinc-900/30',
+                                isLineHighlighted ? 'bg-zinc-200 dark:bg-zinc-800/60 border-l-2 border-violet-500' : 'hover:bg-zinc-100 dark:hover:bg-zinc-900/30',
                               ].join(' ')}
                             >
                               {/* Line number */}
@@ -978,7 +978,7 @@ export function Repository() {
                 )}
 
                 {/* Minimap Placeholder Panel */}
-                <div className="w-16 border-l border-zinc-900 bg-zinc-950/20 select-none hidden md:flex flex-col items-center py-2 overflow-hidden gap-[1px]">
+                <div className="neo-pressed rounded-none w-16 select-none hidden md:flex flex-col items-center py-2 overflow-hidden gap-[1px]">
                   {fileContent !== null &&
                     fileContent
                       .split('\n')
@@ -992,7 +992,7 @@ export function Repository() {
                             style={{ width: `${(len / 60) * 100}%` }}
                             className={[
                               'h-[2px] min-w-[2px] rounded-sm transition max-w-[40px]',
-                              isHighlighted ? 'bg-violet-500' : 'bg-zinc-850',
+                              isHighlighted ? 'bg-violet-500' : 'bg-zinc-300 dark:bg-zinc-800',
                             ].join(' ')}
                           />
                         )
@@ -1004,13 +1004,13 @@ export function Repository() {
         </section>
 
         {/* Right Side: Quick Insights Panel */}
-        <aside className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-4 lg:col-span-3 flex flex-col space-y-4">
+        <aside className="neo-flat flex flex-col space-y-4 p-4 lg:col-span-3">
           <div className="flex items-center justify-between gap-2">
             <div>
               <h2 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Quick Insights</h2>
               <p className="mt-1 text-[10px] text-zinc-500">AI analysis and code health metrics</p>
             </div>
-            <span className="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-1 text-[10px] text-zinc-500">Live</span>
+            <span className="neo-pressed px-2 py-1 text-[10px] text-zinc-500 rounded-full">Live</span>
           </div>
 
           <div className="flex gap-2">
@@ -1023,7 +1023,7 @@ export function Repository() {
                 key={value}
                 type="button"
                 onClick={() => setActiveQuickInsight(value)}
-                className={['rounded-full px-2.5 py-1 text-[10px] transition', activeQuickInsight === value ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300'].join(' ')}
+                className={['px-2.5 py-1 text-[10px] transition rounded-full', activeQuickInsight === value ? 'neo-pressed text-zinc-900 dark:text-white' : 'neo-convex text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-300'].join(' ')}
               >
                 {label}
               </button>
@@ -1031,14 +1031,14 @@ export function Repository() {
           </div>
 
           {!selectedFile || !insights ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-12 text-center border border-dashed border-zinc-850 rounded-lg">
+            <div className="neo-flat flex-1 flex flex-col items-center justify-center py-12 text-center border-dashed border-zinc-300 dark:border-zinc-800">
               <Info className="size-4 text-zinc-600 mb-2" />
               <p className="text-[10px] text-zinc-500 px-4">Select a file to inspect static code quality metrics</p>
             </div>
           ) : (
             <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-22rem)] scrollbar-thin pr-1 text-xs">
               {activeQuickInsight === 'summary' && (
-                <div className="rounded-lg border border-zinc-900 bg-zinc-950 p-3 space-y-1.5">
+                <div className="neo-pressed p-3 space-y-1.5">
                   <span className="text-[9px] font-bold text-violet-400 uppercase tracking-wider flex items-center gap-1">
                     <Sparkles className="size-3" /> AI Summary
                   </span>
@@ -1047,7 +1047,7 @@ export function Repository() {
               )}
 
               {activeQuickInsight !== 'summary' && (
-                <div className="rounded-lg border border-zinc-900 bg-zinc-950 p-3 space-y-2">
+                <div className="neo-pressed p-3 space-y-2">
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                     <Zap className="size-3 text-amber-400" />
                     {activeQuickInsight === 'metrics' ? 'Quality Metrics' : 'Symbols'}
@@ -1055,7 +1055,7 @@ export function Repository() {
 
                   {activeQuickInsight === 'metrics' ? (
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-lg border border-zinc-900 bg-zinc-950 p-2.5">
+                      <div className="neo-pressed p-2.5">
                         <span className="block text-[9px] text-zinc-550 uppercase tracking-wider">Complexity</span>
                         <span className={['mt-1 text-sm font-semibold font-mono flex items-center gap-1', insights.complexityLabel === 'High' ? 'text-red-400' : insights.complexityLabel === 'Moderate' ? 'text-amber-400' : 'text-emerald-400'].join(' ')}>
                           <Flame className="size-3.5" />
@@ -1064,7 +1064,7 @@ export function Repository() {
                         <span className="block mt-0.5 text-[9px] text-zinc-500">{insights.complexityPoints} branches</span>
                       </div>
 
-                      <div className="rounded-lg border border-zinc-900 bg-zinc-950 p-2.5">
+                      <div className="neo-pressed p-2.5">
                         <span className="block text-[9px] text-zinc-550 uppercase tracking-wider">Risk Level</span>
                         <span className={['mt-1 text-sm font-semibold font-mono flex items-center gap-1', insights.riskLevel === 'High' ? 'text-red-400' : insights.riskLevel === 'Medium' ? 'text-amber-400' : 'text-emerald-400'].join(' ')}>
                           <AlertTriangle className="size-3.5" />
@@ -1078,7 +1078,7 @@ export function Repository() {
                       {insights.functions.length > 0 && (
                         <div className="space-y-1.5">
                           <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Functions ({insights.functions.length})</h4>
-                          <div className="max-h-24 overflow-y-auto space-y-1 rounded border border-zinc-900 p-1.5">
+                          <div className="neo-pressed max-h-24 overflow-y-auto space-y-1 p-1.5">
                             {insights.functions.map((func) => (
                               <button
                                 key={func.name}
@@ -1096,7 +1096,7 @@ export function Repository() {
                       {insights.classes.length > 0 && (
                         <div className="space-y-1.5">
                           <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Classes ({insights.classes.length})</h4>
-                          <div className="max-h-24 overflow-y-auto space-y-1 rounded border border-zinc-900 p-1.5">
+                          <div className="neo-pressed max-h-24 overflow-y-auto space-y-1 p-1.5">
                             {insights.classes.map((cls) => (
                               <button
                                 key={cls.name}
@@ -1118,7 +1118,7 @@ export function Repository() {
 
               {/* Complexity, Risk Metrics */}
               <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg border border-zinc-900 bg-zinc-950 p-2.5">
+                <div className="neo-pressed p-2.5">
                   <span className="block text-[9px] text-zinc-550 uppercase tracking-wider">Complexity</span>
                   <span className={['mt-1 text-sm font-semibold font-mono flex items-center gap-1', insights.complexityLabel === 'High' ? 'text-red-400' : insights.complexityLabel === 'Moderate' ? 'text-amber-400' : 'text-emerald-400'].join(' ')}>
                     <Flame className="size-3.5" />
@@ -1127,7 +1127,7 @@ export function Repository() {
                   <span className="block mt-0.5 text-[9px] text-zinc-500">{insights.complexityPoints} branches</span>
                 </div>
 
-                <div className="rounded-lg border border-zinc-900 bg-zinc-950 p-2.5">
+                <div className="neo-pressed p-2.5">
                   <span className="block text-[9px] text-zinc-550 uppercase tracking-wider">Risk Level</span>
                   <span className={['mt-1 text-sm font-semibold font-mono flex items-center gap-1', insights.riskLevel === 'High' ? 'text-red-400' : insights.riskLevel === 'Medium' ? 'text-amber-400' : 'text-emerald-400'].join(' ')}>
                     <AlertTriangle className="size-3.5" />
@@ -1138,7 +1138,7 @@ export function Repository() {
               </div>
 
               {/* LOC / Comment statistics */}
-              <div className="rounded-lg border border-zinc-900 bg-zinc-950 p-3 space-y-2">
+              <div className="neo-pressed p-3 space-y-2">
                 <div className="flex justify-between items-center text-[10px]">
                   <span className="text-zinc-500">Lines of Code</span>
                   <span className="font-mono text-zinc-300 font-semibold">{insights.loc}</span>
@@ -1148,7 +1148,7 @@ export function Repository() {
                   <span className="font-mono text-zinc-300 font-semibold">{(insights.commentRatio * 100).toFixed(0)}%</span>
                 </div>
                 {/* Visual Ratio Bar */}
-                <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden flex">
+                <div className="neo-pressed h-1.5 w-full rounded-full overflow-hidden flex shadow-none">
                   <div className="h-full bg-violet-500" style={{ width: `${((1 - insights.commentRatio) * 100).toFixed(0)}%` }} />
                   <div className="h-full bg-emerald-500" style={{ width: `${(insights.commentRatio * 100).toFixed(0)}%` }} />
                 </div>
@@ -1160,7 +1160,7 @@ export function Repository() {
                   <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Imports</h4>
                   <div className="flex flex-wrap gap-1">
                     {insights.imports.map((imp) => (
-                      <span key={imp} className="rounded bg-zinc-900 px-2 py-0.5 text-[9px] font-mono text-zinc-300 border border-zinc-850 truncate max-w-[150px]">
+                      <span key={imp} className="neo-convex px-2 py-0.5 text-[9px] font-mono text-zinc-600 dark:text-zinc-300 truncate max-w-[150px]">
                         {imp}
                       </span>
                     ))}
@@ -1172,7 +1172,7 @@ export function Repository() {
               {insights.functions.length > 0 && (
                 <div className="space-y-1.5">
                   <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Functions ({insights.functions.length})</h4>
-                  <div className="max-h-24 overflow-y-auto space-y-1 pr-1 border border-zinc-900 rounded p-1.5">
+                  <div className="neo-pressed max-h-24 overflow-y-auto space-y-1 pr-1 p-1.5">
                     {insights.functions.map((func) => (
                       <button
                         key={func.name}
@@ -1192,7 +1192,7 @@ export function Repository() {
               {insights.classes.length > 0 && (
                 <div className="space-y-1.5">
                   <h4 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Classes ({insights.classes.length})</h4>
-                  <div className="max-h-24 overflow-y-auto space-y-1 pr-1 border border-zinc-900 rounded p-1.5">
+                  <div className="neo-pressed max-h-24 overflow-y-auto space-y-1 pr-1 p-1.5">
                     {insights.classes.map((cls) => (
                       <button
                         key={cls.name}
