@@ -326,10 +326,10 @@ export function Settings() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80">
+      <div className="neo-flat p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="neo-pressed grid size-10 place-items-center">
             <Sliders className="size-5 text-violet-600 dark:text-violet-400" />
           </div>
           <div>
@@ -341,7 +341,7 @@ export function Settings() {
         <button
           type="button"
           onClick={handleSave}
-          className="flex h-9 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 dark:border-zinc-200 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
+          className="neo-accent flex h-9 items-center gap-2 px-4 text-sm font-medium transition"
         >
           {isSaving ? <RefreshCw className="size-4 animate-spin" /> : isSaved ? <Check className="size-4 text-emerald-600" /> : null}
           {isSaving ? 'Saving...' : isSaved ? 'Settings Saved' : 'Save Changes'}
@@ -349,7 +349,7 @@ export function Settings() {
         <button
           type="button"
           onClick={handleExport}
-          className="flex h-9 items-center gap-2 rounded-md border border-zinc-300 dark:border-zinc-800 px-3 text-sm font-medium text-zinc-600 dark:text-zinc-400 transition hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
+          className="neo-convex flex h-9 items-center gap-2 px-3 text-sm font-medium text-zinc-400 transition hover:text-white"
         >
           <Download className="size-4" />
           Export
@@ -357,7 +357,7 @@ export function Settings() {
         <button
           type="button"
           onClick={() => document.getElementById('import-settings-input')?.click()}
-          className="flex h-9 items-center gap-2 rounded-md border border-zinc-300 dark:border-zinc-800 px-3 text-sm font-medium text-zinc-600 dark:text-zinc-400 transition hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
+          className="neo-convex flex h-9 items-center gap-2 px-3 text-sm font-medium text-zinc-400 transition hover:text-white"
         >
           <Upload className="size-4" />
           Import
@@ -372,7 +372,7 @@ export function Settings() {
         <button
           type="button"
           onClick={handleReset}
-          className="flex h-9 items-center gap-2 rounded-md border border-zinc-300 dark:border-zinc-800 px-3 text-sm font-medium text-zinc-600 dark:text-zinc-400 transition hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
+          className="neo-convex flex h-9 items-center gap-2 px-3 text-sm font-medium text-zinc-400 transition hover:text-white"
         >
           <RefreshCw className="size-4" />
           Reset
@@ -383,7 +383,7 @@ export function Settings() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
         {/* Navigation Tabs */}
-        <nav className="h-fit rounded-xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80 md:col-span-3">
+        <nav className="neo-flat h-fit p-2 md:col-span-3">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -393,10 +393,10 @@ export function Settings() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={[
-                  'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition',
+                  'flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium transition',
                   isActive
-                    ? 'bg-violet-50 text-violet-700 shadow-[inset_0_0_0_1px_rgba(124,58,237,.18)] dark:bg-violet-500/15 dark:text-violet-200'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/70 dark:hover:text-zinc-200',
+                    ? 'neo-pressed text-violet-400'
+                    : 'neo-convex text-zinc-400 hover:text-zinc-200',
                 ].join(' ')}
               >
                 <Icon className={['size-4 shrink-0', isActive ? 'text-violet-400' : 'text-zinc-500'].join(' ')} />
@@ -407,7 +407,7 @@ export function Settings() {
         </nav>
 
         {/* Content Pane */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80 md:col-span-9 text-zinc-800 dark:text-zinc-100">
+        <div className="neo-flat p-6 md:col-span-9 text-zinc-800 dark:text-zinc-100">
           {activeTab === 'profile' && (
             <div className="space-y-5">
               <div>
@@ -422,7 +422,7 @@ export function Settings() {
                     type="text"
                     value={profile.name}
                     onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    className="mt-2 h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                    className="neo-pressed mt-2 h-9 w-full px-3 text-sm text-zinc-900 dark:text-white outline-none"
                   />
                 </label>
 
@@ -432,7 +432,7 @@ export function Settings() {
                     type="email"
                     value={profile.email}
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    className="mt-2 h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                    className="neo-pressed mt-2 h-9 w-full px-3 text-sm text-zinc-900 dark:text-white outline-none"
                   />
                 </label>
 
@@ -442,7 +442,7 @@ export function Settings() {
                     type="text"
                     value={profile.role}
                     disabled
-                    className="mt-2 h-9 w-full cursor-not-allowed rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/20 px-3 text-sm text-zinc-500 outline-none"
+                    className="neo-pressed mt-2 h-9 w-full cursor-not-allowed px-3 text-sm text-zinc-500 outline-none"
                   />
                 </label>
               </div>
@@ -473,10 +473,10 @@ export function Settings() {
                         applySettings({ theme: option.id as any })
                       }}
                       className={[
-                        'flex flex-col items-center justify-center rounded-lg border p-4 transition text-center',
+                        'flex flex-col items-center justify-center p-4 transition text-center',
                         isSelected
-                          ? 'border-violet-500 bg-violet-100 dark:bg-violet-950/10 text-zinc-900 dark:text-white'
-                          : 'border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/20 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-700',
+                          ? 'neo-pressed text-zinc-900 dark:text-white'
+                          : 'neo-convex text-zinc-600 dark:text-zinc-400',
                       ].join(' ')}
                     >
                       <Icon className="size-5 mb-2" />
@@ -502,8 +502,8 @@ export function Settings() {
                         applySettings({ accent: option.id as typeof accent })
                       }}
                       className={[
-                        'flex h-9 items-center gap-2 rounded-md border px-3 text-xs font-medium capitalize transition',
-                        accent === option.id ? 'border-zinc-400 dark:border-zinc-500 text-zinc-900 dark:text-white' : 'border-zinc-300 dark:border-zinc-800 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300',
+                        'flex h-9 items-center gap-2 px-3 text-xs font-medium capitalize transition',
+                        accent === option.id ? 'neo-pressed text-zinc-900 dark:text-white' : 'neo-convex text-zinc-500 hover:text-zinc-300',
                       ].join(' ')}
                     >
                       <span className={`size-3 rounded-full ${option.className}`} />
@@ -530,7 +530,7 @@ export function Settings() {
                           setSidebarDensity(option.id as 'compact' | 'comfortable' | 'spacious')
                           applySettings({ sidebarDensity: option.id as 'compact' | 'comfortable' | 'spacious' })
                         }}
-                        className={['rounded-md border px-3 py-2 text-xs font-medium transition', isSelected ? 'border-violet-500 bg-violet-100 dark:bg-violet-950/20 text-zinc-900 dark:text-white' : 'border-zinc-300 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-200'].join(' ')}
+                        className={['px-3 py-2 text-xs font-medium transition', isSelected ? 'neo-pressed text-zinc-900 dark:text-white' : 'neo-convex text-zinc-600 dark:text-zinc-400 hover:text-zinc-200'].join(' ')}
                       >
                         {option.label}
                       </button>
@@ -541,7 +541,7 @@ export function Settings() {
 
               <div>
                 <h3 className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Animated Interface</h3>
-                <div className="mt-3 flex items-center gap-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/20 px-4 py-3">
+                <div className="neo-pressed mt-3 flex items-center gap-3 px-4 py-3">
                   <label className="flex items-center gap-2 text-sm text-zinc-800 dark:text-zinc-200">
                     <input
                       type="checkbox"
@@ -573,7 +573,7 @@ export function Settings() {
                   <select
                     value={aiConfig.provider}
                     onChange={(e) => setAiConfig({ ...aiConfig, provider: e.target.value })}
-                    className="mt-2 h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                    className="neo-pressed mt-2 h-9 w-full px-3 text-sm text-zinc-900 dark:text-white outline-none"
                   >
                     <option value="anthropic">Anthropic (Claude 3.5 Sonnet / Opus)</option>
                     <option value="openai">OpenAI (GPT-4o)</option>
@@ -594,13 +594,13 @@ export function Settings() {
                       type="password"
                       value={aiConfig.apiKey}
                       onChange={(e) => setAiConfig({ ...aiConfig, apiKey: e.target.value })}
-                      className="h-9 flex-1 rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                      className="neo-pressed h-9 flex-1 px-3 text-sm text-zinc-900 dark:text-white outline-none"
                     />
                     <button
                       type="button"
                       onClick={handleTestAi}
                       disabled={isTestingAi}
-                      className="flex h-9 items-center gap-2 rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 px-4 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white disabled:opacity-50"
+                      className="neo-convex flex h-9 items-center gap-2 px-4 text-xs font-medium text-zinc-600 dark:text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white disabled:opacity-50"
                     >
                       {isTestingAi ? (
                         <RefreshCw className="size-3.5 animate-spin" />
@@ -630,7 +630,7 @@ export function Settings() {
                       type="number"
                       value={aiConfig.maxTokens}
                       onChange={(e) => setAiConfig({ ...aiConfig, maxTokens: parseInt(e.target.value) || 2048 })}
-                      className="mt-2 h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                      className="neo-pressed mt-2 h-9 w-full px-3 text-sm text-zinc-900 dark:text-white outline-none"
                     />
                   </label>
                 </div>
@@ -645,14 +645,14 @@ export function Settings() {
                       step="0.05"
                       value={0.95}
                       readOnly
-                      className="mt-2 h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/20 px-3 text-sm text-zinc-500 dark:text-zinc-400 outline-none"
+                      className="neo-pressed mt-2 h-9 w-full px-3 text-sm text-zinc-500 dark:text-zinc-400 outline-none"
                     />
                   </label>
                   <label className="block">
                     <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Embedding Provider</span>
                     <select
                       value="huggingface"
-                      className="mt-2 h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                      className="neo-pressed mt-2 h-9 w-full px-3 text-sm text-zinc-900 dark:text-white outline-none"
                     >
                       <option value="huggingface">Hugging Face</option>
                       <option value="openai">OpenAI</option>
@@ -660,7 +660,7 @@ export function Settings() {
                   </label>
                 </div>
 
-                <div className="flex items-center gap-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/20 p-4">
+                <div className="neo-pressed flex items-center gap-3 p-4">
                   <Bot className="size-4 text-violet-600 dark:text-violet-400" />
                   <span className="text-sm text-zinc-600 dark:text-zinc-300">Provider changes are persisted to the backend and used for chat and repository indexing.</span>
                 </div>
@@ -676,7 +676,7 @@ export function Settings() {
               </div>
 
               <div className="space-y-4">
-                <label className="flex items-center gap-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/20 p-4">
+                <label className="neo-pressed flex items-center gap-3 p-4">
                   <input
                     type="checkbox"
                     checked={localConfig.enabled}
@@ -697,7 +697,7 @@ export function Settings() {
                         type="url"
                         value={localConfig.endpoint}
                         onChange={(e) => setLocalConfig({ ...localConfig, endpoint: e.target.value })}
-                        className="mt-2 h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                        className="neo-pressed mt-2 h-9 w-full px-3 text-sm text-zinc-900 dark:text-white outline-none"
                       />
                     </label>
 
@@ -708,13 +708,13 @@ export function Settings() {
                           type="text"
                           value={localConfig.model}
                           onChange={(e) => setLocalConfig({ ...localConfig, model: e.target.value })}
-                          className="h-9 flex-1 rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                          className="neo-pressed h-9 flex-1 px-3 text-sm text-zinc-900 dark:text-white outline-none"
                         />
                         <button
                           type="button"
                           onClick={handleTestLocal}
                           disabled={isTestingLocal}
-                          className="flex h-9 items-center gap-2 rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 px-4 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white disabled:opacity-50"
+                          className="neo-convex flex h-9 items-center gap-2 px-4 text-xs font-medium text-zinc-600 dark:text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white disabled:opacity-50"
                         >
                           {isTestingLocal ? (
                             <RefreshCw className="size-3.5 animate-spin" />
@@ -742,10 +742,10 @@ export function Settings() {
               </div>
 
               {github.connected ? (
-                <div className="rounded-lg border border-emerald-200 dark:border-emerald-900/30 bg-emerald-50 dark:bg-emerald-950/10 p-4">
+                <div className="neo-flat border-emerald-500/30 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="grid size-9 place-items-center rounded-lg bg-zinc-200 dark:bg-zinc-900">
+                      <div className="neo-pressed grid size-9 place-items-center">
                         <FaGithub className="size-5 text-zinc-900 dark:text-white" />
                       </div>
                       <div>
@@ -756,7 +756,7 @@ export function Settings() {
                     <button
                       type="button"
                       onClick={handleDisconnectGithub}
-                      className="rounded-md border border-zinc-300 dark:border-zinc-800 px-3 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      className="neo-convex px-3 py-1.5 text-xs text-red-400 hover:text-red-300"
                     >
                       Disconnect
                     </button>
@@ -768,7 +768,7 @@ export function Settings() {
                     type="button"
                     onClick={handleConnectGithub}
                     disabled={isConnectingGithub}
-                    className="flex h-9 items-center justify-center gap-2 rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-900 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                    className="neo-accent flex h-9 items-center justify-center gap-2 px-4 text-sm font-medium transition disabled:opacity-50"
                   >
                     {isConnectingGithub ? (
                       <RefreshCw className="size-4 animate-spin" />
@@ -791,7 +791,7 @@ export function Settings() {
                       value={github.token}
                       onChange={(e) => setGithub({ ...github, token: e.target.value })}
                       placeholder="ghp_••••••••••••••••••••••••••••••••••••"
-                      className="mt-2 h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
+                      className="neo-pressed mt-2 h-9 w-full px-3 text-sm text-zinc-900 dark:text-white outline-none"
                     />
                   </label>
                 </div>
@@ -807,7 +807,7 @@ export function Settings() {
               </div>
 
               <div className="space-y-4">
-                <label className="flex items-start gap-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/20 p-4">
+                <label className="neo-pressed flex items-start gap-3 p-4">
                   <input
                     type="checkbox"
                     checked={preferences.autoAnalyze}
@@ -820,7 +820,7 @@ export function Settings() {
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900/20 p-4">
+                <label className="neo-pressed flex items-start gap-3 p-4">
                   <input
                     type="checkbox"
                     checked={preferences.notifications}
@@ -833,7 +833,7 @@ export function Settings() {
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900/20 p-4">
+                <label className="neo-pressed flex items-start gap-3 p-4">
                   <input
                     type="checkbox"
                     checked={preferences.telemetry}
@@ -852,7 +852,7 @@ export function Settings() {
           {activeTab === 'about' && (
             <div className="space-y-5">
               <div className="flex items-start gap-4">
-                <div className="grid size-12 place-items-center rounded-xl border border-violet-400/30 bg-zinc-900 shadow-sm">
+                <div className="neo-convex grid size-12 place-items-center">
                   <Logo size={38} aria-label="CodeScope AI logo" />
                 </div>
                 <div>
