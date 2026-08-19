@@ -52,8 +52,8 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
   }
 
   return (
-    <div className="group my-3 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
-      <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50 px-4 py-2">
+    <div className="neo-flat group my-3 overflow-hidden rounded-lg">
+      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-4 py-2">
         <span className="font-mono text-xs text-zinc-500">{language || 'code'}</span>
         <button
           type="button"
@@ -332,17 +332,17 @@ export function Chat() {
 
   if (messages.length === 0 && !error && !isTyping) {
     return (
-      <div className="flex min-h-[calc(100vh-8rem)] flex-col gap-4 rounded-xl border border-zinc-800 bg-zinc-950/70 p-4 lg:flex-row">
-        <aside className={['w-full shrink-0 rounded-lg border border-zinc-800 bg-zinc-950/80 p-3 lg:w-72', sidebarOpen ? 'block' : 'hidden lg:block'].join(' ')}>
+      <div className="flex min-h-[calc(100vh-8rem)] flex-col gap-4 p-0 lg:flex-row">
+        <aside className={['neo-flat w-full shrink-0 p-3 lg:w-72', sidebarOpen ? 'block' : 'hidden lg:block'].join(' ')}>
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Conversations</p>
-            <button type="button" onClick={createConversation} className="rounded-md border border-zinc-800 p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-white">
+            <button type="button" onClick={createConversation} className="neo-convex p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
               <MessageSquarePlus className="size-3.5" />
             </button>
           </div>
           <div className="mt-3 space-y-2">
             {conversations.map((conversation) => (
-              <div key={conversation.id} className={['rounded-lg border p-2', activeConversationId === conversation.id ? 'border-zinc-700 bg-zinc-900/80' : 'border-zinc-800 bg-zinc-950/40'].join(' ')}>
+              <div key={conversation.id} className={['p-2 rounded-lg', activeConversationId === conversation.id ? 'neo-pressed' : 'neo-flat border border-transparent'].join(' ')}>
                 {editingId === conversation.id ? (
                   <div className="flex items-center gap-2">
                     <input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} className="h-8 flex-1 rounded border border-zinc-700 bg-zinc-900 px-2 text-xs text-white" />
@@ -366,18 +366,18 @@ export function Chat() {
           </div>
         </aside>
 
-        <div className="flex flex-1 flex-col rounded-lg border border-zinc-800 bg-zinc-950/70 p-6">
+        <div className="neo-flat flex flex-1 flex-col p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wider text-violet-400">AI Workspace</p>
               <h1 className="text-xl font-semibold text-white">Chat with your codebase</h1>
             </div>
-            <button type="button" onClick={() => setSidebarOpen((value) => !value)} className="rounded-md border border-zinc-800 p-2 text-zinc-400 hover:bg-zinc-900 hover:text-white">
+            <button type="button" onClick={() => setSidebarOpen((value) => !value)} className="neo-convex p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
               {sidebarOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
             </button>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center pb-10 pt-8 text-center">
-            <div className="grid size-16 place-items-center rounded-2xl border border-zinc-800 bg-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="neo-pressed grid size-16 place-items-center rounded-2xl">
               <Sparkles className="size-7 text-violet-400" />
             </div>
             <p className="mt-4 max-w-md text-sm text-zinc-500">
@@ -385,7 +385,7 @@ export function Chat() {
             </p>
             <div className="mt-8 grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
               {WELCOME_SUGGESTIONS.map((suggestion) => (
-                <button key={suggestion} type="button" onClick={() => sendMessage(suggestion)} className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-4 text-left text-sm text-zinc-400 transition hover:border-zinc-700 hover:bg-zinc-900/80 hover:text-zinc-200">
+                <button key={suggestion} type="button" onClick={() => sendMessage(suggestion)} className="neo-convex p-4 text-left text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200">
                   <Code2 className="mb-2 size-4 text-zinc-600" />
                   {suggestion}
                 </button>
@@ -393,12 +393,12 @@ export function Chat() {
             </div>
           </div>
 
-          <div className="sticky bottom-0 border-t border-zinc-800/50 bg-zinc-950/90 px-4 py-4 backdrop-blur-xl">
+          <div className="sticky bottom-0 border-t border-zinc-200 dark:border-zinc-800/50 px-4 py-4 backdrop-blur-xl" style={{ background: 'var(--bg-color)' }}>
             <form onSubmit={handleSubmit} className="flex w-full items-end gap-2">
               <div className="relative flex-1">
-                <textarea ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown} placeholder="Ask anything about your code…" rows={1} className="max-h-32 min-h-[2.5rem] w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/70 px-4 py-2.5 pr-12 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600" />
+                <textarea ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown} placeholder="Ask anything about your code…" rows={1} className="neo-pressed max-h-32 min-h-[2.5rem] w-full resize-none px-4 py-2.5 pr-12 text-sm text-zinc-900 dark:text-white outline-none transition placeholder:text-zinc-500" />
               </div>
-              <button type="submit" disabled={!input.trim()} className="grid size-10 shrink-0 place-items-center rounded-lg border border-zinc-700 bg-zinc-100 text-zinc-950 transition hover:bg-white disabled:opacity-30">
+              <button type="submit" disabled={!input.trim()} className="neo-accent grid size-10 shrink-0 place-items-center transition disabled:opacity-30">
                 <Send className="size-4" />
               </button>
             </form>
@@ -410,16 +410,16 @@ export function Chat() {
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)] w-full flex-col gap-4 rounded-none border-0 bg-transparent p-0 lg:flex-row">
-      <aside className={['w-full shrink-0 rounded-lg border border-zinc-800 bg-zinc-950/80 p-3 lg:w-72', sidebarOpen ? 'block' : 'hidden lg:block'].join(' ')}>
+      <aside className={['neo-flat w-full shrink-0 p-3 lg:w-72', sidebarOpen ? 'block' : 'hidden lg:block'].join(' ')}>
         <div className="flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Conversations</p>
-          <button type="button" onClick={createConversation} className="rounded-md border border-zinc-800 p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-white">
+          <button type="button" onClick={createConversation} className="neo-convex p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
             <MessageSquarePlus className="size-3.5" />
           </button>
         </div>
         <div className="mt-3 space-y-2">
           {conversations.map((conversation) => (
-            <div key={conversation.id} className={['rounded-lg border p-2', activeConversationId === conversation.id ? 'border-zinc-700 bg-zinc-900/80' : 'border-zinc-800 bg-zinc-950/40'].join(' ')}>
+            <div key={conversation.id} className={['p-2 rounded-lg', activeConversationId === conversation.id ? 'neo-pressed' : 'neo-flat border border-transparent'].join(' ')}>
               {editingId === conversation.id ? (
                 <div className="flex items-center gap-2">
                   <input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} className="h-8 flex-1 rounded border border-zinc-700 bg-zinc-900 px-2 text-xs text-white" />
@@ -443,8 +443,8 @@ export function Chat() {
         </div>
       </aside>
 
-      <div className="flex flex-1 flex-col rounded-lg border border-zinc-800 bg-zinc-950/70 p-4">
-        <div className="flex items-center justify-between border-b border-zinc-800/50 pb-4">
+      <div className="neo-flat flex flex-1 flex-col p-4">
+        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/50 pb-4">
           <div className="flex items-center gap-3">
             <BotMessageSquare className="size-5 text-violet-400" />
             <div>
@@ -453,7 +453,7 @@ export function Chat() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setSidebarOpen((value) => !value)} className="rounded-md border border-zinc-800 p-2 text-zinc-400 hover:bg-zinc-900 hover:text-white">
+            <button type="button" onClick={() => setSidebarOpen((value) => !value)} className="neo-convex p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
               {sidebarOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
             </button>
             {messages.some((message) => message.role === 'assistant') && (
@@ -476,7 +476,7 @@ export function Chat() {
         <div className="flex-1 space-y-1 overflow-y-auto py-6">
           {messages.map((message) => (
             <div key={message.id} className={`group flex gap-3 rounded-lg px-4 py-4 transition ${message.role === 'user' ? 'bg-transparent' : 'bg-zinc-900/30'}`}>
-              <div className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-md border ${message.role === 'user' ? 'border-zinc-700 bg-zinc-800 text-zinc-300' : 'border-violet-800/40 bg-violet-950/40 text-violet-400'}`}>
+              <div className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-md ${message.role === 'user' ? 'neo-convex text-zinc-600 dark:text-zinc-300' : 'neo-convex text-violet-500'}`}>
                 {message.role === 'user' ? <User className="size-3.5" /> : <Sparkles className="size-3.5" />}
               </div>
               <div className="min-w-0 flex-1 text-sm leading-7 text-zinc-300">
@@ -504,12 +504,12 @@ export function Chat() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="sticky bottom-0 border-t border-zinc-800/50 bg-zinc-950/90 px-4 py-4 backdrop-blur-xl">
+        <div className="sticky bottom-0 border-t border-zinc-200 dark:border-zinc-800/50 px-4 py-4 backdrop-blur-xl" style={{ background: 'var(--bg-color)' }}>
           <form onSubmit={handleSubmit} className="flex w-full items-end gap-2">
             <div className="relative flex-1">
-              <textarea ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown} placeholder="Ask anything about your code…" rows={1} className="max-h-32 min-h-[2.5rem] w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/70 px-4 py-2.5 pr-12 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600" />
+              <textarea ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown} placeholder="Ask anything about your code…" rows={1} className="neo-pressed max-h-32 min-h-[2.5rem] w-full resize-none px-4 py-2.5 pr-12 text-sm text-zinc-900 dark:text-white outline-none transition placeholder:text-zinc-500" />
             </div>
-            <button type="submit" disabled={!input.trim() || isTyping} className="grid size-10 shrink-0 place-items-center rounded-lg border border-zinc-700 bg-zinc-100 text-zinc-950 transition hover:bg-white disabled:opacity-30">
+            <button type="submit" disabled={!input.trim() || isTyping} className="neo-accent grid size-10 shrink-0 place-items-center transition disabled:opacity-30">
               <Send className="size-4" />
             </button>
           </form>
