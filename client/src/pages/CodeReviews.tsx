@@ -74,7 +74,7 @@ function ReviewDrawer({ review, onClose }: { review: CodeReview; onClose: () => 
   return (
     <>
       <button type="button" className="fixed inset-0 z-40 bg-black/50" onClick={onClose} aria-label="Close" />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg overflow-y-auto border-l border-zinc-800 bg-[#09090b] p-6 shadow-2xl">
+      <div className="neo-flat rounded-none fixed inset-y-0 right-0 z-50 w-full max-w-lg overflow-y-auto p-6 border-l-0 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${config.badgeClasses}`}>
@@ -82,7 +82,7 @@ function ReviewDrawer({ review, onClose }: { review: CodeReview; onClose: () => 
             </span>
             <h2 className="mt-3 text-base font-semibold text-white">{review.title}</h2>
           </div>
-          <button type="button" onClick={onClose} className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-900 hover:text-white">
+          <button type="button" onClick={onClose} className="neo-convex p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
             <X className="size-4" />
           </button>
         </div>
@@ -100,13 +100,13 @@ function ReviewDrawer({ review, onClose }: { review: CodeReview; onClose: () => 
                 <button
                   type="button"
                   onClick={handleCopySuggestion}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
+                  className="neo-convex flex items-center gap-1 px-2 py-1 text-xs text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                 >
                   {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
                   {copied ? 'Copied' : 'Copy'}
                 </button>
               </div>
-              <div className="mt-2 rounded-lg border border-emerald-900/30 bg-emerald-950/10 p-4 text-sm leading-6 text-emerald-300">
+              <div className="neo-pressed mt-2 p-4 text-sm leading-6 text-emerald-600 dark:text-emerald-300">
                 {review.suggestion}
               </div>
             </div>
@@ -114,7 +114,7 @@ function ReviewDrawer({ review, onClose }: { review: CodeReview; onClose: () => 
 
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-600">Location</h3>
-            <div className="mt-2 flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm">
+            <div className="neo-pressed mt-2 flex items-center gap-2 px-3 py-2 text-sm">
               <FileCode2 className="size-4 text-blue-400" />
               <span className="text-zinc-300">{review.file}</span>
               <span className="text-zinc-600">:</span>
@@ -278,7 +278,7 @@ export function CodeReviews() {
         <div className="flex items-center gap-3">
           <ShieldAlert className="size-5 text-red-400" />
           <h1 className="text-lg font-semibold text-white">Code Reviews</h1>
-          <span className="rounded-md border border-zinc-800 bg-zinc-950 px-2 py-0.5 text-xs text-zinc-500">
+          <span className="neo-pressed px-2 py-0.5 text-xs text-zinc-500">
             {reviews.length} issues
           </span>
         </div>
@@ -301,14 +301,14 @@ export function CodeReviews() {
               type="button"
               onClick={() => { setSeverityFilter((prev) => (prev === severity ? 'all' : severity)); resetPage() }}
               className={[
-                'rounded-lg border p-4 text-left transition',
+                'p-4 text-left transition',
                 severityFilter === severity
-                  ? `${config.badgeClasses} border-opacity-100`
-                  : 'border-zinc-800 bg-zinc-950/80 hover:border-zinc-700',
+                  ? `neo-pressed ${config.badgeClasses} border-opacity-100`
+                  : 'neo-convex text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100',
               ].join(' ')}
             >
               <Icon className={`size-5 ${config.classes}`} />
-              <p className="mt-2 font-mono text-2xl font-semibold text-white">{count}</p>
+              <p className="mt-2 font-mono text-2xl font-semibold text-zinc-900 dark:text-white">{count}</p>
               <p className="mt-0.5 text-xs text-zinc-500 capitalize">{severity}</p>
             </button>
           )
@@ -317,7 +317,7 @@ export function CodeReviews() {
 
       {/* Search & Filters */}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="flex flex-1 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/50 px-3">
+        <div className="neo-pressed flex flex-1 items-center gap-2 px-3">
           <Search className="size-4 text-zinc-600" />
           <input
             type="text"
@@ -337,10 +337,10 @@ export function CodeReviews() {
           type="button"
           onClick={() => setShowFilters((v) => !v)}
           className={[
-            'flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition',
+            'flex items-center gap-2 px-3 py-2 text-sm transition',
             showFilters
-              ? 'border-zinc-600 bg-zinc-800 text-white'
-              : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200',
+              ? 'neo-pressed text-zinc-900 dark:text-white'
+              : 'neo-convex text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200',
           ].join(' ')}
         >
           <SlidersHorizontal className="size-4" /> Filters
@@ -348,7 +348,7 @@ export function CodeReviews() {
       </div>
 
       {showFilters && (
-        <div className="flex flex-wrap gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 p-4">
+        <div className="neo-flat flex flex-wrap gap-2 p-4">
           <span className="text-xs text-zinc-500 self-center mr-2">Category:</span>
           {(['all', ...Object.keys(CATEGORY_LABELS)] as (ReviewCategory | 'all')[]).map((cat) => (
             <button
@@ -356,10 +356,10 @@ export function CodeReviews() {
               type="button"
               onClick={() => { setCategoryFilter(cat); resetPage() }}
               className={[
-                'rounded-md border px-2.5 py-1 text-xs font-medium transition capitalize',
+                'px-2.5 py-1 text-xs font-medium transition capitalize',
                 categoryFilter === cat
-                  ? 'border-zinc-600 bg-zinc-800 text-white'
-                  : 'border-zinc-800 text-zinc-500 hover:text-zinc-300',
+                  ? 'neo-pressed text-zinc-900 dark:text-white'
+                  : 'neo-convex text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200',
               ].join(' ')}
             >
               {cat === 'all' ? 'All' : CATEGORY_LABELS[cat]}
@@ -372,11 +372,11 @@ export function CodeReviews() {
       {filteredReviews.length === 0 ? (
         <EmptyState title="No issues matched" description={searchQuery ? 'Try adjusting the search or filter settings.' : 'Your current view is clear of issues.'} icon={Bug} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950/80">
+        <div className="neo-flat overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-left text-xs font-medium uppercase tracking-wider text-zinc-600">
+                <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-xs font-medium uppercase tracking-wider text-zinc-600">
                   <th className="px-4 py-3">
                     <button type="button" onClick={() => handleSort('severity')} className="flex items-center gap-1 hover:text-zinc-300">
                       Severity {sortField === 'severity' && <SortIcon className="size-3" />}
@@ -405,19 +405,19 @@ export function CodeReviews() {
                   return (
                     <tr
                       key={review.id}
-                      className="cursor-pointer border-b border-zinc-800/50 transition hover:bg-zinc-900/50"
+                      className="cursor-pointer border-b border-zinc-200 dark:border-zinc-800/50 transition hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
                     >
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${config.badgeClasses}`}>
                           <SevIcon className="size-3" /> {config.label}
                         </span>
                       </td>
-                      <td className="max-w-xs truncate px-4 py-3 text-zinc-200">{review.title}</td>
+                      <td className="max-w-xs truncate px-4 py-3 text-zinc-800 dark:text-zinc-200">{review.title}</td>
                       <td className="hidden max-w-[200px] truncate px-4 py-3 font-mono text-xs text-zinc-500 md:table-cell">{review.file}</td>
                       <td className="hidden px-4 py-3 text-xs text-zinc-500 capitalize lg:table-cell">{CATEGORY_LABELS[review.category]}</td>
                       <td className="hidden px-4 py-3 text-xs text-zinc-600 sm:table-cell">{review.createdAt}</td>
                       <td className="px-4 py-3 text-right">
-                        <button type="button" onClick={() => setSelectedReview(review)} className="rounded-md border border-zinc-800 px-2 py-1 text-[11px] text-zinc-500 hover:border-zinc-700 hover:text-white">
+                        <button type="button" onClick={() => setSelectedReview(review)} className="neo-convex px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
                           View
                         </button>
                       </td>
@@ -427,7 +427,7 @@ export function CodeReviews() {
               </tbody>
             </table>
           </div>
-          <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3 text-xs text-zinc-500">
+          <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 text-xs text-zinc-500">
             <span>
               Page {page} of {pageCount} · {filteredReviews.length} matching issues
             </span>
@@ -436,7 +436,7 @@ export function CodeReviews() {
                 type="button"
                 disabled={page === 1}
                 onClick={() => setPage((value) => Math.max(1, value - 1))}
-                className="rounded-md border border-zinc-800 px-2 py-1 hover:bg-zinc-900 disabled:opacity-40"
+                className="neo-convex px-2 py-1 hover:text-zinc-900 dark:hover:text-white disabled:opacity-40"
               >
                 Previous
               </button>
@@ -444,7 +444,7 @@ export function CodeReviews() {
                 type="button"
                 disabled={page === pageCount}
                 onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
-                className="rounded-md border border-zinc-800 px-2 py-1 hover:bg-zinc-900 disabled:opacity-40"
+                className="neo-convex px-2 py-1 hover:text-zinc-900 dark:hover:text-white disabled:opacity-40"
               >
                 Next
               </button>
