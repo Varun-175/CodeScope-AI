@@ -43,7 +43,7 @@ export function Login() {
             value={email}
             onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })) }}
             placeholder="you@example.com"
-            className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600"
+            className="neo-pressed mt-2 h-10 w-full px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:outline-violet-500"
             autoComplete="email"
             autoFocus
           />
@@ -63,7 +63,7 @@ export function Login() {
               value={password}
               onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })) }}
               placeholder="••••••••"
-              className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 pr-10 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600"
+              className="neo-pressed h-10 w-full px-3 pr-10 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:outline-violet-500"
               autoComplete="current-password"
             />
             <button
@@ -81,7 +81,7 @@ export function Login() {
         <button
           type="submit"
           disabled={isLoading}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-zinc-700 bg-zinc-100 text-sm font-medium text-zinc-950 transition hover:bg-white disabled:opacity-50"
+          className="neo-convex flex h-10 w-full items-center justify-center gap-2 text-sm font-medium text-white transition hover:text-violet-300 disabled:opacity-50"
         >
           {isLoading ? (
             <Loader2 className="size-4 animate-spin" />

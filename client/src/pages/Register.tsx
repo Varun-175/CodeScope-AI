@@ -51,7 +51,7 @@ export function Register() {
             value={name}
             onChange={(e) => { setName(e.target.value); clearError('name') }}
             placeholder="John Doe"
-            className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600"
+            className="neo-pressed mt-2 h-10 w-full px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:outline-violet-500"
             autoFocus
           />
           {errors.name && <span className="mt-1.5 block text-xs text-red-400">{errors.name}</span>}
@@ -64,7 +64,7 @@ export function Register() {
             value={email}
             onChange={(e) => { setEmail(e.target.value); clearError('email') }}
             placeholder="you@example.com"
-            className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600"
+            className="neo-pressed mt-2 h-10 w-full px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:outline-violet-500"
             autoComplete="email"
           />
           {errors.email && <span className="mt-1.5 block text-xs text-red-400">{errors.email}</span>}
@@ -78,7 +78,7 @@ export function Register() {
               value={password}
               onChange={(e) => { setPassword(e.target.value); clearError('password') }}
               placeholder="••••••••"
-              className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 pr-10 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600"
+              className="neo-pressed h-10 w-full px-3 pr-10 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:outline-violet-500"
               autoComplete="new-password"
             />
             <button
@@ -100,7 +100,7 @@ export function Register() {
             value={confirmPassword}
             onChange={(e) => { setConfirmPassword(e.target.value); clearError('confirmPassword') }}
             placeholder="••••••••"
-            className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600"
+            className="neo-pressed mt-2 h-10 w-full px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:outline-violet-500"
             autoComplete="new-password"
           />
           {errors.confirmPassword && <span className="mt-1.5 block text-xs text-red-400">{errors.confirmPassword}</span>}
@@ -109,7 +109,7 @@ export function Register() {
         <button
           type="submit"
           disabled={isLoading}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-zinc-700 bg-zinc-100 text-sm font-medium text-zinc-950 transition hover:bg-white disabled:opacity-50"
+          className="neo-convex flex h-10 w-full items-center justify-center gap-2 text-sm font-medium text-white transition hover:text-violet-300 disabled:opacity-50"
         >
           {isLoading ? <Loader2 className="size-4 animate-spin" /> : <UserPlus className="size-4" />}
           {isLoading ? 'Creating account…' : 'Create account'}

@@ -16,7 +16,7 @@ export function DashboardCard({
   return (
     <section
       className={[
-        'surface-glass animate-fade-in-up relative overflow-hidden rounded-lg p-5 transition duration-200 hover:border-violet-400/50',
+        'neo-flat animate-fade-in-up relative overflow-hidden p-5 transition duration-200 hover:border-violet-400/50',
         className,
       ].join(' ')}
     >

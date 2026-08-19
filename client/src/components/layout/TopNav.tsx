@@ -70,7 +70,7 @@ export function TopNav({
         </span>
       </div>
 
-      <div className="surface-glass hidden min-w-0 items-center gap-2 rounded-xl px-3 py-1.5 text-sm sm:flex">
+      <div className="neo-flat hidden min-w-0 items-center gap-2 px-3 py-1.5 text-sm sm:flex">
         <Activity className="size-4 text-emerald-400" aria-hidden="true" />
         <span className="hidden text-zinc-500 md:inline">Repository</span>
         <span className="font-medium text-zinc-200">Connected</span>
@@ -83,7 +83,7 @@ export function TopNav({
 
       <button
         type="button"
-        className="inline-flex h-9 items-center gap-2 rounded-md border border-violet-400/30 bg-violet-600 px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500"
+        className="neo-accent inline-flex h-9 items-center gap-2 px-3 text-sm font-semibold transition"
         onClick={openAnalyzeModal}
       >
         <Play className="size-4" aria-hidden="true" />
@@ -96,7 +96,7 @@ export function TopNav({
           type="button"
           aria-label="User profile"
           onClick={() => setIsDropdownOpen((v) => !v)}
-          className="tactile-control grid size-9 shrink-0 place-items-center rounded-full border-violet-400/30 bg-gradient-to-br from-violet-500/30 to-cyan-400/10 text-xs font-semibold text-zinc-200"
+          className="neo-convex grid size-9 shrink-0 place-items-center rounded-full text-xs font-semibold text-zinc-200"
         >
           {initials}
         </button>

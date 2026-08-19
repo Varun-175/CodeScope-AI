@@ -37,7 +37,7 @@ export function ForgotPassword() {
           </p>
           <Link
             to="/login"
-            className="mt-6 flex h-10 items-center gap-2 rounded-md border border-zinc-700 bg-zinc-100 px-4 text-sm font-medium text-zinc-950 transition hover:bg-white"
+            className="neo-convex mt-6 flex h-10 items-center gap-2 px-4 text-sm font-medium text-white transition hover:text-violet-300"
           >
             <ArrowLeft className="size-4" /> Back to sign in
           </Link>
@@ -56,7 +56,7 @@ export function ForgotPassword() {
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError('') }}
             placeholder="you@example.com"
-            className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-zinc-600"
+            className="neo-pressed mt-2 h-10 w-full px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:outline-violet-500"
             autoComplete="email"
             autoFocus
           />
@@ -66,7 +66,7 @@ export function ForgotPassword() {
         <button
           type="submit"
           disabled={isLoading}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-zinc-700 bg-zinc-100 text-sm font-medium text-zinc-950 transition hover:bg-white disabled:opacity-50"
+          className="neo-convex flex h-10 w-full items-center justify-center gap-2 text-sm font-medium text-white transition hover:text-violet-300 disabled:opacity-50"
         >
           {isLoading ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
           {isLoading ? 'Sending…' : 'Send reset link'}

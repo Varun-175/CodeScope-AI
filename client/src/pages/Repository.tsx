@@ -713,7 +713,7 @@ export function Repository() {
   // Skeletons for tree
   if (status === 'idle') {
     return (
-      <div className="flex min-h-[calc(100vh-14rem)] items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/80 p-8">
+      <div className="neo-flat flex min-h-[calc(100vh-14rem)] items-center justify-center p-8">
         <EmptyState
           title="No connected repository"
           description="Run an analysis from the dashboard to browse repository files, inspect code health, and navigate the repository tree."
@@ -769,10 +769,10 @@ export function Repository() {
         ref={explorerRef}
       >
         {/* Left Side: Directory Tree Sidebar */}
-        <aside className="rounded-lg border border-zinc-800 bg-zinc-950/80 flex flex-col lg:col-span-3">
+        <aside className="neo-flat flex flex-col lg:col-span-3">
           <div className="p-3 border-b border-zinc-800 space-y-3">
             {/* Search inputs */}
-            <div className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/50 px-2.5 py-1.5">
+            <div className="neo-pressed flex items-center gap-2 px-2.5 py-1.5">
               <Search className="size-3.5 text-zinc-500" />
               <input
                 type="text"
@@ -843,7 +843,7 @@ export function Repository() {
         {/* Center Section: Main Code Viewer */}
         <section className="flex flex-col lg:col-span-6 min-w-0">
           {!selectedFile ? (
-            <div className="flex-1 flex flex-col items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/85 p-8 text-center min-h-[300px]">
+            <div className="neo-flat flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[300px]">
               <div className="mx-auto grid size-12 place-items-center rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-550">
                 <Eye className="size-5" />
               </div>
@@ -853,7 +853,7 @@ export function Repository() {
               </p>
             </div>
           ) : (
-              <div className="flex-1 flex flex-col rounded-lg border border-zinc-800 bg-zinc-950/80 overflow-hidden shadow-2xl backdrop-blur-md">
+              <div className="neo-flat flex-1 flex flex-col overflow-hidden backdrop-blur-md">
               {/* IDE-like Tab Bar */}
               <div className="flex items-center justify-between border-b border-zinc-850 bg-zinc-950/90">
                 {/* Active Tab */}
