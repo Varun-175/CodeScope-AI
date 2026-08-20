@@ -17,7 +17,7 @@
   --accent-soft: rgba(139, 92, 246, 0.14);
   --surface: #202124;
   --surface-strong: #1a1b1d;
-  --surface-border: #3c4043;
+  --surface-border: rgba(255, 255, 255, 0.08);
   
   /* Dark mode neumorphic shadows */
   --neo-shadow-light: #292a2f;
@@ -30,11 +30,11 @@
   --text-color: #202124;
   --surface: #e8eaed;
   --surface-strong: #d5d8dc;
-  --surface-border: #bdc1c6;
+  --surface-border: rgba(255, 255, 255, 0.6);
 
   /* Light mode neumorphic shadows */
   --neo-shadow-light: #ffffff;
-  --neo-shadow-dark: #c1c5cc;
+  --neo-shadow-dark: #d0d4db;
 }
 
 * {
@@ -62,9 +62,9 @@ body {
   background: var(--surface);
   border-radius: 12px;
   box-shadow: 
-    6px 6px 14px var(--neo-shadow-dark), 
-    -6px -6px 14px var(--neo-shadow-light);
-  border: 1px solid transparent;
+    4px 4px 10px var(--neo-shadow-dark), 
+    -4px -4px 10px var(--neo-shadow-light);
+  border: 1px solid var(--surface-border);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -73,8 +73,8 @@ body {
   background: var(--surface);
   border-radius: 8px;
   box-shadow: 
-    inset 4px 4px 8px var(--neo-shadow-dark), 
-    inset -4px -4px 8px var(--neo-shadow-light);
+    inset 2px 2px 5px var(--neo-shadow-dark), 
+    inset -2px -2px 5px var(--neo-shadow-light);
   border: 1px solid transparent;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -84,9 +84,9 @@ body {
   background: var(--surface);
   border-radius: 8px;
   box-shadow: 
-    4px 4px 10px var(--neo-shadow-dark), 
-    -4px -4px 10px var(--neo-shadow-light);
-  border: 1px solid transparent;
+    3px 3px 6px var(--neo-shadow-dark), 
+    -3px -3px 6px var(--neo-shadow-light);
+  border: 1px solid var(--surface-border);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
@@ -94,15 +94,16 @@ body {
 .neo-convex:hover {
   transform: translateY(-1px);
   box-shadow: 
-    6px 6px 14px var(--neo-shadow-dark), 
-    -6px -6px 14px var(--neo-shadow-light);
+    4px 4px 8px var(--neo-shadow-dark), 
+    -4px -4px 8px var(--neo-shadow-light);
 }
 
 .neo-convex:active, .neo-convex.active {
   transform: translateY(1px);
   box-shadow: 
-    inset 3px 3px 6px var(--neo-shadow-dark), 
-    inset -3px -3px 6px var(--neo-shadow-light);
+    inset 2px 2px 4px var(--neo-shadow-dark), 
+    inset -2px -2px 4px var(--neo-shadow-light);
+  border-color: transparent;
 }
 
 /* Accent versions for primary actions */
@@ -111,8 +112,9 @@ body {
   color: #fff;
   border-radius: 8px;
   box-shadow: 
-    4px 4px 12px rgba(139, 92, 246, 0.4), 
-    -4px -4px 12px var(--neo-shadow-light);
+    3px 3px 8px rgba(139, 92, 246, 0.4), 
+    -3px -3px 8px var(--neo-shadow-light);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
@@ -121,16 +123,17 @@ body {
   filter: brightness(1.05);
   transform: translateY(-1px);
   box-shadow: 
-    6px 6px 16px rgba(139, 92, 246, 0.5), 
-    -6px -6px 16px var(--neo-shadow-light);
+    4px 4px 12px rgba(139, 92, 246, 0.5), 
+    -4px -4px 12px var(--neo-shadow-light);
 }
 
 .neo-accent:active {
   filter: brightness(0.95);
   transform: translateY(1px);
   box-shadow: 
-    inset 2px 2px 5px rgba(0, 0, 0, 0.25), 
-    inset -2px -2px 5px rgba(255, 255, 255, 0.15);
+    inset 2px 2px 4px rgba(0, 0, 0, 0.25), 
+    inset -2px -2px 4px rgba(255, 255, 255, 0.15);
+  border-color: transparent;
 }
 
 button,
