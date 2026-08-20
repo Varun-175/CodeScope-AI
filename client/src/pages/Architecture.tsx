@@ -131,7 +131,7 @@ export function Architecture() {
         {metrics.map((metric) => {
           const Icon = metric.icon
           return (
-            <div key={metric.label} className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+            <div key={metric.label} className="neo-flat p-5">
               <div className="flex items-center gap-2">
                 <Icon className={`size-4 ${metric.color}`} />
                 <span className="text-xs font-medium uppercase tracking-wider text-zinc-600">{metric.label}</span>
@@ -143,23 +143,23 @@ export function Architecture() {
         })}
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-6">
+      <div className="neo-flat p-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-medium text-zinc-200">Dependency Graph</h2>
             <p className="mt-1 text-xs text-zinc-500">Repository dependencies and direct relationships</p>
           </div>
-          <span className="rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-xs text-zinc-500">Live</span>
+          <span className="neo-pressed px-2.5 py-1 text-xs text-zinc-500">Live</span>
         </div>
 
-        <div className="mt-6 flex min-h-[280px] flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-800 bg-zinc-900/20 p-6">
+        <div className="neo-pressed mt-6 flex min-h-[280px] flex-col items-center justify-center p-6">
           <div className="flex flex-wrap items-center justify-center gap-3">
             {dependencyNodes.map((edge, index) => (
               <button
                 key={`${edge.to}-${index}`}
                 type="button"
                 onClick={() => setSelectedModule(edge.to)}
-                className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs transition hover:border-zinc-700 hover:bg-zinc-900"
+                className="neo-convex flex items-center gap-2 px-3 py-2 text-xs transition"
               >
                 <span className="font-medium text-zinc-300">{edge.from}</span>
                 <ArrowRight className="size-3 text-zinc-600" />
@@ -177,7 +177,7 @@ export function Architecture() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-6">
+      <div className="neo-flat p-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-medium text-zinc-200">Repository Layers</h2>
@@ -187,7 +187,7 @@ export function Architecture() {
 
         <div className="mt-6 space-y-3">
           {layers.map((layer) => (
-            <div key={layer.name} className={`rounded-lg border p-4 transition ${layer.color}`}>
+            <div key={layer.name} className={`neo-pressed p-4 transition ${layer.color.replace('border-', 'ring-1 ring-').replace('bg-', '')}`}>
               <button type="button" onClick={() => toggleLayer(layer.name)} className="flex w-full items-center justify-between text-left">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">{layer.name}</h3>
                 <span className="text-xs text-zinc-500">{expandedLayers.has(layer.name) ? 'Collapse' : 'Expand'}</span>
@@ -202,7 +202,7 @@ export function Architecture() {
                         key={moduleName}
                         type="button"
                         onClick={() => module && setSelectedModule(module.name)}
-                        className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm transition hover:border-zinc-700 hover:bg-zinc-900"
+                        className="neo-convex flex items-center gap-2 px-3 py-2 text-sm transition"
                       >
                         <Icon className="size-4 text-zinc-400" />
                         <span className="text-zinc-300">{moduleName}</span>
@@ -227,15 +227,15 @@ export function Architecture() {
                 type="button"
                 onClick={() => setSelectedModule(module.name)}
                 className={[
-                  'group rounded-lg border bg-zinc-950/80 p-5 text-left transition hover:border-zinc-700 hover:shadow-lg',
-                  selectedArchitectureModule?.name === module.name ? 'border-zinc-600 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]' : 'border-zinc-800',
+                  'group p-5 text-left transition',
+                  selectedArchitectureModule?.name === module.name ? 'neo-pressed ring-1 ring-violet-500/50' : 'neo-convex',
                 ].join(' ')}
               >
                 <div className="flex items-start justify-between">
-                  <div className="grid size-10 place-items-center rounded-lg border border-zinc-800 bg-zinc-900/50">
+                  <div className="neo-pressed grid size-10 place-items-center">
                     <Icon className="size-5 text-zinc-400 transition group-hover:text-white" />
                   </div>
-                  <span className="rounded-md border border-zinc-800 bg-zinc-950 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+                  <span className="neo-pressed px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-600">
                     {module.type}
                   </span>
                 </div>
@@ -251,7 +251,7 @@ export function Architecture() {
           })}
         </div>
         {selectedArchitectureModule && (
-          <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/80 p-4 text-sm text-zinc-400">
+          <div className="neo-pressed mt-4 p-4 text-sm text-zinc-400">
             <p className="font-medium text-zinc-200">{selectedArchitectureModule.name}</p>
             <p className="mt-1">{selectedArchitectureModule.description}</p>
             <p className="mt-3 font-mono text-xs text-zinc-500">
@@ -261,12 +261,12 @@ export function Architecture() {
         )}
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-6">
+      <div className="neo-flat p-6">
         <h2 className="text-sm font-medium text-zinc-200">Architecture Summary</h2>
         <p className="mt-2 text-sm leading-6 text-zinc-400">{data.summary.overview}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {data.summary.technologies.slice(0, 6).map((technology) => (
-            <span key={technology} className="rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-xs text-zinc-400">{technology}</span>
+            <span key={technology} className="neo-convex px-2.5 py-1 text-xs text-zinc-400">{technology}</span>
           ))}
         </div>
       </div>
