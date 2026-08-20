@@ -17,26 +17,25 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-12">
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
       {/* Background effects */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 size-96 rounded-full bg-violet-600/5 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 size-96 rounded-full bg-cyan-600/5 blur-3xl" />
-        <div className="absolute left-1/2 top-0 h-px w-1/2 -translate-x-1/2 bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
+        <div className="absolute -left-32 -top-32 size-96 rounded-full bg-violet-600/10 blur-3xl dark:bg-violet-600/5" />
+        <div className="absolute -bottom-32 -right-32 size-96 rounded-full bg-blue-600/10 blur-3xl dark:bg-blue-600/5" />
       </div>
 
       <div className="relative w-full max-w-md">
         {/* Branding */}
         <div className="mb-10 text-center">
-          <div className="mx-auto inline-flex rounded-3xl border border-zinc-800 bg-zinc-950 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+          <div className="neo-convex mx-auto inline-flex p-6">
             <Logo size={120} variant="glowing" />
           </div>
-          <h1 className="mt-6 text-3xl font-bold tracking-tight text-white sm:text-4xl">{title}</h1>
-          <p className="mt-3 text-sm text-zinc-500 sm:text-base">{subtitle}</p>
+          <h1 className="mt-6 text-3xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-4xl">{title}</h1>
+          <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 sm:text-base">{subtitle}</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
+        <div className="neo-flat p-8">
           {children}
         </div>
       </div>
