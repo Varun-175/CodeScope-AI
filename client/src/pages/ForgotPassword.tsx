@@ -37,7 +37,7 @@ export function ForgotPassword() {
           </p>
           <Link
             to="/login"
-            className="neo-convex mt-6 flex h-10 items-center gap-2 px-4 text-sm font-medium text-white transition hover:text-violet-300"
+            className="neo-convex mt-6 flex h-10 items-center gap-2 px-4 text-sm font-medium text-zinc-900 transition hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-300"
           >
             <ArrowLeft className="size-4" /> Back to sign in
           </Link>
@@ -50,13 +50,13 @@ export function ForgotPassword() {
     <AuthLayout title="Reset password" subtitle="Enter your email to receive a reset link">
       <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block">
-          <span className="text-sm font-medium text-zinc-300">Email address</span>
+          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Email address</span>
           <input
             type="email"
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError('') }}
             placeholder="you@example.com"
-            className="neo-pressed mt-2 h-10 w-full px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:outline-violet-500"
+            className="neo-pressed mt-2 h-10 w-full px-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 dark:text-white dark:placeholder:text-zinc-600"
             autoComplete="email"
             autoFocus
           />
@@ -66,7 +66,7 @@ export function ForgotPassword() {
         <button
           type="submit"
           disabled={isLoading}
-          className="neo-convex flex h-10 w-full items-center justify-center gap-2 text-sm font-medium text-white transition hover:text-violet-300 disabled:opacity-50"
+          className="neo-accent flex h-10 w-full items-center justify-center gap-2 text-sm font-medium transition disabled:opacity-50"
         >
           {isLoading ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
           {isLoading ? 'Sending…' : 'Send reset link'}
@@ -74,7 +74,7 @@ export function ForgotPassword() {
       </form>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        <Link to="/login" className="inline-flex items-center gap-1 font-medium text-zinc-300 transition hover:text-white">
+        <Link to="/login" className="inline-flex items-center gap-1 font-medium text-zinc-700 transition hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
           <ArrowLeft className="size-3.5" /> Back to sign in
         </Link>
       </p>
