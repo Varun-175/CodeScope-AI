@@ -395,8 +395,8 @@ export function Settings() {
                 className={[
                   'flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium transition',
                   isActive
-                    ? 'neo-pressed text-violet-400'
-                    : 'neo-convex text-zinc-400 hover:text-zinc-200',
+                    ? 'neo-flat border-l-2 border-violet-500 text-violet-600 dark:text-violet-400'
+                    : 'neo-convex text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200',
                 ].join(' ')}
               >
                 <Icon className={['size-4 shrink-0', isActive ? 'text-violet-400' : 'text-zinc-500'].join(' ')} />
@@ -473,9 +473,9 @@ export function Settings() {
                         applySettings({ theme: option.id as any })
                       }}
                       className={[
-                        'flex flex-col items-center justify-center p-4 transition text-center',
+                        'flex flex-col items-center justify-center p-4 transition text-center rounded-xl',
                         isSelected
-                          ? 'neo-pressed text-zinc-900 dark:text-white'
+                          ? 'neo-flat ring-2 ring-violet-500 text-violet-600 dark:text-violet-400'
                           : 'neo-convex text-zinc-600 dark:text-zinc-400',
                       ].join(' ')}
                     >
@@ -502,8 +502,8 @@ export function Settings() {
                         applySettings({ accent: option.id as typeof accent })
                       }}
                       className={[
-                        'flex h-9 items-center gap-2 px-3 text-xs font-medium capitalize transition',
-                        accent === option.id ? 'neo-pressed text-zinc-900 dark:text-white' : 'neo-convex text-zinc-500 hover:text-zinc-300',
+                        'flex h-9 items-center gap-2 px-3 text-xs font-medium capitalize transition rounded-lg',
+                        accent === option.id ? 'neo-flat ring-2 ring-violet-500 text-zinc-900 dark:text-white' : 'neo-convex text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300',
                       ].join(' ')}
                     >
                       <span className={`size-3 rounded-full ${option.className}`} />
@@ -530,7 +530,7 @@ export function Settings() {
                           setSidebarDensity(option.id as 'compact' | 'comfortable' | 'spacious')
                           applySettings({ sidebarDensity: option.id as 'compact' | 'comfortable' | 'spacious' })
                         }}
-                        className={['px-3 py-2 text-xs font-medium transition', isSelected ? 'neo-pressed text-zinc-900 dark:text-white' : 'neo-convex text-zinc-600 dark:text-zinc-400 hover:text-zinc-200'].join(' ')}
+                        className={['px-3 py-2 text-xs font-medium transition rounded-lg', isSelected ? 'neo-flat ring-2 ring-violet-500 text-violet-600 dark:text-violet-400' : 'neo-convex text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'].join(' ')}
                       >
                         {option.label}
                       </button>
