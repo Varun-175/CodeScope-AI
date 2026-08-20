@@ -473,7 +473,7 @@ export function Chat() {
           </div>
         )}
 
-        <div className="flex-1 space-y-1 overflow-y-auto py-6">
+        <div className="flex-1 space-y-2 overflow-y-auto py-6">
           {messages.map((message) => (
             <div key={message.id} className={`group flex gap-3 rounded-lg px-4 py-4 transition ${message.role === 'user' ? 'bg-transparent' : 'bg-zinc-900/30'}`}>
               <div className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-md ${message.role === 'user' ? 'neo-convex text-zinc-600 dark:text-zinc-300' : 'neo-convex text-violet-500'}`}>
