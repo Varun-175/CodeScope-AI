@@ -383,7 +383,7 @@ export function Settings() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
         {/* Navigation Tabs */}
-        <nav className="neo-flat h-fit p-2 md:col-span-3">
+        <nav className="neo-flat h-fit p-2 space-y-2 md:col-span-3">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
