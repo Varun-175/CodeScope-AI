@@ -541,20 +541,28 @@ export function Settings() {
 
               <div>
                 <h3 className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Animated Interface</h3>
-                <div className="neo-pressed mt-3 flex items-center gap-3 px-4 py-3">
-                  <label className="flex items-center gap-2 text-sm text-zinc-800 dark:text-zinc-200">
-                    <input
-                      type="checkbox"
-                      checked={animations}
-                      onChange={(e) => {
-                        setAnimations(e.target.checked)
-                        applySettings({ animations: e.target.checked })
-                      }}
-                      className="h-4 w-4 rounded border-zinc-700 bg-zinc-950 accent-violet-500"
+                <div className="neo-pressed mt-3 flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Enable UI animations</span>
+                    <span className="text-xs text-zinc-500">Toggle motion effects for transitions and feedback.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAnimations(!animations)
+                      applySettings({ animations: !animations })
+                    }}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      animations ? 'neo-accent' : 'bg-zinc-300 dark:bg-zinc-800 neo-pressed'
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        animations ? 'translate-x-5' : 'translate-x-0'
+                      }`}
                     />
-                    Enable UI animations
-                  </label>
-                  <span className="text-xs text-zinc-500">Toggle motion effects for transitions and feedback.</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -676,18 +684,26 @@ export function Settings() {
               </div>
 
               <div className="space-y-4">
-                <label className="neo-pressed flex items-center gap-3 p-4">
-                  <input
-                    type="checkbox"
-                    checked={localConfig.enabled}
-                    onChange={(e) => setLocalConfig({ ...localConfig, enabled: e.target.checked })}
-                    className="size-4 rounded border-zinc-800 bg-zinc-950 accent-violet-500"
-                  />
-                  <div>
-                    <span className="block text-sm font-medium text-zinc-800 dark:text-zinc-200">Enable Local Inference</span>
-                    <span className="block text-xs text-zinc-500">Fallback to local endpoint when processing sensitive data.</span>
+                <div className="neo-pressed flex items-center justify-between gap-3 p-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Enable Local Inference</span>
+                    <span className="text-xs text-zinc-500">Fallback to local endpoint when processing sensitive data.</span>
                   </div>
-                </label>
+                  <button
+                    type="button"
+                    onClick={() => setLocalConfig({ ...localConfig, enabled: !localConfig.enabled })}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      localConfig.enabled ? 'neo-accent' : 'bg-zinc-300 dark:bg-zinc-800 neo-pressed'
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        localConfig.enabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
 
                 {localConfig.enabled && (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
