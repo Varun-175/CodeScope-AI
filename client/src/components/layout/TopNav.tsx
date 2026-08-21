@@ -11,6 +11,7 @@ import {
 import { useRepositoryAnalysis } from '../../contexts/RepositoryAnalysisContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { Logo } from '../shared/Logo'
+import { JobTracker } from './JobTracker'
 
 type TopNavProps = {
   isSidebarCollapsed: boolean
@@ -90,6 +91,8 @@ export function TopNav({
         <span className="hidden sm:inline">Analyze Repository</span>
         <span className="sm:hidden">Analyze</span>
       </button>
+
+      <JobTracker />
 
       <div className="relative">
         <button
