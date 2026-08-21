@@ -201,6 +201,7 @@ analysis_reports/
 # Local User Files
 # ==========================================================
 project_overview.md
+CodeScope AI — Production-Grade HLD & LLD Architecture Plan.md
 *.local
 *.secret
 *.key
