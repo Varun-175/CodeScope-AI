@@ -1,92 +1,132 @@
 import { useState } from 'react'
-import { Activity, Loader2, CheckCircle2, AlertCircle, X, Maximize2 } from 'lucide-react'
+import { Activity, Loader2, CheckCircle2, AlertCircle, Clock, X, Maximize2, Trash2 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import { useJobs, type Job } from '../../contexts/JobContext'
 
-export type JobStatus = 'running' | 'completed' | 'failed' | 'queued'
-
-export type Job = {
-  id: string
-  title: string
-  status: JobStatus
-  progress?: number
+const statusMeta: Record<Job['status'], { icon: React.ReactNode; label: string; color: string }> = {
+  running: { icon: <Loader2 className="size-4 animate-spin text-violet-400" />, label: 'Running', color: 'text-violet-400' },
+  queued:  { icon: <Clock className="size-4 text-zinc-500" />, label: 'Queued', color: 'text-zinc-400' },
+  completed: { icon: <CheckCircle2 className="size-4 text-emerald-500" />, label: 'Done', color: 'text-emerald-400' },
+  failed:  { icon: <AlertCircle className="size-4 text-red-500" />, label: 'Failed', color: 'text-red-400' },
 }
 
 export function JobTracker() {
   const [isOpen, setIsOpen] = useState(false)
-  
-  // Mock data for jobs
-  const [jobs] = useState<Job[]>([
-    { id: 'job-1', title: 'Repository Indexing: CodeScope-AI', status: 'running', progress: 45 },
-    { id: 'job-2', title: 'Running Backend Tests', status: 'queued' },
-    { id: 'job-3', title: 'Docker Image Build', status: 'failed' },
-    { id: 'job-4', title: 'Generate AST for main', status: 'completed' }
-  ])
+  const { jobs, removeJob, clearCompleted, activeCount } = useJobs()
 
   const runningJobs = jobs.filter(j => j.status === 'running')
+  const hasCompleted = jobs.some(j => j.status === 'completed')
 
   return (
     <div className="relative">
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className="neo-convex flex h-9 items-center gap-2 px-3 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+        className={[
+          'neo-convex flex h-9 items-center gap-2 px-3 text-sm font-medium transition',
+          isOpen ? 'neo-pressed text-violet-400' : 'text-zinc-500 hover:text-zinc-100',
+        ].join(' ')}
       >
-        <Activity className="size-4" />
+        {runningJobs.length > 0
+          ? <Loader2 className="size-4 animate-spin text-violet-400" />
+          : <Activity className="size-4" />
+        }
         <span>Jobs</span>
-        {runningJobs.length > 0 && (
-          <span className="flex h-5 items-center rounded-full bg-violet-500/10 px-2 text-[10px] text-violet-500">
-            {runningJobs.length} active
+        {activeCount > 0 && (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-500/15 px-1.5 text-[10px] font-bold text-violet-400 animate-pulse-glow">
+            {activeCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="neo-flat absolute right-0 top-full mt-2 w-80 overflow-hidden z-50">
-          <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50 px-4 py-3">
-            <h3 className="text-sm font-semibold text-zinc-100">Background Tasks</h3>
-            <div className="flex gap-2">
-              <NavLink 
-                to="/workflows"
-                onClick={() => setIsOpen(false)}
-                className="text-zinc-400 hover:text-white"
-                title="View all workflows"
-              >
-                <Maximize2 className="size-4" />
-              </NavLink>
-              <button onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-white">
-                <X className="size-4" />
-              </button>
+        <>
+          {/* Backdrop */}
+          <button
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+            aria-label="Close job panel"
+          />
+
+          <div className="neo-flat animate-slide-in-right absolute right-0 top-full mt-2 w-[340px] overflow-hidden z-50 border border-zinc-800/80">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/60 px-4 py-3">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-100">Background Tasks</h3>
+                <p className="text-[10px] text-zinc-500 mt-0.5">{jobs.length} total · {activeCount} active</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {hasCompleted && (
+                  <button
+                    onClick={clearCompleted}
+                    className="neo-convex p-1.5 text-zinc-500 hover:text-zinc-200 transition"
+                    title="Clear completed"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                )}
+                <NavLink
+                  to="/workflows"
+                  onClick={() => setIsOpen(false)}
+                  className="neo-convex p-1.5 text-zinc-500 hover:text-zinc-200 transition"
+                  title="View all workflows"
+                >
+                  <Maximize2 className="size-3.5" />
+                </NavLink>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="neo-convex p-1.5 text-zinc-500 hover:text-zinc-200 transition"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Job list */}
+            <div className="max-h-80 overflow-y-auto scrollbar-thin p-2 space-y-1">
+              {jobs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+                  <Activity className="size-6 text-zinc-700" />
+                  <p className="text-sm text-zinc-500">No active jobs.</p>
+                </div>
+              ) : (
+                jobs.map(job => {
+                  const meta = statusMeta[job.status]
+                  return (
+                    <div key={job.id} className="group flex items-start gap-3 rounded-lg p-3 hover:bg-zinc-800/40 transition relative">
+                      <div className="shrink-0 pt-0.5">{meta.icon}</div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-zinc-200 pr-6">{job.title}</p>
+                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${meta.color}`}>
+                          {meta.label}
+                        </span>
+                        {job.error && (
+                          <p className="text-[10px] text-red-400 mt-0.5 truncate">{job.error}</p>
+                        )}
+                        {job.status === 'running' && job.progress !== undefined && (
+                          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+                            <div
+                              className="h-full bg-gradient-to-r from-violet-600 to-violet-400 transition-all duration-700"
+                              style={{ width: `${job.progress}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => removeJob(job.id)}
+                        className="absolute right-2 top-2 p-1 text-zinc-700 hover:text-zinc-300 transition opacity-0 group-hover:opacity-100"
+                        title="Dismiss"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
-          
-          <div className="max-h-96 overflow-y-auto p-2 space-y-1">
-            {jobs.length === 0 ? (
-              <p className="p-4 text-center text-sm text-zinc-500">No active jobs.</p>
-            ) : (
-              jobs.map(job => (
-                <div key={job.id} className="group relative flex items-center gap-3 rounded-lg p-3 hover:bg-zinc-800/50">
-                  <div className="shrink-0">
-                    {job.status === 'running' && <Loader2 className="size-4 animate-spin text-violet-500" />}
-                    {job.status === 'completed' && <CheckCircle2 className="size-4 text-green-500" />}
-                    {job.status === 'failed' && <AlertCircle className="size-4 text-red-500" />}
-                    {job.status === 'queued' && <Activity className="size-4 text-zinc-500" />}
-                  </div>
-                  
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-zinc-200">{job.title}</p>
-                    {job.status === 'running' && job.progress !== undefined && (
-                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
-                        <div 
-                          className="h-full bg-violet-500 transition-all duration-500"
-                          style={{ width: `${job.progress}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        </>
       )}
     </div>
   )
