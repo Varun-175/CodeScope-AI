@@ -1,28 +1,28 @@
+import { lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '../layouts/AppLayout'
-import { Chat } from '../pages/Chat'
-import { Dashboard } from '../pages/Dashboard'
-import { Repository } from '../pages/Repository'
-import { RepositoryOverview } from '../pages/RepositoryOverview'
-import { Settings } from '../pages/Settings'
-import { CodeReviews } from '../pages/CodeReviews'
-import { Architecture } from '../pages/Architecture'
-import { Login } from '../pages/Login'
-import { Register } from '../pages/Register'
-import { ForgotPassword } from '../pages/ForgotPassword'
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
 
-// New domain pages
-import { Organizations } from '../pages/Organizations'
-import { Projects } from '../pages/Projects'
-import { Intelligence } from '../pages/Intelligence'
-import { Planning } from '../pages/Planning'
-import { Testing } from '../pages/Testing'
-import { Deployment } from '../pages/Deployment'
-import { Observability } from '../pages/Observability'
-import { Incidents } from '../pages/Incidents'
-import { Workflows } from '../pages/Workflows'
-import { Audit } from '../pages/Audit'
+const Login = lazy(() => import('../pages/Login').then(({ Login }) => ({ default: Login })))
+const Register = lazy(() => import('../pages/Register').then(({ Register }) => ({ default: Register })))
+const ForgotPassword = lazy(() => import('../pages/ForgotPassword').then(({ ForgotPassword }) => ({ default: ForgotPassword })))
+const Dashboard = lazy(() => import('../pages/Dashboard').then(({ Dashboard }) => ({ default: Dashboard })))
+const Organizations = lazy(() => import('../pages/Organizations').then(({ Organizations }) => ({ default: Organizations })))
+const Projects = lazy(() => import('../pages/Projects').then(({ Projects }) => ({ default: Projects })))
+const RepositoryOverview = lazy(() => import('../pages/RepositoryOverview').then(({ RepositoryOverview }) => ({ default: RepositoryOverview })))
+const Repository = lazy(() => import('../pages/Repository').then(({ Repository }) => ({ default: Repository })))
+const Intelligence = lazy(() => import('../pages/Intelligence').then(({ Intelligence }) => ({ default: Intelligence })))
+const Architecture = lazy(() => import('../pages/Architecture').then(({ Architecture }) => ({ default: Architecture })))
+const Planning = lazy(() => import('../pages/Planning').then(({ Planning }) => ({ default: Planning })))
+const Chat = lazy(() => import('../pages/Chat').then(({ Chat }) => ({ default: Chat })))
+const CodeReviews = lazy(() => import('../pages/CodeReviews').then(({ CodeReviews }) => ({ default: CodeReviews })))
+const Testing = lazy(() => import('../pages/Testing').then(({ Testing }) => ({ default: Testing })))
+const Deployment = lazy(() => import('../pages/Deployment').then(({ Deployment }) => ({ default: Deployment })))
+const Observability = lazy(() => import('../pages/Observability').then(({ Observability }) => ({ default: Observability })))
+const Incidents = lazy(() => import('../pages/Incidents').then(({ Incidents }) => ({ default: Incidents })))
+const Workflows = lazy(() => import('../pages/Workflows').then(({ Workflows }) => ({ default: Workflows })))
+const Settings = lazy(() => import('../pages/Settings').then(({ Settings }) => ({ default: Settings })))
+const Audit = lazy(() => import('../pages/Audit').then(({ Audit }) => ({ default: Audit })))
 
 export const router = createBrowserRouter([
   {
