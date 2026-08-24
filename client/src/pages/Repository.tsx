@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   ChevronRight,
   ChevronDown,
@@ -397,6 +398,7 @@ function TreeItem({
 // ---------- Main Repository Component ----------
 export function Repository() {
   const { data, status } = useRepositoryAnalysis()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [fileTree, setFileTree] = useState<FileNode[]>([])
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null)
   const [fileContent, setFileContent] = useState<string | null>(null)
@@ -420,6 +422,8 @@ export function Repository() {
 
   // Extract owner, repo, branch from context
   const repoMeta = data?.repository
+  const filePathParam = searchParams.get('file')
+  const lineParam = Number(searchParams.get('line'))
   const repositoryOwner = repoMeta?.owner ?? ''
   const repositoryName = repoMeta?.name ?? ''
   const repositoryBranch = repoMeta?.branch || 'main'
@@ -427,6 +431,22 @@ export function Repository() {
   const selectedBranch = branchSelection.repositoryKey === repositoryKey
     ? branchSelection.branch
     : repositoryBranch
+
+  const updateExplorerUrl = useCallback((filePath: string | null, line: number | null = null) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current)
+      if (filePath) next.set('file', filePath)
+      else next.delete('file')
+      if (line && line > 0) next.set('line', String(line))
+      else next.delete('line')
+      return next
+    })
+  }, [setSearchParams])
+
+  const selectFile = useCallback((file: FileNode) => {
+    setSelectedFile(file)
+    updateExplorerUrl(file.path)
+  }, [updateExplorerUrl])
 
   useEffect(() => {
     if (!repositoryOwner || !repositoryName) return
@@ -517,6 +537,29 @@ export function Repository() {
       void Promise.resolve().then(fetchTree)
     }
   }, [repositoryOwner, repositoryName, fetchTree])
+
+  useEffect(() => {
+    if (!filePathParam || !fileTree.length || selectedFile?.path === filePathParam) return
+
+    function findFile(nodes: FileNode[]): FileNode | null {
+      for (const node of nodes) {
+        if (node.path === filePathParam && node.type === 'file') return node
+        if (node.children) {
+          const match = findFile(node.children)
+          if (match) return match
+        }
+      }
+      return null
+    }
+
+    const file = findFile(fileTree)
+    if (file) {
+      queueMicrotask(() => {
+        setSelectedFile(file)
+        if (Number.isInteger(lineParam) && lineParam > 0) setHighlightedLine(lineParam)
+      })
+    }
+  }, [filePathParam, fileTree, lineParam, selectedFile?.path])
 
   // 2. Fetch File Content from GitHub Raw
   useEffect(() => {
@@ -629,19 +672,19 @@ export function Repository() {
         e.preventDefault()
         const nextNode = visible[currentIndex + 1]
         if (nextNode) {
-          if (nextNode.type === 'file') setSelectedFile(nextNode)
+          if (nextNode.type === 'file') selectFile(nextNode)
           else handleToggle(nextNode.path)
         }
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
         const prevNode = visible[currentIndex - 1]
         if (prevNode) {
-          if (prevNode.type === 'file') setSelectedFile(prevNode)
+          if (prevNode.type === 'file') selectFile(prevNode)
           else handleToggle(prevNode.path)
         }
       }
     },
-    [fileTree, expandedPaths, selectedFile]
+    [fileTree, expandedPaths, selectedFile, selectFile]
   )
 
   function handleCopyCode() {
@@ -655,6 +698,7 @@ export function Repository() {
 
   function handleSymbolClick(lineNum: number) {
     setHighlightedLine(lineNum)
+    updateExplorerUrl(selectedFile?.path ?? null, lineNum)
     setTimeout(() => {
       const lineEl = document.getElementById(`line-${lineNum}`)
       if (lineEl) {
@@ -799,7 +843,7 @@ export function Repository() {
                   node={node}
                   depth={0}
                   selectedPath={selectedFile?.path ?? null}
-                  onSelect={(file) => setSelectedFile(file)}
+                  onSelect={selectFile}
                   expandedPaths={expandedPaths}
                   onToggle={handleToggle}
                   searchQuery={searchQuery}
@@ -832,7 +876,10 @@ export function Repository() {
                     <span>{selectedFile.name}</span>
                     <button
                       type="button"
-                      onClick={() => setSelectedFile(null)}
+                      onClick={() => {
+                        setSelectedFile(null)
+                        updateExplorerUrl(null)
+                      }}
                       className="ml-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 p-0.5 rounded transition"
                       title="Close file"
                     >
@@ -918,7 +965,10 @@ export function Repository() {
                             <tr
                               key={i}
                               id={`line-${i + 1}`}
-                              onClick={() => setHighlightedLine(i + 1)}
+                              onClick={() => {
+                                setHighlightedLine(i + 1)
+                                updateExplorerUrl(selectedFile.path, i + 1)
+                              }}
                               className={[
                                 'transition duration-150',
                                 isLineHighlighted ? 'bg-zinc-200 dark:bg-zinc-800/60 border-l-2 border-violet-500' : 'hover:bg-zinc-100 dark:hover:bg-zinc-900/30',
