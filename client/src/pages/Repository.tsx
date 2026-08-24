@@ -25,6 +25,7 @@ import {
   Minimize2,
   FileCode,
   Sparkles,
+  CheckCircle2,
 } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 import { useToast } from '../contexts/ToastContext'
@@ -679,7 +680,7 @@ export function Repository() {
   }
 
   // Skeletons for tree
-  if (status === 'idle') {
+  if ((status === 'idle' || status === 'failed') && !data) {
     return (
       <div className="neo-flat flex min-h-[calc(100vh-14rem)] items-center justify-center p-8">
         <EmptyState
@@ -997,6 +998,22 @@ export function Repository() {
               </button>
             ))}
           </div>
+
+          {selectedFile && highlightedLine && fileContent !== null && (
+            <section className="neo-pressed border-l-2 border-emerald-500/70 p-3" aria-label="Source evidence">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                Verified source evidence
+              </div>
+              <p className="mt-2 truncate font-mono text-[10px] text-zinc-500">
+                {selectedFile.path}:{highlightedLine}
+              </p>
+              <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words text-[11px] leading-5 text-zinc-300">
+                {fileContent.split('\n')[highlightedLine - 1] || '(blank line)'}
+              </pre>
+              <p className="mt-2 text-[10px] leading-4 text-zinc-600">Evidence is taken directly from the selected repository snapshot.</p>
+            </section>
+          )}
 
           {!selectedFile || !insights ? (
             <div className="neo-flat flex-1 flex flex-col items-center justify-center py-12 text-center border-dashed border-zinc-300 dark:border-zinc-800">
