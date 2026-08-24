@@ -418,6 +418,7 @@ export function Repository() {
   const [activeQuickInsight, setActiveQuickInsight] = useState<'summary' | 'metrics' | 'symbols'>('summary')
 
   const explorerRef = useRef<HTMLDivElement>(null)
+  const treeControllerRef = useRef<AbortController | null>(null)
   const { pushToast } = useToast()
 
   // Extract owner, repo, branch from context
@@ -450,17 +451,20 @@ export function Repository() {
 
   useEffect(() => {
     if (!repositoryOwner || !repositoryName) return
+    const controller = new AbortController()
 
     async function loadBranches() {
       try {
-        const branches = await getRepositoryBranches(repositoryOwner, repositoryName)
+        const branches = await getRepositoryBranches(repositoryOwner, repositoryName, controller.signal)
         setBranchOptions(branches.map((branch) => branch.name).slice(0, 30))
-      } catch {
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === 'AbortError') return
         setBranchOptions([])
       }
     }
 
-    loadBranches()
+    void loadBranches()
+    return () => controller.abort()
   }, [repositoryOwner, repositoryName])
 
   // 1. Fetch Repository Tree from GitHub API when repo changes
@@ -473,8 +477,11 @@ export function Repository() {
     setSelectedFile(null)
     setFileContent(null)
 
+    treeControllerRef.current?.abort()
+    const controller = new AbortController()
+    treeControllerRef.current = controller
     try {
-      const treeData = await getRepositoryTree(repositoryOwner, repositoryName, selectedBranch)
+      const treeData = await getRepositoryTree(repositoryOwner, repositoryName, selectedBranch, controller.signal)
 
       // Construct tree nodes recursively
       const rootNodes: FileNode[] = []
@@ -526,9 +533,11 @@ export function Repository() {
       })
       setExpandedPaths(initialExpanded)
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Error occurred while loading tree.')
     } finally {
-      setIsLoadingTree(false)
+      if (!controller.signal.aborted) setIsLoadingTree(false)
+      if (treeControllerRef.current === controller) treeControllerRef.current = null
     }
   }, [repositoryOwner, repositoryName, selectedBranch])
 
@@ -536,6 +545,7 @@ export function Repository() {
     if (repositoryOwner && repositoryName) {
       void Promise.resolve().then(fetchTree)
     }
+    return () => treeControllerRef.current?.abort()
   }, [repositoryOwner, repositoryName, fetchTree])
 
   useEffect(() => {
@@ -564,6 +574,7 @@ export function Repository() {
   // 2. Fetch File Content from GitHub Raw
   useEffect(() => {
     if (!selectedFile || !repositoryOwner || !repositoryName) return
+    const controller = new AbortController()
 
     const loadContent = async () => {
       setIsLoadingContent(true)
@@ -574,17 +585,19 @@ export function Repository() {
         const repo = repositoryName
         const path = selectedFile.path
 
-        const text = await getRepositoryFile(owner, repo, selectedBranch, path)
+        const text = await getRepositoryFile(owner, repo, selectedBranch, path, controller.signal)
         setFileContent(text)
       } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === 'AbortError') return
         const message = err instanceof Error ? err.message : 'Failed to retrieve file contents.'
         setFileContent(`// Error loading file contents: ${message}`)
       } finally {
-        setIsLoadingContent(false)
+        if (!controller.signal.aborted) setIsLoadingContent(false)
       }
     }
 
-    loadContent()
+    void loadContent()
+    return () => controller.abort()
   }, [selectedFile, repositoryOwner, repositoryName, selectedBranch])
 
   // 3. Tree toggle helper
