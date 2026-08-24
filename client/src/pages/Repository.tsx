@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback, type ReactNode } from 'react'
 import {
   ChevronRight,
   ChevronDown,
@@ -29,6 +29,7 @@ import {
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 import { useToast } from '../contexts/ToastContext'
 import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { getRepositoryBranches, getRepositoryFile, getRepositoryTree } from '../services/api/github'
 
 // ---------- Types ----------
 type FileNode = {
@@ -78,53 +79,42 @@ function highlightCodeLine(line: string) {
   const tokenRegex = /(?:\/\/*|#.*|\/\*[\s\S]*?\*\/)|(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\b(?:const|let|var|function|return|import|from|export|default|class|extends|def|if|else|for|while|try|catch|finally|async|await|type|interface|enum|public|private|protected|package|as|self|this|with|yield|fn|impl|struct|trait|pub|use|mut|match|break|continue|in|and|or|not|is|lambda|pass|assert|raise|except|switch|case)\b)|(\b[\w_]+(?=\s*\())|(\b\d+(?:\.\d+)?\b)|([{}[\]()])|([+\-*/%&|^!~=<>?:]+|[,;])/g
 
   let lastIndex = 0
-  let html = ''
-
-  const escapeHtml = (text: string) => {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-  }
+  const tokens: ReactNode[] = []
 
   line.replace(tokenRegex, (match, keyword, fn, num, bracket, op, index) => {
-    if (index > lastIndex) {
-      html += escapeHtml(line.slice(lastIndex, index))
-    }
+    if (index > lastIndex) tokens.push(line.slice(lastIndex, index))
 
-    const escapedMatch = escapeHtml(match)
-
+    let className = 'text-zinc-300'
     if (match.startsWith('//') || match.startsWith('#') || match.startsWith('/*')) {
-      html += `<span class="text-zinc-500 font-mono italic">${escapedMatch}</span>`
+      className = 'text-zinc-500 italic'
     } else if (match.startsWith('"') || match.startsWith("'") || match.startsWith('`')) {
-      html += `<span class="text-emerald-400 font-mono">${escapedMatch}</span>`
+      className = 'text-emerald-400'
     } else if (keyword !== undefined) {
-      html += `<span class="text-violet-400 font-semibold">${escapedMatch}</span>`
+      className = 'text-violet-400 font-semibold'
     } else if (fn !== undefined) {
-      html += `<span class="text-blue-400">${escapedMatch}</span>`
+      className = 'text-blue-400'
     } else if (num !== undefined) {
-      html += `<span class="text-amber-400">${escapedMatch}</span>`
+      className = 'text-amber-400'
     } else if (bracket !== undefined) {
-      let bracketClass = 'text-zinc-400'
-      if (['{', '}'].includes(match)) bracketClass = 'text-amber-500 font-semibold'
-      else if (['(', ')'].includes(match)) bracketClass = 'text-sky-400 font-semibold'
-      else if (['[', ']'].includes(match)) bracketClass = 'text-pink-400 font-semibold'
-      html += `<span class="${bracketClass}">${escapedMatch}</span>`
+      className = ['{', '}'].includes(match)
+        ? 'text-amber-500 font-semibold'
+        : ['(', ')'].includes(match)
+          ? 'text-sky-400 font-semibold'
+          : ['[', ']'].includes(match)
+            ? 'text-pink-400 font-semibold'
+            : 'text-zinc-400'
     } else if (op !== undefined) {
-      html += `<span class="text-fuchsia-500/90">${escapedMatch}</span>`
-    } else {
-      html += escapedMatch
+      className = 'text-fuchsia-500/90'
     }
 
+    tokens.push(<span key={`${index}-${match}`} className={className}>{match}</span>)
     lastIndex = index + match.length
     return match
   })
 
-  if (lastIndex < line.length) {
-    html += escapeHtml(line.slice(lastIndex))
-  }
+  if (lastIndex < line.length) tokens.push(line.slice(lastIndex))
 
-  return <span className="font-mono text-zinc-300 select-text" dangerouslySetInnerHTML={{ __html: html }} />
+  return <span className="font-mono text-zinc-300 select-text">{tokens}</span>
 }
 
 // ---------- Client-side Code Parser ----------
@@ -441,9 +431,7 @@ export function Repository() {
 
     async function loadBranches() {
       try {
-        const res = await fetch(`https://api.github.com/repos/${owner}/${name}/branches`)
-        if (!res.ok) return
-        const branches = await res.json() as Array<{ name: string }>
+        const branches = await getRepositoryBranches(owner, name)
         setBranchOptions(branches.map((branch) => branch.name).slice(0, 30))
       } catch {
         setBranchOptions([])
@@ -468,19 +456,7 @@ export function Repository() {
       const repo = repoMeta.name
       const branch = selectedBranch || repoMeta.branch || 'main'
 
-      const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`
-      const response = await fetch(url)
-
-      if (!response.ok) {
-        throw new Error(
-          response.status === 403
-            ? 'GitHub API rate limit exceeded. Please try again later or add credentials.'
-            : `Failed to fetch repository details (${response.status})`
-        )
-      }
-
-      const result = await response.json()
-      const treeData = result.tree as Array<{ path: string; type: 'blob' | 'tree'; size?: number }>
+      const treeData = await getRepositoryTree(owner, repo, branch)
 
       // Construct tree nodes recursively
       const rootNodes: FileNode[] = []
@@ -558,15 +534,11 @@ export function Repository() {
         const branch = selectedBranch || repoMeta.branch || 'main'
         const path = selectedFile.path
 
-        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`
-        const res = await fetch(rawUrl)
-        if (!res.ok) {
-          throw new Error('Failed to retrieve file contents.')
-        }
-        const text = await res.text()
+        const text = await getRepositoryFile(owner, repo, branch, path)
         setFileContent(text)
-      } catch (err: any) {
-        setFileContent(`// Error loading file contents: ${err.message}`)
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to retrieve file contents.'
+        setFileContent(`// Error loading file contents: ${message}`)
       } finally {
         setIsLoadingContent(false)
       }

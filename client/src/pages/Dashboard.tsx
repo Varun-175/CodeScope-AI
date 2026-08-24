@@ -8,7 +8,7 @@ import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 export function Dashboard() {
   const { data, error, status } = useRepositoryAnalysis()
 
-  if (status === 'idle') {
+  if ((status === 'idle' || status === 'failed') && !data) {
     return <EmptyDashboardState />
   }
 

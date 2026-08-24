@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  Activity,
   PanelLeft,
   Play,
   Search,
@@ -24,7 +23,7 @@ export function TopNav({
   onMenuClick,
   onToggleSidebar,
 }: TopNavProps) {
-  const { openAnalyzeModal } = useRepositoryAnalysis()
+  const { data, status, openAnalyzeModal } = useRepositoryAnalysis()
   const { user, logout } = useAuth()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
@@ -72,9 +71,11 @@ export function TopNav({
       </div>
 
       <div className="neo-flat hidden min-w-0 items-center gap-2 px-3 py-1.5 text-sm sm:flex">
-        <Activity className="size-4 text-emerald-400" aria-hidden="true" />
+        <span className={`size-2 rounded-full ${status === 'analyzing' ? 'bg-amber-400' : data ? 'bg-emerald-400' : 'bg-zinc-500'}`} aria-hidden="true" />
         <span className="hidden text-zinc-500 md:inline">Repository</span>
-        <span className="font-medium text-zinc-200">Connected</span>
+        <span className="max-w-44 truncate font-medium text-zinc-200">
+          {data ? data.repository.name : status === 'analyzing' ? 'Analyzing' : 'Not connected'}
+        </span>
       </div>
 
       <div className="neo-pressed ml-auto hidden h-9 w-full max-w-sm items-center gap-2 px-3 text-sm md:flex">

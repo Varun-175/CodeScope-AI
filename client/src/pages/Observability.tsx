@@ -1,4 +1,4 @@
-import { Activity, Terminal, AlertTriangle, Eye, LineChart, ChevronDown } from 'lucide-react'
+import { Activity, Terminal, AlertTriangle, LineChart, ChevronDown } from 'lucide-react'
 
 export function Observability() {
   return (

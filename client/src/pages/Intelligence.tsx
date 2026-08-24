@@ -1,4 +1,4 @@
-import { Brain, Layers, GitCompare, GitPullRequest, Search, Zap } from 'lucide-react'
+import { Brain, Layers, GitPullRequest, Search, Zap } from 'lucide-react'
 
 export function Intelligence() {
   return (

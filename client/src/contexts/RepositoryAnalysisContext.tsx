@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import { analyzeRepository } from '../services/api/analysis'
 import type { AnalysisResponse } from '../types/analysis'
 
-type AnalysisStatus = 'idle' | 'analyzing' | 'complete'
+type AnalysisStatus = 'idle' | 'analyzing' | 'complete' | 'failed'
 
 type RepositoryAnalysisContextValue = {
   status: AnalysisStatus
@@ -41,7 +41,7 @@ export function RepositoryAnalysisProvider({
       const message =
         caught instanceof Error ? caught.message : 'Repository analysis failed.'
       setError(message)
-      setStatus(data ? 'complete' : 'idle')
+      setStatus('failed')
       throw caught
     }
   }

@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { AnalyzeRepositoryModal } from '../components/analysis/AnalyzeRepositoryModal'
 import { Sidebar } from '../components/layout/Sidebar'
 import { TopNav } from '../components/layout/TopNav'
+import { RepositoryContextBar } from '../components/layout/RepositoryContextBar'
 import { RepositoryAnalysisProvider } from '../contexts/RepositoryAnalysisContext'
 
 export function AppLayout() {
@@ -33,6 +34,7 @@ export function AppLayout() {
 
           <main className="min-h-[calc(100vh-4rem)] px-4 py-6 sm:px-6 lg:px-8">
             <div className="mx-auto w-full max-w-7xl animate-fade-in-up">
+              <RepositoryContextBar />
               <Outlet />
             </div>
           </main>
