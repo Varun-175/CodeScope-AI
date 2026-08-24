@@ -192,7 +192,7 @@ function parseCodeContent(filename: string, content: string): CodeInsights {
   // Estimate Cyclomatic Complexity points based on branching structures
   let complexityPoints = 1
   const decisionKeywords = /\b(if|for|while|catch|case|&&|\|\|)\b/
-  for (let line of lines) {
+  for (const line of lines) {
     if (decisionKeywords.test(line)) {
       complexityPoints++
     }
@@ -297,7 +297,7 @@ function getAllDirectories(nodes: FileNode[], paths: string[] = []): string[] {
 // ---------- Highlight Search Helper ----------
 function highlightText(text: string, query: string) {
   if (!query) return text
-  const parts = text.split(new RegExp(`(${query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi'))
+  const parts = text.split(new RegExp(`(${query.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi'))
   return (
     <>
       {parts.map((part, i) =>
@@ -405,7 +405,7 @@ export function Repository() {
   const [isLoadingContent, setIsLoadingContent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [branchOptions, setBranchOptions] = useState<string[]>([])
-  const [selectedBranch, setSelectedBranch] = useState('')
+  const [branchSelection, setBranchSelection] = useState({ repositoryKey: '', branch: '' })
 
   // Code Viewer UX states
   const [wrapLines, setWrapLines] = useState(true)
@@ -419,19 +419,20 @@ export function Repository() {
 
   // Extract owner, repo, branch from context
   const repoMeta = data?.repository
+  const repositoryOwner = repoMeta?.owner ?? ''
+  const repositoryName = repoMeta?.name ?? ''
+  const repositoryBranch = repoMeta?.branch || 'main'
+  const repositoryKey = `${repositoryOwner}/${repositoryName}`
+  const selectedBranch = branchSelection.repositoryKey === repositoryKey
+    ? branchSelection.branch
+    : repositoryBranch
 
   useEffect(() => {
-    setSelectedBranch(repoMeta?.branch || 'main')
-  }, [repoMeta?.branch, repoMeta?.owner, repoMeta?.name])
-
-  useEffect(() => {
-    if (!repoMeta?.owner || !repoMeta?.name) return
-    const owner = repoMeta.owner
-    const name = repoMeta.name
+    if (!repositoryOwner || !repositoryName) return
 
     async function loadBranches() {
       try {
-        const branches = await getRepositoryBranches(owner, name)
+        const branches = await getRepositoryBranches(repositoryOwner, repositoryName)
         setBranchOptions(branches.map((branch) => branch.name).slice(0, 30))
       } catch {
         setBranchOptions([])
@@ -439,11 +440,11 @@ export function Repository() {
     }
 
     loadBranches()
-  }, [repoMeta?.owner, repoMeta?.name])
+  }, [repositoryOwner, repositoryName])
 
   // 1. Fetch Repository Tree from GitHub API when repo changes
   const fetchTree = useCallback(async () => {
-    if (!repoMeta?.owner || !repoMeta?.name) return
+    if (!repositoryOwner || !repositoryName) return
 
     setIsLoadingTree(true)
     setError(null)
@@ -452,11 +453,7 @@ export function Repository() {
     setFileContent(null)
 
     try {
-      const owner = repoMeta.owner
-      const repo = repoMeta.name
-      const branch = selectedBranch || repoMeta.branch || 'main'
-
-      const treeData = await getRepositoryTree(owner, repo, branch)
+      const treeData = await getRepositoryTree(repositoryOwner, repositoryName, selectedBranch)
 
       // Construct tree nodes recursively
       const rootNodes: FileNode[] = []
@@ -507,34 +504,33 @@ export function Repository() {
         if (node.type === 'directory') initialExpanded.add(node.path)
       })
       setExpandedPaths(initialExpanded)
-    } catch (err: any) {
-      setError(err.message || 'Error occurred while loading tree.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error occurred while loading tree.')
     } finally {
       setIsLoadingTree(false)
     }
-  }, [repoMeta?.owner, repoMeta?.name, repoMeta?.branch, selectedBranch])
+  }, [repositoryOwner, repositoryName, selectedBranch])
 
   useEffect(() => {
-    if (repoMeta?.owner && repoMeta?.name) {
-      fetchTree()
+    if (repositoryOwner && repositoryName) {
+      void Promise.resolve().then(fetchTree)
     }
-  }, [repoMeta?.owner, repoMeta?.name, fetchTree])
+  }, [repositoryOwner, repositoryName, fetchTree])
 
   // 2. Fetch File Content from GitHub Raw
   useEffect(() => {
-    if (!selectedFile || !repoMeta) return
+    if (!selectedFile || !repositoryOwner || !repositoryName) return
 
     const loadContent = async () => {
       setIsLoadingContent(true)
       setFileContent(null)
       setHighlightedLine(null)
       try {
-        const owner = repoMeta.owner
-        const repo = repoMeta.name
-        const branch = selectedBranch || repoMeta.branch || 'main'
+        const owner = repositoryOwner
+        const repo = repositoryName
         const path = selectedFile.path
 
-        const text = await getRepositoryFile(owner, repo, branch, path)
+        const text = await getRepositoryFile(owner, repo, selectedBranch, path)
         setFileContent(text)
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to retrieve file contents.'
@@ -545,7 +541,7 @@ export function Repository() {
     }
 
     loadContent()
-  }, [selectedFile, repoMeta, selectedBranch])
+  }, [selectedFile, repositoryOwner, repositoryName, selectedBranch])
 
   // 3. Tree toggle helper
   function handleToggle(path: string) {
@@ -715,7 +711,7 @@ export function Repository() {
           </span>
           <select
             value={selectedBranch}
-            onChange={(event) => setSelectedBranch(event.target.value)}
+            onChange={(event) => setBranchSelection({ repositoryKey, branch: event.target.value })}
             className="neo-pressed h-8 px-2 text-xs font-mono text-zinc-900 dark:text-zinc-300 outline-none transition"
           >
             {[selectedBranch, ...branchOptions.filter((branch) => branch !== selectedBranch)].filter(Boolean).map((branch) => (
