@@ -3,6 +3,7 @@ import { AppLayout } from '../layouts/AppLayout'
 import { Chat } from '../pages/Chat'
 import { Dashboard } from '../pages/Dashboard'
 import { Repository } from '../pages/Repository'
+import { RepositoryOverview } from '../pages/RepositoryOverview'
 import { Settings } from '../pages/Settings'
 import { CodeReviews } from '../pages/CodeReviews'
 import { Architecture } from '../pages/Architecture'
@@ -47,7 +48,8 @@ export const router = createBrowserRouter([
           { index: true, element: <Dashboard /> },
           { path: 'organizations', element: <Organizations /> },
           { path: 'projects', element: <Projects /> },
-          { path: 'repository', element: <Repository /> },
+          { path: 'repository', element: <RepositoryOverview /> },
+          { path: 'repository/explore', element: <Repository /> },
           { path: 'intelligence', element: <Intelligence /> },
           { path: 'architecture', element: <Architecture /> },
           { path: 'planning', element: <Planning /> },
