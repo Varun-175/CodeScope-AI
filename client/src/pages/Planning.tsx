@@ -1,96 +1,107 @@
-import { Calendar, Filter, MoreHorizontal, Plus, Clock, Target, ListTodo } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { AlertTriangle, ArrowRight, Calendar, CheckCircle2, Clock, ListTodo, Target } from 'lucide-react'
+import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
+import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+
+type PlanStatus = 'todo' | 'progress' | 'review' | 'done'
+type PlanPriority = 'Critical' | 'High' | 'Medium'
+type PlanTask = {
+  id: string
+  title: string
+  detail: string
+  priority: PlanPriority
+  status: PlanStatus
+  source: string
+}
+
+const COLUMNS: Array<{ id: PlanStatus; name: string; icon: typeof ListTodo; color: string }> = [
+  { id: 'todo', name: 'To Do', icon: ListTodo, color: 'text-zinc-400' },
+  { id: 'progress', name: 'In Progress', icon: Clock, color: 'text-amber-400' },
+  { id: 'review', name: 'In Review', icon: Target, color: 'text-sky-400' },
+  { id: 'done', name: 'Done', icon: CheckCircle2, color: 'text-emerald-400' },
+]
 
 export function Planning() {
-  const columns = [
-    { name: 'To Do', icon: ListTodo, color: 'text-zinc-400', count: 3, tasks: [
-      { id: 'TSK-102', title: 'Implement OAuth2 Flow', points: 5, priority: 'High' },
-      { id: 'TSK-105', title: 'Update dependencies to React 19', points: 3, priority: 'Medium' },
-      { id: 'TSK-106', title: 'Design system tokens refactor', points: 8, priority: 'Medium' }
-    ]},
-    { name: 'In Progress', icon: Clock, color: 'text-amber-400', count: 2, tasks: [
-      { id: 'TSK-101', title: 'Setup monorepo tooling', points: 13, priority: 'Critical' },
-      { id: 'TSK-104', title: 'Database migration scripts', points: 5, priority: 'High' }
-    ]},
-    { name: 'In Review', icon: Target, color: 'text-sky-400', count: 1, tasks: [
-      { id: 'TSK-98', title: 'User profile dashboard', points: 8, priority: 'Medium' }
-    ]},
-    { name: 'Done', icon: Calendar, color: 'text-emerald-400', count: 0, tasks: [] }
-  ]
+  const { data, status } = useRepositoryAnalysis()
+  const [taskStatuses, setTaskStatuses] = useState<Record<string, PlanStatus>>({})
+
+  const tasks = useMemo<PlanTask[]>(() => {
+    if (!data) return []
+    const risks = [...(data.risks.critical ?? []), ...(data.risks.warnings ?? []), ...(data.risks.complexity_hotspots ?? [])]
+    const nextTasks: PlanTask[] = risks.slice(0, 6).map((risk, index) => ({
+      id: `RISK-${String(index + 1).padStart(3, '0')}`,
+      title: risk.reason || `Review ${risk.path || 'analysis hotspot'}`,
+      detail: risk.path ? `${risk.path}${risk.lines ? ` · ${risk.lines.toLocaleString()} lines` : ''}` : 'Current repository analysis signal',
+      priority: risk.severity?.toLowerCase() === 'critical' || index === 0 ? 'Critical' : index < 3 ? 'High' : 'Medium',
+      status: 'todo',
+      source: 'Repository risk analysis',
+    }))
+
+    if (!data.repository.has_tests) {
+      nextTasks.push({ id: 'TEST-001', title: 'Add coverage for high-risk modules', detail: 'No test suite was detected in the current snapshot.', priority: 'Critical', status: 'todo', source: 'Test detection' })
+    }
+    if ((data.dependency_health.unknown?.length ?? 0) > 0) {
+      nextTasks.push({ id: 'DEP-001', title: 'Review unknown dependencies', detail: `${data.dependency_health.unknown.length} dependencies need verification.`, priority: 'High', status: 'todo', source: 'Dependency analysis' })
+    }
+    if (!data.repository.readme) {
+      nextTasks.push({ id: 'DOC-001', title: 'Document repository setup', detail: 'README evidence was not found in the current snapshot.', priority: 'Medium', status: 'todo', source: 'Documentation analysis' })
+    }
+    return nextTasks
+  }, [data])
+
+  function moveTask(id: string, status: PlanStatus) {
+    setTaskStatuses((current) => ({ ...current, [id]: status }))
+  }
+
+  if (status === 'analyzing') return <LoadingState title="Preparing planning signals" hint="Converting repository findings into actionable work" />
+  if (!data) return <EmptyState title="Analyze a repository to create a plan" description="Planning items are generated from risks, dependencies, documentation, and test signals in the selected snapshot." icon={Calendar} />
 
   return (
-    <div className="space-y-6 animate-fade-in-up h-[calc(100vh-10rem)] flex flex-col">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+    <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-5">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Calendar className="size-6 text-fuchsia-500" />
-            Sprint Planning
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Current iteration: Sprint 42 (Ends in 3 days)
-          </p>
+          <div className="flex items-center gap-3">
+            <Calendar className="size-5 text-fuchsia-400" aria-hidden="true" />
+            <h1 className="text-lg font-semibold text-white">Planning</h1>
+          </div>
+          <p className="mt-1 text-xs text-zinc-500">Actionable work derived from {data.repository.owner}/{data.repository.name} at {data.repository.branch}.</p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <button className="neo-pressed flex h-9 items-center gap-2 px-4 text-sm text-zinc-300">
-            <Filter className="size-4" /> Filter
-          </button>
-          <button className="neo-accent flex h-9 items-center gap-2 px-4 text-sm font-semibold transition bg-fuchsia-500/20 text-fuchsia-400 hover:bg-fuchsia-500/30 border-fuchsia-500/50">
-            <Plus className="size-4" /> New Issue
-          </button>
-        </div>
+        <span className="neo-pressed inline-flex items-center gap-2 px-3 py-2 text-[10px] text-zinc-500"><AlertTriangle className="size-3 text-amber-400" aria-hidden="true" />Snapshot-scoped recommendations</span>
       </header>
 
-      <div className="flex gap-6 overflow-x-auto pb-4 flex-1 scrollbar-thin">
-        {columns.map(col => (
-          <div key={col.name} className="flex flex-col min-w-[320px] w-[320px] bg-zinc-900/20 rounded-2xl border border-zinc-800/50">
-            <div className="p-4 flex justify-between items-center border-b border-zinc-800/50">
-              <h3 className={`text-sm font-semibold flex items-center gap-2 ${col.color}`}>
-                <col.icon className="size-4" /> {col.name}
-              </h3>
-              <span className="neo-pressed px-2 py-0.5 rounded-full text-xs text-zinc-400 font-mono">
-                {col.count}
-              </span>
-            </div>
-            
-            <div className="p-3 space-y-3 overflow-y-auto flex-1 scrollbar-thin">
-              {col.tasks.map(task => (
-                <div key={task.id} className="neo-flat p-4 cursor-pointer hover:border-fuchsia-500/30 transition-colors group">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-[10px] font-mono text-zinc-500 bg-zinc-800/50 px-1.5 py-0.5 rounded">
-                      {task.id}
-                    </span>
-                    <button className="text-zinc-600 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition">
-                      <MoreHorizontal className="size-4" />
-                    </button>
-                  </div>
-                  <h4 className="text-sm font-medium text-zinc-200 mb-3">{task.title}</h4>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className={[
-                      'px-2 py-0.5 rounded-full font-medium',
-                      task.priority === 'Critical' ? 'bg-red-500/10 text-red-400' :
-                      task.priority === 'High' ? 'bg-amber-500/10 text-amber-400' :
-                      'bg-zinc-800 text-zinc-400'
-                    ].join(' ')}>
-                      {task.priority}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="neo-pressed size-6 rounded-full flex items-center justify-center font-mono text-[10px] text-zinc-400">
-                        {task.points}
-                      </span>
-                      <div className="size-6 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 border border-zinc-800" title="Assigned to you"></div>
-                    </div>
-                  </div>
+      {tasks.length === 0 ? (
+        <div className="neo-flat flex flex-1 items-center justify-center"><EmptyState title="No planning signals found" description="The current analysis did not produce risks or follow-up actions." icon={CheckCircle2} /></div>
+      ) : (
+        <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
+          {COLUMNS.map((column) => {
+            const Icon = column.icon
+            const columnTasks = tasks.filter((task) => (taskStatuses[task.id] ?? task.status) === column.id)
+            return (
+              <section key={column.id} className="neo-flat flex min-w-[290px] flex-1 flex-col p-3">
+                <div className="flex items-center justify-between border-b border-zinc-800/70 px-2 pb-3">
+                  <h2 className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${column.color}`}><Icon className="size-3.5" aria-hidden="true" />{column.name}</h2>
+                  <span className="neo-pressed px-2 py-0.5 font-mono text-[10px] text-zinc-500">{columnTasks.length}</span>
                 </div>
-              ))}
-              {col.tasks.length === 0 && (
-                <div className="text-center p-6 text-xs text-zinc-600 border-2 border-dashed border-zinc-800 rounded-xl">
-                  No issues
+                <div className="mt-3 flex flex-1 flex-col gap-3">
+                  {columnTasks.map((task) => {
+                    const nextColumn = COLUMNS[COLUMNS.findIndex((item) => item.id === (taskStatuses[task.id] ?? task.status)) + 1]
+                    return (
+                      <article key={task.id} className="neo-convex p-4">
+                        <div className="flex items-start justify-between gap-3"><span className="font-mono text-[10px] text-zinc-600">{task.id}</span><span className={`text-[10px] font-medium ${task.priority === 'Critical' ? 'text-red-400' : task.priority === 'High' ? 'text-amber-400' : 'text-zinc-500'}`}>{task.priority}</span></div>
+                        <h3 className="mt-3 text-sm font-medium leading-5 text-zinc-200">{task.title}</h3>
+                        <p className="mt-2 text-xs leading-5 text-zinc-500">{task.detail}</p>
+                        <p className="mt-3 border-t border-zinc-800/70 pt-3 text-[10px] text-zinc-600">Source: {task.source}</p>
+                        {nextColumn ? <button type="button" onClick={() => moveTask(task.id, nextColumn.id)} className="mt-3 inline-flex items-center gap-1 text-[10px] text-violet-400 transition hover:text-violet-300">Move to {nextColumn.name}<ArrowRight className="size-3" aria-hidden="true" /></button> : null}
+                      </article>
+                    )
+                  })}
+                  {columnTasks.length === 0 ? <div className="flex flex-1 items-center justify-center border border-dashed border-zinc-800 p-6 text-center text-[10px] text-zinc-700">No items</div> : null}
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+              </section>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

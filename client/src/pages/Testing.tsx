@@ -1,99 +1,48 @@
-import { Beaker, CheckCircle2, XCircle, AlertCircle, PlayCircle, Clock, BarChart } from 'lucide-react'
+import { useMemo } from 'react'
+import { AlertCircle, Beaker, CheckCircle2, FileCode2, ShieldAlert, TestTube2, XCircle } from 'lucide-react'
+import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
+import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Testing() {
-  const testSuites = [
-    { name: 'Unit Tests (Frontend)', status: 'passed', time: '45s', coverage: 92, failed: 0, passed: 1240 },
-    { name: 'Unit Tests (Backend)', status: 'passed', time: '1m 12s', coverage: 88, failed: 0, passed: 856 },
-    { name: 'Integration Tests', status: 'failed', time: '3m 40s', coverage: 75, failed: 3, passed: 142 },
-    { name: 'E2E Tests', status: 'running', time: '4m 10s...', coverage: null, failed: 0, passed: 45 },
-  ]
+  const { data, status } = useRepositoryAnalysis()
+  const testSignals = useMemo(() => {
+    if (!data) return []
+    return [
+      { label: 'Test files detected', value: data.repository.has_tests ? 'Yes' : 'No', detail: data.repository.has_tests ? 'The analyzer found test-related files.' : 'No test suite was detected in the current snapshot.', icon: data.repository.has_tests ? CheckCircle2 : XCircle, color: data.repository.has_tests ? 'text-emerald-400' : 'text-red-400' },
+      { label: 'Parsed source files', value: `${data.repository.parsed_files}`, detail: `${data.repository.supported_files} supported files were scanned.`, icon: FileCode2, color: 'text-blue-400' },
+      { label: 'Risk hotspots', value: `${data.risks.complexity_hotspots?.length ?? 0}`, detail: 'Complexity signals requiring focused test coverage.', icon: ShieldAlert, color: 'text-amber-400' },
+    ]
+  }, [data])
+
+  if (status === 'analyzing') return <LoadingState title="Preparing test intelligence" hint="Inspecting source and test signals" />
+  if (!data) return <EmptyState title="Analyze a repository to inspect testing" description="Testing intelligence is scoped to the currently analyzed repository snapshot." icon={Beaker} />
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-5">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Beaker className="size-6 text-emerald-500" />
-            Testing & Coverage
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Deterministic validation pipelines, code coverage, and test intelligence.
-          </p>
+          <div className="flex items-center gap-3"><Beaker className="size-5 text-emerald-400" aria-hidden="true" /><h1 className="text-lg font-semibold text-white">Testing</h1></div>
+          <p className="mt-1 text-xs text-zinc-500">Test intelligence for {data.repository.owner}/{data.repository.name} at {data.repository.branch}.</p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <button className="neo-accent flex h-9 items-center gap-2 px-4 text-sm font-semibold transition bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border-emerald-500/50">
-            <PlayCircle className="size-4" />
-            Run All Tests
-          </button>
-        </div>
+        <span className="neo-pressed px-3 py-2 text-[10px] text-zinc-500">Execution provider not configured</span>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="neo-flat p-5 flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-zinc-400 text-sm mb-4">
-            <CheckCircle2 className="size-4 text-emerald-500" /> Passed Tests
-          </div>
-          <div className="text-3xl font-bold text-zinc-200">2,238</div>
-          <div className="text-xs text-emerald-400 mt-2">↑ 14 from last run</div>
-        </div>
-        
-        <div className="neo-flat p-5 flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-zinc-400 text-sm mb-4">
-            <XCircle className="size-4 text-red-500" /> Failed Tests
-          </div>
-          <div className="text-3xl font-bold text-zinc-200">3</div>
-          <div className="text-xs text-red-400 mt-2">Needs immediate attention</div>
-        </div>
-        
-        <div className="neo-flat p-5 flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-zinc-400 text-sm mb-4">
-            <BarChart className="size-4 text-violet-500" /> Global Coverage
-          </div>
-          <div className="text-3xl font-bold text-zinc-200">86.4%</div>
-          <div className="w-full bg-zinc-800 rounded-full h-1.5 mt-3">
-            <div className="bg-violet-500 h-1.5 rounded-full" style={{ width: '86.4%' }}></div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {testSignals.map((signal) => {
+          const Icon = signal.icon
+          return <div key={signal.label} className="neo-flat p-4"><div className="flex items-center gap-2"><Icon className={`size-4 ${signal.color}`} aria-hidden="true" /><span className="text-xs uppercase tracking-wider text-zinc-500">{signal.label}</span></div><p className="mt-3 font-mono text-2xl font-semibold text-zinc-200">{signal.value}</p><p className="mt-1 text-[10px] leading-4 text-zinc-600">{signal.detail}</p></div>
+        })}
       </div>
 
-      <div className="neo-flat overflow-hidden">
-        <div className="p-4 border-b border-zinc-800/50 flex justify-between items-center">
-          <h2 className="text-sm font-semibold text-zinc-300">Active Test Suites</h2>
+      <section className="neo-flat p-5">
+        <div className="flex items-center gap-2 border-b border-zinc-800/70 pb-4"><TestTube2 className="size-4 text-emerald-400" aria-hidden="true" /><h2 className="text-sm font-medium text-zinc-200">Coverage readiness</h2></div>
+        <div className="mt-5 space-y-3">
+          <div className="neo-pressed flex items-start gap-3 p-4"><CheckCircle2 className="mt-0.5 size-4 text-emerald-400" aria-hidden="true" /><div><p className="text-xs font-medium text-zinc-300">Source inventory available</p><p className="mt-1 text-xs text-zinc-500">{data.repository.lines_of_code.toLocaleString()} lines across {data.repository.files} files can be used to target test work.</p></div></div>
+          <div className="neo-pressed flex items-start gap-3 p-4">{data.repository.has_tests ? <CheckCircle2 className="mt-0.5 size-4 text-emerald-400" aria-hidden="true" /> : <AlertCircle className="mt-0.5 size-4 text-amber-400" aria-hidden="true" />}<div><p className="text-xs font-medium text-zinc-300">Test suite signal</p><p className="mt-1 text-xs text-zinc-500">{data.repository.has_tests ? 'Test-related files were found. Connect a test runner to collect execution results.' : 'Add a test suite around the highest-risk modules before relying on change automation.'}</p></div></div>
+          <div className="neo-pressed flex items-start gap-3 p-4"><ShieldAlert className="mt-0.5 size-4 text-amber-400" aria-hidden="true" /><div><p className="text-xs font-medium text-zinc-300">Priority targets</p><p className="mt-1 text-xs text-zinc-500">{data.risks.complexity_hotspots?.slice(0, 3).map((hotspot) => hotspot.path).filter(Boolean).join(', ') || 'No complexity hotspots were reported.'}</p></div></div>
         </div>
-        <div className="divide-y divide-zinc-800/50">
-          {testSuites.map((suite, idx) => (
-            <div key={idx} className="p-4 hover:bg-zinc-800/20 transition flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {suite.status === 'passed' && <CheckCircle2 className="size-5 text-emerald-500" />}
-                {suite.status === 'failed' && <XCircle className="size-5 text-red-500" />}
-                {suite.status === 'running' && <AlertCircle className="size-5 text-amber-500 animate-pulse" />}
-                
-                <div>
-                  <h3 className="text-sm font-medium text-zinc-200">{suite.name}</h3>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500 font-mono">
-                    <span className="flex items-center gap-1"><Clock className="size-3" /> {suite.time}</span>
-                    <span>{suite.passed} passed</span>
-                    {suite.failed > 0 && <span className="text-red-400">{suite.failed} failed</span>}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-6">
-                {suite.coverage && (
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs text-zinc-400 mb-1">Coverage</span>
-                    <span className="text-sm font-mono font-semibold text-zinc-200">{suite.coverage}%</span>
-                  </div>
-                )}
-                <button className="neo-pressed p-2 text-zinc-400 hover:text-white transition rounded-lg">
-                  View Logs
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+        <p className="mt-5 border-t border-zinc-800/70 pt-4 text-[10px] text-zinc-600">Pass/fail counts and coverage percentages will appear when a repository test execution contract is available.</p>
+      </section>
     </div>
   )
 }
