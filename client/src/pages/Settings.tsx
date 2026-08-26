@@ -20,14 +20,14 @@ import {
 } from 'lucide-react'
 import { FaGithub } from 'react-icons/fa'
 import { useToast } from '../contexts/ToastContext'
-import { applySettings, exportSettings, loadSettings, resetSettings, saveSettings as persistLocalSettings, importSettings } from '../utils/settings'
+import { applySettings, exportSettings, loadSettings, resetSettings, saveSettings as persistLocalSettings, importSettings, type SettingsTheme } from '../utils/settings'
 import { getSettings, saveSettings as saveSettingsApi, testProvider } from '../services/api/analysis'
 import { Logo } from '../components/shared/Logo'
 
 type SettingsTab = 'profile' | 'theme' | 'ai' | 'local' | 'github' | 'preferences' | 'about'
 
 export function Settings() {
-  const initialSettings = loadSettings()
+  const [initialSettings] = useState(loadSettings)
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
   const [profile, setProfile] = useState(initialSettings.profile)
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>(initialSettings.theme)
@@ -88,7 +88,7 @@ export function Settings() {
           vector_store: 'chromadb',
         })
         pushToast('Settings imported successfully', 'success')
-      } catch (error) {
+      } catch {
         pushToast('Failed to import settings. Invalid file format.', 'error')
       }
     }
@@ -200,18 +200,7 @@ export function Settings() {
   }
 
   useEffect(() => {
-    const local = loadSettings()
-    setProfile(local.profile)
-    setTheme(local.theme)
-    setAccent(local.accent)
-    setSidebarDensity(local.sidebarDensity)
-    setAnimations(local.animations)
-    setAiConfig(local.ai)
-    setLocalConfig(local.local)
-    setGithub(local.github)
-    setPreferences(local.preferences)
-
-    applySettings(local)
+    applySettings(initialSettings)
 
     async function loadBackendSettings() {
       try {
@@ -232,7 +221,7 @@ export function Settings() {
     }
 
     loadBackendSettings()
-  }, [])
+  }, [initialSettings])
 
   async function handleSave() {
     setIsSaving(true)
@@ -469,8 +458,9 @@ export function Settings() {
                       key={option.id}
                       type="button"
                       onClick={() => {
-                        setTheme(option.id as any)
-                        applySettings({ theme: option.id as any })
+                        const nextTheme = option.id as SettingsTheme
+                        setTheme(nextTheme)
+                        applySettings({ theme: nextTheme })
                       }}
                       className={[
                         'flex flex-col items-center justify-center p-4 transition text-center rounded-xl',

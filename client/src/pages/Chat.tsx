@@ -35,6 +35,10 @@ type Conversation = {
   updatedAt: Date
 }
 
+function generateMessageId() {
+  return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+}
+
 const WELCOME_SUGGESTIONS = [
   'Explain the architecture of this codebase',
   'Find potential security vulnerabilities',
@@ -193,24 +197,20 @@ export function Chat() {
     scrollToBottom()
   }, [messages, isTyping, scrollToBottom])
 
-  useEffect(() => {
-    const current = conversations.find((conversation) => conversation.id === activeConversationId)
-    if (current) {
-      setMessages(current.messages)
-    }
-  }, [activeConversationId, conversations])
-
-  function generateId() {
-    return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
-  }
-
   const updateActiveConversation = useCallback((nextMessages: Message[]) => {
     setConversations((prev) => prev.map((conversation) => conversation.id === activeConversationId ? { ...conversation, messages: nextMessages, updatedAt: new Date() } : conversation))
   }, [activeConversationId])
 
+  function selectConversation(id: string) {
+    const conversation = conversations.find((item) => item.id === id)
+    if (!conversation) return
+    setActiveConversationId(id)
+    setMessages(conversation.messages)
+  }
+
   async function sendMessage(text: string) {
     const userMessage: Message = {
-      id: generateId(),
+      id: generateMessageId(),
       role: 'user',
       content: text.trim(),
       timestamp: new Date(),
@@ -226,7 +226,7 @@ export function Chat() {
     try {
       const response = await chatWithRepository(text)
       const assistantMessage: Message = {
-        id: generateId(),
+        id: generateMessageId(),
         role: 'assistant',
         content: response.answer || buildAssistantReply(text, data),
         timestamp: new Date(),
@@ -238,7 +238,7 @@ export function Chat() {
     } catch (caught) {
       const fallback = caught instanceof Error ? caught.message : 'The chat service is unavailable right now.'
       const assistantMessage: Message = {
-        id: generateId(),
+        id: generateMessageId(),
         role: 'assistant',
         content: `I couldn't reach the repository reasoning service. ${fallback}`,
         timestamp: new Date(),
@@ -291,7 +291,7 @@ export function Chat() {
 
   function createConversation() {
     const next = {
-      id: generateId(),
+      id: generateMessageId(),
       title: `Conversation ${conversations.length + 1}`,
       messages: [],
       updatedAt: new Date(),
@@ -349,7 +349,7 @@ export function Chat() {
                     <button type="button" onClick={() => saveConversationTitle(conversation.id)} className="text-xs text-violet-400">Save</button>
                   </div>
                 ) : (
-                  <button type="button" onClick={() => setActiveConversationId(conversation.id)} className="flex w-full items-start justify-between gap-2 text-left">
+                  <button type="button" onClick={() => selectConversation(conversation.id)} className="flex w-full items-start justify-between gap-2 text-left">
                     <div className="min-w-0">
                       <p className="truncate text-sm text-zinc-200">{conversation.title}</p>
                       <p className="mt-1 text-[11px] text-zinc-500">{conversation.messages.length ? `${conversation.messages.length} messages` : 'New chat'}</p>
@@ -426,7 +426,7 @@ export function Chat() {
                   <button type="button" onClick={() => saveConversationTitle(conversation.id)} className="text-xs text-violet-400">Save</button>
                 </div>
               ) : (
-                <button type="button" onClick={() => setActiveConversationId(conversation.id)} className="flex w-full items-start justify-between gap-2 text-left">
+                <button type="button" onClick={() => selectConversation(conversation.id)} className="flex w-full items-start justify-between gap-2 text-left">
                   <div className="min-w-0">
                     <p className="truncate text-sm text-zinc-200">{conversation.title}</p>
                     <p className="mt-1 text-[11px] text-zinc-500">{conversation.messages.length ? `${conversation.messages.length} messages` : 'New chat'}</p>

@@ -36,7 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
   const [isLoading, setIsLoading] = useState(false)
 
-  const login = useCallback(async (_email: string, _password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
+    void email
+    void password
     setIsLoading(true)
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1200))
@@ -45,7 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const register = useCallback(async (name: string, email: string, _password: string) => {
+  const register = useCallback(async (name: string, email: string, password: string) => {
+    void password
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 1500))
     const newUser: User = { ...MOCK_USER, name, email, id: 'usr_' + Date.now() }
@@ -59,7 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('codescope_user')
   }, [])
 
-  const forgotPassword = useCallback(async (_email: string) => {
+  const forgotPassword = useCallback(async (email: string) => {
+    void email
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 1000))
     setIsLoading(false)

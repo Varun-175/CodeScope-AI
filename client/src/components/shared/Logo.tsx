@@ -6,10 +6,9 @@ interface LogoProps extends SVGProps<SVGSVGElement> {
 }
 
 export function Logo({ size = 36, variant = 'primary', ...props }: LogoProps) {
-  // Select gradients/colors based on variant
-  const stopColor1 = '#a78bfa' // light violet
-  const stopColor2 = '#6366f1' // indigo
-  const stopColor3 = '#06b6d4' // cyan
+  const stopColor1 = variant === 'mono' ? '#f4f4f5' : '#a78bfa'
+  const stopColor2 = variant === 'mono' ? '#a1a1aa' : '#6366f1'
+  const stopColor3 = variant === 'mono' ? '#52525b' : '#06b6d4'
 
   return (
     <svg
@@ -18,7 +17,7 @@ export function Logo({ size = 36, variant = 'primary', ...props }: LogoProps) {
       viewBox="0 0 120 120"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="logo-antigravity"
+      className={`logo-antigravity logo-${variant}`}
       {...props}
     >
       <defs>

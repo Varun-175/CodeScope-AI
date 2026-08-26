@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Search,
   SlidersHorizontal,
@@ -155,18 +155,8 @@ export function CodeReviews() {
   const [selectedReview, setSelectedReview] = useState<CodeReview | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [page, setPage] = useState(1)
-  const [isLoading, setIsLoading] = useState(true)
   const pageSize = 5
-
-  useEffect(() => {
-    if (status === 'analyzing') {
-      setIsLoading(true)
-      return
-    }
-
-    const timer = window.setTimeout(() => setIsLoading(false), 400)
-    return () => window.clearTimeout(timer)
-  }, [data, status])
+  const isLoading = status === 'analyzing'
 
   const reviews = useMemo<CodeReview[]>(() => {
     if (!data) return []
@@ -235,19 +225,16 @@ export function CodeReviews() {
     }
 
     result.sort((a, b) => {
-      let cmp = 0
-      if (sortField === 'severity') {
-        cmp = SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity)
-      } else if (sortField === 'file') {
-        cmp = a.file.localeCompare(b.file)
-      } else {
-        cmp = a.id.localeCompare(b.id)
-      }
-      return sortDir === 'asc' ? cmp : -cmp
+      const comparison = sortField === 'severity'
+        ? SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity)
+        : sortField === 'file'
+          ? a.file.localeCompare(b.file)
+          : a.id.localeCompare(b.id)
+      return sortDir === 'asc' ? comparison : -comparison
     })
 
     return result
-  }, [searchQuery, severityFilter, categoryFilter, sortField, sortDir])
+  }, [reviews, searchQuery, severityFilter, categoryFilter, sortField, sortDir])
 
   const pageCount = Math.max(1, Math.ceil(filteredReviews.length / pageSize))
   const pagedReviews = filteredReviews.slice((page - 1) * pageSize, page * pageSize)

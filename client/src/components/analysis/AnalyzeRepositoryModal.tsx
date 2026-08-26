@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRepositoryAnalysis } from '../../contexts/RepositoryAnalysisContext'
 import { AnalysisProgress } from './AnalysisProgress'
 
@@ -28,17 +28,15 @@ export function AnalyzeRepositoryModal() {
   const [isApiFinished, setIsApiFinished] = useState(false)
   const [isProgressFinished, setIsProgressFinished] = useState(false)
 
-  useEffect(() => {
-    if (isApiFinished && isProgressFinished) {
-      setRepositoryUrl('')
-      setBranch('')
-      setMode('quick')
-      setIsAnalyzing(false)
-      setIsApiFinished(false)
-      setIsProgressFinished(false)
-      closeAnalyzeModal()
-    }
-  }, [isApiFinished, isProgressFinished, closeAnalyzeModal])
+  function finishAnalysis() {
+    setRepositoryUrl('')
+    setBranch('')
+    setMode('quick')
+    setIsAnalyzing(false)
+    setIsApiFinished(false)
+    setIsProgressFinished(false)
+    closeAnalyzeModal()
+  }
 
   if (!isAnalyzeModalOpen) {
     return null
@@ -69,6 +67,7 @@ export function AnalyzeRepositoryModal() {
     runAnalysis(repositoryUrl.trim(), branch.trim())
       .then(() => {
         setIsApiFinished(true)
+        if (isProgressFinished) finishAnalysis()
       })
       .catch(() => {
         setError('Analysis failed. Check the repository URL and backend server.')
@@ -108,7 +107,10 @@ export function AnalyzeRepositoryModal() {
         </div>
 
         {isAnalyzing ? (
-          <AnalysisProgress onComplete={() => setIsProgressFinished(true)} />
+          <AnalysisProgress onComplete={() => {
+            setIsProgressFinished(true)
+            if (isApiFinished) finishAnalysis()
+          }} />
         ) : (
           <div className="space-y-5">
             <label className="block">
