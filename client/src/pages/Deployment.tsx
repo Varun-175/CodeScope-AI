@@ -1,103 +1,48 @@
-import { Rocket, Server, Activity, ArrowRight, GitCommit, Check } from 'lucide-react'
+import { useMemo } from 'react'
+import { AlertTriangle, CheckCircle2, GitBranch, Rocket, Server, ShieldAlert, XCircle } from 'lucide-react'
+import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
+import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+
+type Readiness = { label: string; detail: string; ready: boolean }
 
 export function Deployment() {
-  const environments = [
-    { name: 'Production', status: 'live', version: 'v1.4.2', commit: '8f4b2a1', updated: '2 days ago' },
-    { name: 'Staging', status: 'live', version: 'v1.5.0-rc.1', commit: '3c9d1e2', updated: '4 hours ago' },
-    { name: 'Preview (PR-142)', status: 'deploying', version: '-', commit: '9a1b2c3', updated: 'Just now' },
-  ]
+  const { data, status } = useRepositoryAnalysis()
+  const readiness = useMemo<Readiness[]>(() => {
+    if (!data) return []
+    return [
+      { label: 'Framework detected', detail: data.dna.framework || data.repository.framework || 'No framework signal', ready: Boolean(data.dna.framework || data.repository.framework) },
+      { label: 'Entry point detected', detail: data.repository.entry_points?.[0] || 'No entry point was reported', ready: (data.repository.entry_points?.length ?? 0) > 0 },
+      { label: 'Dependencies analyzed', detail: `${data.dependency_health.total_dependencies} dependencies in the current snapshot`, ready: data.dependency_health.total_dependencies > 0 },
+      { label: 'Test signal', detail: data.repository.has_tests ? 'Test-related files detected' : 'No test suite detected', ready: data.repository.has_tests },
+      { label: 'Documentation signal', detail: data.repository.readme ? 'README detected' : 'README not detected', ready: Boolean(data.repository.readme) },
+    ]
+  }, [data])
+
+  if (status === 'analyzing') return <LoadingState title="Preparing deployment readiness" hint="Inspecting repository runtime and release signals" />
+  if (!data) return <EmptyState title="Analyze a repository to prepare delivery" description="Deployment readiness is scoped to the selected repository snapshot." icon={Rocket} />
+
+  const readyCount = readiness.filter((item) => item.ready).length
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-5">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Rocket className="size-6 text-sky-500" />
-            Deployment
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Manage environments, delivery pipelines, and release orchestration.
-          </p>
+          <div className="flex items-center gap-3"><Rocket className="size-5 text-sky-400" aria-hidden="true" /><h1 className="text-lg font-semibold text-white">Deployment</h1></div>
+          <p className="mt-1 text-xs text-zinc-500">Release readiness for {data.repository.owner}/{data.repository.name} at {data.repository.branch}.</p>
         </div>
-        
-        <button className="neo-accent flex h-9 items-center gap-2 px-4 text-sm font-semibold transition bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 border-sky-500/50">
-          <Rocket className="size-4" />
-          Trigger Release
-        </button>
+        <span className="neo-pressed inline-flex items-center gap-2 px-3 py-2 text-[10px] text-zinc-500"><Server className="size-3" aria-hidden="true" />Deployment provider not configured</span>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {environments.map((env) => (
-          <div key={env.name} className="neo-flat p-5 flex flex-col relative overflow-hidden group">
-            {env.status === 'live' ? (
-              <div className="absolute top-0 right-0 p-4">
-                <span className="flex h-3 w-3 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-              </div>
-            ) : (
-              <div className="absolute top-0 right-0 p-4">
-                <Activity className="size-4 text-amber-500 animate-pulse" />
-              </div>
-            )}
-            
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 neo-pressed rounded-lg">
-                <Server className="size-5 text-sky-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-zinc-200">{env.name}</h3>
-            </div>
-            
-            <div className="space-y-3 mt-2">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-zinc-500">Version</span>
-                <span className="font-mono text-zinc-200 bg-zinc-800 px-2 py-0.5 rounded">{env.version}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-zinc-500">Commit</span>
-                <span className="font-mono text-zinc-400 flex items-center gap-1">
-                  <GitCommit className="size-3" /> {env.commit}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-zinc-500">Updated</span>
-                <span className="text-zinc-400">{env.updated}</span>
-              </div>
-            </div>
-            
-            <div className="mt-6 pt-4 border-t border-zinc-800/50 flex justify-between items-center">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                {env.status === 'live' ? 'Environment Healthy' : 'Deployment in progress'}
-              </span>
-              <button className="text-sky-400 hover:text-sky-300 text-xs font-medium flex items-center gap-1 transition">
-                View Logs <ArrowRight className="size-3" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="neo-flat p-6">
-        <h3 className="text-sm font-semibold text-zinc-300 mb-6">Recent Deployments</h3>
-        <div className="space-y-6">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="flex items-start gap-4">
-              <div className="mt-1 neo-pressed p-1.5 rounded-full">
-                <Check className="size-3 text-emerald-500" />
-              </div>
-              <div className="flex-1 pb-6 border-b border-zinc-800/50">
-                <div className="flex justify-between items-start mb-1">
-                  <h4 className="text-sm font-medium text-zinc-200">Deployed v1.4.{item} to Production</h4>
-                  <span className="text-xs text-zinc-500">{(item * 2)} days ago</span>
-                </div>
-                <p className="text-xs text-zinc-400 font-mono flex items-center gap-2">
-                  <GitCommit className="size-3" /> e8a2{item}f9 by @alex-dev
-                </p>
-              </div>
-            </div>
-          ))}
+      <section className="neo-flat p-5">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-xs uppercase tracking-wider text-zinc-500">Readiness signals</p><p className="mt-2 font-mono text-3xl font-semibold text-zinc-200">{readyCount}/{readiness.length}</p></div><p className="max-w-md text-xs leading-5 text-zinc-500">These checks describe what the analyzed snapshot can prove. They do not imply that an environment is deployed or healthy.</p></div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          {readiness.map((item) => <div key={item.label} className="neo-pressed flex items-start gap-3 p-3">{item.ready ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" aria-hidden="true" /> : <XCircle className="mt-0.5 size-4 shrink-0 text-amber-400" aria-hidden="true" />}<div><p className="text-xs font-medium text-zinc-300">{item.label}</p><p className="mt-1 text-[10px] leading-4 text-zinc-600">{item.detail}</p></div></div>)}
         </div>
+      </section>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <section className="neo-flat p-5"><div className="flex items-center gap-2 border-b border-zinc-800/70 pb-4"><GitBranch className="size-4 text-sky-400" aria-hidden="true" /><h2 className="text-sm font-medium text-zinc-200">Release context</h2></div><dl className="mt-4 space-y-3 text-xs"><div className="flex justify-between gap-4"><dt className="text-zinc-600">Branch</dt><dd className="font-mono text-zinc-300">{data.repository.branch}</dd></div><div className="flex justify-between gap-4"><dt className="text-zinc-600">Primary language</dt><dd className="text-zinc-300">{data.repository.primary_language}</dd></div><div className="flex justify-between gap-4"><dt className="text-zinc-600">Project type</dt><dd className="text-zinc-300">{data.dna.project_type}</dd></div><div className="flex justify-between gap-4"><dt className="text-zinc-600">Repository size</dt><dd className="text-zinc-300">{data.dna.repository_size}</dd></div></dl></section>
+        <section className="neo-flat p-5"><div className="flex items-center gap-2 border-b border-zinc-800/70 pb-4"><ShieldAlert className="size-4 text-amber-400" aria-hidden="true" /><h2 className="text-sm font-medium text-zinc-200">Before release</h2></div><ul className="mt-4 space-y-3 text-xs text-zinc-500"><li>Connect a deployment provider to create and monitor environments.</li><li>Review {data.risks.critical?.length ?? 0} critical risks and {data.risks.warnings?.length ?? 0} warnings before release.</li><li>Validate the application with a repository test runner.</li></ul><div className="mt-5 flex items-start gap-2 border-t border-zinc-800/70 pt-4 text-[10px] text-zinc-600"><AlertTriangle className="mt-0.5 size-3 shrink-0 text-amber-400" aria-hidden="true" />No deployment action is available until a provider contract is configured.</div></section>
       </div>
     </div>
   )
