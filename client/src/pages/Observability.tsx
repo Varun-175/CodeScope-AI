@@ -1,77 +1,13 @@
-import { Activity, Terminal, AlertTriangle, LineChart, ChevronDown } from 'lucide-react'
+import { Activity, AlertTriangle, BarChart3, Radio, Terminal } from 'lucide-react'
+import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
+import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Observability() {
-  return (
-    <div className="space-y-6 animate-fade-in-up h-[calc(100vh-10rem)] flex flex-col">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Activity className="size-6 text-pink-500" />
-            Observability
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Real-time logs, metrics, and incident tracing.
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <button className="neo-pressed flex h-9 items-center gap-2 px-4 text-sm text-zinc-300">
-            Last 24 Hours <ChevronDown className="size-4" />
-          </button>
-        </div>
-      </header>
+  const { data, status } = useRepositoryAnalysis()
+  if (status === 'analyzing') return <LoadingState title="Preparing observability workspace" hint="Waiting for repository analysis signals" />
+  if (!data) return <EmptyState title="Connect a repository to inspect observability" description="Runtime metrics, logs, and traces will appear here after an observability provider is configured." icon={Radio} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
-        <div className="neo-flat p-4 flex items-center gap-4">
-          <div className="p-3 neo-pressed rounded-xl text-pink-500"><LineChart className="size-6" /></div>
-          <div>
-            <div className="text-sm text-zinc-400">Total Requests</div>
-            <div className="text-2xl font-bold text-zinc-200">1.2M</div>
-          </div>
-        </div>
-        <div className="neo-flat p-4 flex items-center gap-4">
-          <div className="p-3 neo-pressed rounded-xl text-amber-500"><AlertTriangle className="size-6" /></div>
-          <div>
-            <div className="text-sm text-zinc-400">Error Rate</div>
-            <div className="text-2xl font-bold text-zinc-200">0.04%</div>
-          </div>
-        </div>
-        <div className="neo-flat p-4 flex items-center gap-4">
-          <div className="p-3 neo-pressed rounded-xl text-emerald-500"><Activity className="size-6" /></div>
-          <div>
-            <div className="text-sm text-zinc-400">Avg Latency</div>
-            <div className="text-2xl font-bold text-zinc-200">142ms</div>
-          </div>
-        </div>
-      </div>
+  const metrics = [{ label: 'Source surface', value: data.repository.lines_of_code.toLocaleString(), detail: 'lines analyzed', icon: BarChart3, color: 'text-sky-400' }, { label: 'Risk signals', value: `${data.risks.critical.length + data.risks.warnings.length}`, detail: 'current snapshot', icon: AlertTriangle, color: 'text-amber-400' }, { label: 'Health', value: `${data.health.score}/100`, detail: data.health.status, icon: Activity, color: 'text-emerald-400' }]
 
-      <div className="neo-flat flex-1 min-h-0 flex flex-col overflow-hidden">
-        <div className="p-3 border-b border-zinc-800/50 flex items-center gap-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider bg-zinc-900/30">
-          <Terminal className="size-4" /> Live Logs
-        </div>
-        <div className="flex-1 overflow-auto bg-[#0c0c0c] p-4 font-mono text-xs space-y-2 scrollbar-thin">
-          {[
-            { level: 'INFO', time: '14:32:01.023', msg: 'Incoming request to /api/v1/users', service: 'api-gateway' },
-            { level: 'DEBUG', time: '14:32:01.045', msg: 'DB Connection acquired from pool', service: 'auth-service' },
-            { level: 'INFO', time: '14:32:01.102', msg: 'User authenticated successfully', service: 'auth-service' },
-            { level: 'WARN', time: '14:32:02.405', msg: 'Rate limit approaching for IP 192.168.1.1', service: 'rate-limiter' },
-            { level: 'ERROR', time: '14:32:05.912', msg: 'Failed to connect to Redis cache', service: 'session-store' },
-            { level: 'INFO', time: '14:32:06.001', msg: 'Retrying connection to Redis (1/3)', service: 'session-store' },
-          ].map((log, i) => (
-            <div key={i} className="flex items-start gap-4 hover:bg-zinc-800/30 py-1 transition-colors">
-              <span className="text-zinc-600 shrink-0">{log.time}</span>
-              <span className={[
-                'shrink-0 w-12',
-                log.level === 'INFO' ? 'text-sky-400' : 
-                log.level === 'WARN' ? 'text-amber-400' : 
-                log.level === 'ERROR' ? 'text-red-400' : 'text-zinc-400'
-              ].join(' ')}>{log.level}</span>
-              <span className="text-zinc-500 shrink-0 w-24 truncate">[{log.service}]</span>
-              <span className="text-zinc-300">{log.msg}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+  return <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-5"><header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="flex items-center gap-3"><Activity className="size-5 text-sky-400" aria-hidden="true" /><h1 className="text-lg font-semibold text-white">Observability</h1></div><p className="mt-1 text-xs text-zinc-500">Runtime workspace for {data.repository.owner}/{data.repository.name}.</p></div><span className="neo-pressed px-3 py-2 text-[10px] text-zinc-500">Provider not configured</span></header><div className="grid gap-3 md:grid-cols-3">{metrics.map(({ label, value, detail, icon: Icon, color }) => <div key={label} className="neo-flat p-4"><div className="flex items-center gap-2"><Icon className={`size-4 ${color}`} aria-hidden="true" /><span className="text-xs uppercase tracking-wider text-zinc-500">{label}</span></div><p className="mt-3 font-mono text-2xl font-semibold text-zinc-200">{value}</p><p className="mt-1 text-[10px] text-zinc-600">{detail}</p></div>)}</div><section className="neo-flat flex min-h-0 flex-1 flex-col overflow-hidden"><div className="flex items-center gap-2 border-b border-zinc-800/70 p-4"><Terminal className="size-4 text-zinc-500" aria-hidden="true" /><h2 className="text-sm font-medium text-zinc-200">Live telemetry</h2></div><div className="flex flex-1 items-center justify-center p-8 text-center"><div><Radio className="mx-auto size-7 text-zinc-700" aria-hidden="true" /><p className="mt-3 text-sm text-zinc-400">No runtime telemetry connected</p><p className="mt-1 max-w-sm text-xs leading-5 text-zinc-600">Repository analysis can describe source risk, but it cannot prove production traffic, latency, logs, or service health.</p></div></div></section></div>
 }

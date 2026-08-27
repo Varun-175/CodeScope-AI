@@ -1,123 +1,31 @@
-import { Workflow, Play, Settings, CheckCircle2, CircleDashed, ChevronRight, Share2, PauseCircle } from 'lucide-react'
+import { CheckCircle2, CircleDashed, GitBranch, Play, Settings, Workflow, XCircle } from 'lucide-react'
+import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
+import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Workflows() {
-  const runs = [
-    { id: 'run-8291', name: 'Nightly Security Scan', status: 'running', trigger: 'schedule', time: '12m ago' },
-    { id: 'run-8290', name: 'Deploy to Production', status: 'success', trigger: 'push', time: '2h ago' },
-    { id: 'run-8289', name: 'Run E2E Tests', status: 'success', trigger: 'pull_request', time: '4h ago' },
-    { id: 'run-8288', name: 'Database Backup', status: 'paused', trigger: 'manual', time: '1d ago' },
+  const { data, status } = useRepositoryAnalysis()
+
+  if (status === 'analyzing') return <LoadingState title="Preparing workflow workspace" hint="Inspecting repository entry points and validation signals" />
+  if (!data) return <EmptyState title="Analyze a repository to design workflows" description="Workflow design is ready for a provider connection. Start with a repository snapshot to preflight the pipeline." icon={Workflow} />
+
+  const steps = [
+    { label: 'Source', detail: `${data.repository.branch} snapshot`, ready: true },
+    { label: 'Build', detail: data.dna.framework || data.repository.primary_language || 'Build command required', ready: Boolean(data.dna.framework || data.repository.primary_language) },
+    { label: 'Test', detail: data.repository.has_tests ? 'Test files detected' : 'Test suite required', ready: data.repository.has_tests },
+    { label: 'Deploy', detail: 'Provider connection required', ready: false },
   ]
+  const readySteps = steps.filter((step) => step.ready).length
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Workflow className="size-6 text-orange-500" />
-            Automated Workflows
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Define, monitor, and trace CI/CD pipelines and custom automation tasks.
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <button className="neo-pressed flex h-9 items-center gap-2 px-4 text-sm text-zinc-300">
-            <Settings className="size-4" /> Config
-          </button>
-          <button className="neo-accent flex h-9 items-center gap-2 px-4 text-sm font-semibold transition bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border-orange-500/50">
-            <Play className="size-4" /> Run Workflow
-          </button>
-        </div>
+    <div className="space-y-5">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div><div className="flex items-center gap-3"><Workflow className="size-5 text-amber-400" aria-hidden="true" /><h1 className="text-lg font-semibold text-white">Workflows</h1></div><p className="mt-1 text-xs text-zinc-500">Pipeline design for {data.repository.owner}/{data.repository.name} at {data.repository.branch}.</p></div>
+        <div className="flex gap-2"><button type="button" disabled className="neo-pressed inline-flex items-center gap-2 px-3 py-2 text-xs text-zinc-600"><Settings className="size-3.5" aria-hidden="true" />Configure provider</button><button type="button" disabled className="neo-accent inline-flex items-center gap-2 px-3 py-2 text-xs opacity-40"><Play className="size-3.5" aria-hidden="true" />Run workflow</button></div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="lg:col-span-2 space-y-6">
-          <div className="neo-flat overflow-hidden">
-            <div className="p-4 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900/30">
-              <h2 className="text-sm font-semibold text-zinc-300">Recent Workflow Runs</h2>
-            </div>
-            
-            <div className="divide-y divide-zinc-800/50">
-              {runs.map(run => (
-                <div key={run.id} className="p-4 hover:bg-zinc-800/20 transition flex items-center justify-between group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    {run.status === 'success' && <CheckCircle2 className="size-5 text-emerald-500" />}
-                    {run.status === 'running' && <CircleDashed className="size-5 text-amber-500 animate-spin" />}
-                    {run.status === 'paused' && <PauseCircle className="size-5 text-zinc-500" />}
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-zinc-200">{run.name}</h3>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500 font-mono">
-                        <span className="text-zinc-400">{run.id}</span>
-                        <span>•</span>
-                        <span>trigger: {run.trigger}</span>
-                        <span>•</span>
-                        <span>{run.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <ChevronRight className="size-4 text-zinc-600 group-hover:text-zinc-300 transition" />
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="neo-flat p-6">
-            <h3 className="text-sm font-semibold text-zinc-300 mb-6">Pipeline Visualization (Preview)</h3>
-            <div className="flex items-center justify-center p-8 border-2 border-dashed border-zinc-800 rounded-xl bg-zinc-900/10">
-              <div className="flex items-center gap-4 text-xs font-mono">
-                <div className="neo-pressed p-3 rounded-lg border border-zinc-700/50 flex flex-col items-center gap-2">
-                  <Share2 className="size-4 text-zinc-400" /> Webhook
-                </div>
-                <div className="h-0.5 w-8 bg-zinc-700"></div>
-                <div className="neo-pressed p-3 rounded-lg border border-zinc-700/50 flex flex-col items-center gap-2">
-                  <Settings className="size-4 text-sky-400" /> Build
-                </div>
-                <div className="h-0.5 w-8 bg-zinc-700"></div>
-                <div className="neo-pressed p-3 rounded-lg border border-emerald-500/30 flex flex-col items-center gap-2 relative">
-                  <div className="absolute -top-1 -right-1 size-2.5 rounded-full bg-emerald-500 animate-ping"></div>
-                  <div className="absolute -top-1 -right-1 size-2.5 rounded-full bg-emerald-500"></div>
-                  <Play className="size-4 text-emerald-400" /> Test
-                </div>
-                <div className="h-0.5 w-8 bg-zinc-800 border-t border-dashed border-zinc-700"></div>
-                <div className="neo-flat p-3 rounded-lg flex flex-col items-center gap-2 opacity-50">
-                  <Workflow className="size-4 text-orange-400" /> Deploy
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+      <section className="neo-flat p-5"><div className="flex flex-col justify-between gap-3 border-b border-zinc-800/70 pb-4 sm:flex-row sm:items-end"><div><p className="text-xs uppercase tracking-wider text-zinc-500">Pipeline readiness</p><p className="mt-2 font-mono text-3xl font-semibold text-zinc-200">{readySteps}/{steps.length}</p></div><p className="max-w-md text-xs leading-5 text-zinc-500">The pipeline canvas is preflighted from repository evidence. Execution history and runner telemetry will populate after a CI provider is connected.</p></div><div className="mt-6 grid gap-3 md:grid-cols-4">{steps.map((step, index) => <div key={step.label} className="relative"><div className={`neo-pressed min-h-24 p-4 ${step.ready ? 'border-emerald-500/30' : 'border-zinc-800'}`}><div className="flex items-center gap-2">{step.ready ? <CheckCircle2 className="size-4 text-emerald-400" aria-hidden="true" /> : <XCircle className="size-4 text-zinc-600" aria-hidden="true" />}<span className="text-xs font-semibold text-zinc-300">{step.label}</span></div><p className="mt-3 text-[10px] leading-4 text-zinc-500">{step.detail}</p></div>{index < steps.length - 1 && <span className="absolute -right-2 top-12 hidden text-zinc-700 md:block">→</span>}</div>)}</div></section>
 
-        <aside className="space-y-6">
-          <div className="neo-flat p-5">
-            <h3 className="text-sm font-semibold text-zinc-300 mb-4">Active Runners</h3>
-            <div className="space-y-3">
-              {[
-                { name: 'ubuntu-latest (core-1)', status: 'busy', load: 85 },
-                { name: 'ubuntu-latest (core-2)', status: 'idle', load: 5 },
-                { name: 'macos-13 (build-1)', status: 'offline', load: 0 },
-              ].map(runner => (
-                <div key={runner.name} className="neo-pressed p-3 rounded-lg flex justify-between items-center">
-                  <div>
-                    <div className="text-xs font-medium text-zinc-200">{runner.name}</div>
-                    <div className="text-[10px] text-zinc-500 mt-1 uppercase tracking-wider">{runner.status}</div>
-                  </div>
-                  {runner.status !== 'offline' && (
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-[10px] font-mono text-zinc-400">{runner.load}% CPU</span>
-                      <div className="w-16 h-1 bg-zinc-800 rounded-full">
-                        <div className={['h-full rounded-full', runner.load > 80 ? 'bg-orange-500' : 'bg-emerald-500'].join(' ')} style={{ width: `${runner.load}%` }}></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-      </div>
+      <div className="grid gap-5 lg:grid-cols-2"><section className="neo-flat p-5"><div className="flex items-center gap-2 border-b border-zinc-800/70 pb-4"><GitBranch className="size-4 text-sky-400" aria-hidden="true" /><h2 className="text-sm font-medium text-zinc-200">Workflow inputs</h2></div><dl className="mt-4 space-y-3 text-xs"><div className="flex justify-between gap-4"><dt className="text-zinc-600">Branch</dt><dd className="font-mono text-zinc-300">{data.repository.branch}</dd></div><div className="flex justify-between gap-4"><dt className="text-zinc-600">Entry point</dt><dd className="font-mono text-zinc-300">{data.repository.entry_points?.[0] || 'Not detected'}</dd></div><div className="flex justify-between gap-4"><dt className="text-zinc-600">Package manager</dt><dd className="text-zinc-300">{data.dependency_health.package_manager || 'Not detected'}</dd></div></dl></section><section className="neo-flat p-5"><div className="flex items-center gap-2 border-b border-zinc-800/70 pb-4"><CircleDashed className="size-4 text-zinc-500" aria-hidden="true" /><h2 className="text-sm font-medium text-zinc-200">Execution history</h2></div><div className="flex min-h-28 items-center justify-center text-center text-xs text-zinc-600">No workflow runs are available.<br />Connect a CI provider to collect build evidence.</div></section></div>
     </div>
   )
 }
