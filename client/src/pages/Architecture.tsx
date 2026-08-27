@@ -4,7 +4,6 @@ import {
   Network,
   Layers,
   Package,
-  ArrowRight,
   Cpu,
   Database,
   Globe,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { DependencyConstellation } from '../components/analysis/DependencyConstellation'
 
 type ArchitectureModule = {
   name: string
@@ -78,12 +78,9 @@ export function Architecture() {
     ]
   }, [architectureModules.length, data])
 
-  const dependencyNodes = useMemo(() => {
+  const dependencies = useMemo(() => {
     if (!data) return []
-    return (data.dependency_health.top_dependencies ?? data.dependency_health.detected ?? []).slice(0, 6).map((dependency) => ({
-      from: data.repository.name,
-      to: dependency.name,
-    }))
+    return (data.dependency_health.top_dependencies ?? data.dependency_health.detected ?? []).slice(0, 6)
   }, [data])
 
   const layers = useMemo(() => {
@@ -146,46 +143,15 @@ export function Architecture() {
       <div className="neo-flat p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-medium text-zinc-200">Dependency Graph</h2>
-            <p className="mt-1 text-xs text-zinc-500">Repository dependencies and direct relationships</p>
+            <h2 className="text-sm font-medium text-zinc-200">Dependency Constellation</h2>
+            <p className="mt-1 text-xs text-zinc-500">A high-level spatial view of the analyzed dependency surface</p>
           </div>
-          <span className="neo-pressed px-2.5 py-1 text-xs text-zinc-500">Live</span>
+          <span className="border border-amber-500/30 px-2.5 py-1 text-xs text-amber-400">Snapshot</span>
         </div>
 
-        <div className="neo-pressed mt-6 min-h-[280px] p-6">
-          {dependencyNodes.length > 0 ? (
-            <div className="flex flex-col items-center gap-5">
-              <div className="neo-convex flex min-w-40 items-center gap-2 border border-violet-500/40 px-4 py-3">
-                <Boxes className="size-4 text-violet-400" aria-hidden="true" />
-                <span className="text-xs font-semibold text-white">{data.repository.name}</span>
-                <span className="text-[10px] text-zinc-500">source</span>
-              </div>
-
-              <div className="flex w-full items-start justify-center gap-3 overflow-x-auto pb-2">
-                {dependencyNodes.map((edge, index) => (
-                  <div key={`${edge.to}-${index}`} className="flex min-w-28 flex-col items-center gap-2">
-                    <ArrowRight className="size-4 rotate-90 text-zinc-600" aria-hidden="true" />
-                    <button
-                      type="button"
-                      onClick={() => setSelectedModule(edge.to)}
-                      aria-label={`Inspect dependency ${edge.to}`}
-                      className="neo-convex flex min-h-14 w-full flex-col items-center justify-center gap-1 border border-zinc-800 px-3 py-2 text-center transition hover:border-violet-500/50 hover:text-white"
-                    >
-                      <Package className="size-3.5 text-blue-400" aria-hidden="true" />
-                      <span className="max-w-28 truncate text-[10px] text-zinc-400">{edge.to}</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 text-center text-xs text-zinc-500">
-                <Network className="size-4 text-emerald-400" aria-hidden="true" />
-                <span>{selectedArchitectureModule ? `${selectedArchitectureModule.name}: ${selectedArchitectureModule.description}` : 'Select a dependency node'}</span>
-              </div>
-              <p className="text-[10px] text-zinc-700">
-                {dependencyNodes.length} dependency connections derived from the analyzed repository
-              </p>
-            </div>
+        <div className="mt-6">
+          {dependencies.length > 0 ? (
+            <DependencyConstellation repositoryName={data.repository.name} dependencies={dependencies} onSelect={setSelectedModule} />
           ) : (
             <div className="flex min-h-[220px] flex-col items-center justify-center text-center text-zinc-600">
               <Network className="size-6" aria-hidden="true" />

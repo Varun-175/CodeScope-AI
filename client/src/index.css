@@ -5,26 +5,21 @@
 :root {
   color-scheme: dark;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  --bg-color: #202124;
+    "Trebuchet MS", "Segoe UI", sans-serif;
+  --bg-color: #101416;
   --text-color: #f4f4f5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --accent-color: #8b5cf6;
-  --accent-soft: rgba(139, 92, 246, 0.14);
-  --surface: #202124;
-  --surface-strong: #1a1b1d;
-  --surface-border: rgba(255, 255, 255, 0.08);
-  
-  /* Dark mode neumorphic shadows */
-  --neo-shadow-light: #292a2f;
-  --neo-shadow-dark: #17181a;
+  --accent-color: #b99552;
+  --accent-soft: rgba(185, 149, 82, 0.14);
+  --surface: #171d20;
+  --surface-strong: #121719;
+  --surface-border: rgba(202, 211, 207, 0.14);
 
   /* Glow colors */
-  --glow-violet: rgba(139, 92, 246, 0.35);
+  --glow-violet: rgba(185, 149, 82, 0.22);
   --glow-emerald: rgba(16, 185, 129, 0.35);
   --glow-sky: rgba(14, 165, 233, 0.35);
   --glow-amber: rgba(245, 158, 11, 0.35);
@@ -33,15 +28,11 @@
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --bg-color: #e8eaed;
-  --text-color: #202124;
-  --surface: #e8eaed;
-  --surface-strong: #d5d8dc;
-  --surface-border: rgba(255, 255, 255, 0.6);
-
-  /* Light mode neumorphic shadows */
-  --neo-shadow-light: #ffffff;
-  --neo-shadow-dark: #d0d4db;
+  --bg-color: #f1eee7;
+  --text-color: #1e292a;
+  --surface: #faf8f2;
+  --surface-strong: #e8e3d8;
+  --surface-border: rgba(30, 41, 42, 0.16);
 }
 
 * {
@@ -62,85 +53,64 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* --- Neumorphic Base Classes --- */
-
-/* Flat floating surface */
+/* Classical panel language: quiet surfaces, hairline rules, no inflated shadows. */
 .neo-flat {
   background: var(--surface);
-  border-radius: 12px;
-  box-shadow: 
-    4px 4px 10px var(--neo-shadow-dark), 
-    -4px -4px 10px var(--neo-shadow-light);
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
   border: 1px solid var(--surface-border);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Recessed / Pressed surface (for inputs, track areas) */
 .neo-pressed {
-  background: var(--surface);
-  border-radius: 8px;
-  box-shadow: 
-    inset 2px 2px 5px var(--neo-shadow-dark), 
-    inset -2px -2px 5px var(--neo-shadow-light);
-  border: 1px solid transparent;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: color-mix(in srgb, var(--surface-strong) 62%, transparent);
+  border-radius: 3px;
+  border: 1px solid var(--surface-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Convex surface (buttons) */
 .neo-convex {
   background: var(--surface);
-  border-radius: 8px;
-  box-shadow: 
-    3px 3px 6px var(--neo-shadow-dark), 
-    -3px -3px 6px var(--neo-shadow-light);
+  border-radius: 4px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
   border: 1px solid var(--surface-border);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s ease, transform 0.2s ease;
   cursor: pointer;
 }
 
 .neo-convex:hover {
   transform: translateY(-1px);
-  box-shadow: 
-    4px 4px 8px var(--neo-shadow-dark), 
-    -4px -4px 8px var(--neo-shadow-light);
+  border-color: color-mix(in srgb, var(--accent-color) 55%, var(--surface-border));
 }
 
 .neo-convex:active, .neo-convex.active {
   transform: translateY(1px);
-  box-shadow: 
-    inset 2px 2px 4px var(--neo-shadow-dark), 
-    inset -2px -2px 4px var(--neo-shadow-light);
-  border-color: transparent;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  border-color: var(--accent-color);
 }
 
 /* Accent versions for primary actions */
 .neo-accent {
   background: var(--accent-color);
   color: #fff;
-  border-radius: 8px;
-  box-shadow: 
-    3px 3px 8px rgba(139, 92, 246, 0.4), 
-    -3px -3px 8px var(--neo-shadow-light);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(185, 149, 82, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  transition: filter 0.2s ease, transform 0.2s ease;
   cursor: pointer;
 }
 
 .neo-accent:hover {
   filter: brightness(1.05);
   transform: translateY(-1px);
-  box-shadow: 
-    4px 4px 12px rgba(139, 92, 246, 0.5), 
-    -4px -4px 12px var(--neo-shadow-light);
+  box-shadow: 0 7px 18px rgba(185, 149, 82, 0.28);
 }
 
 .neo-accent:active {
   filter: brightness(0.95);
   transform: translateY(1px);
-  box-shadow: 
-    inset 2px 2px 4px rgba(0, 0, 0, 0.25), 
-    inset -2px -2px 4px rgba(255, 255, 255, 0.15);
-  border-color: transparent;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* --- Glassmorphism Variant --- */
@@ -327,7 +297,7 @@ input[type="range"]::-webkit-slider-runnable-track {
   height: 8px;
   background: var(--surface);
   border-radius: 4px;
-  box-shadow: inset 2px 2px 4px var(--neo-shadow-dark), inset -2px -2px 4px var(--neo-shadow-light);
+  border: 1px solid var(--surface-border);
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -336,7 +306,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 20px;
   border-radius: 50%;
   background: var(--surface);
-  box-shadow: 2px 2px 5px var(--neo-shadow-dark), -2px -2px 5px var(--neo-shadow-light);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   margin-top: -6px;
   cursor: pointer;
   border: 2px solid var(--accent-color);
@@ -357,17 +327,114 @@ input.neo-pressed:focus,
 textarea.neo-pressed:focus,
 select.neo-pressed:focus {
   outline: none;
-  box-shadow: 
-    inset 2px 2px 4px var(--neo-shadow-dark), 
-    inset -2px -2px 4px var(--neo-shadow-light),
-    0 0 0 2px var(--accent-soft);
-  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent-color) 60%, transparent);
 }
 
 /* --- Typography Helpers --- */
 .font-display {
   font-weight: 700;
-  letter-spacing: -0.025em;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+h1, h2, h3 {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.architecture-stage {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--surface-border);
+  border-radius: 4px;
+  background:
+    linear-gradient(rgba(185, 149, 82, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(185, 149, 82, 0.05) 1px, transparent 1px),
+    var(--surface-strong);
+  background-size: 32px 32px;
+}
+
+.architecture-stage__canvas {
+  display: block;
+  width: 100%;
+  height: 360px;
+  cursor: crosshair;
+}
+
+.architecture-stage__label,
+.architecture-stage__legend {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.architecture-stage__label {
+  top: 16px;
+  left: 16px;
+  color: var(--text-color);
+}
+
+.architecture-stage__legend {
+  right: 16px;
+  bottom: 16px;
+  gap: 14px;
+  color: #7f8b8e;
+}
+
+.architecture-stage__dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-radius: 50%;
+}
+
+.architecture-stage__dot--core { background: #b99552; }
+.architecture-stage__dot--dependency { background: #7aa2b8; }
+
+.architecture-stage__list {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  display: grid;
+  gap: 5px;
+  max-width: min(42%, 240px);
+}
+
+.architecture-stage__list button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  color: #a9b4b5;
+  font-size: 10px;
+  text-align: left;
+  background: rgba(16, 20, 22, 0.58);
+  cursor: pointer;
+}
+
+.architecture-stage__list button:hover,
+.architecture-stage__list button:focus-visible {
+  border-color: rgba(185, 149, 82, 0.55);
+  color: #f4f4f5;
+}
+
+.architecture-stage__list button span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .architecture-stage__list {
+    max-width: 55%;
+  }
 }
 
 .text-gradient-violet {
