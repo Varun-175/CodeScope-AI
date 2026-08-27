@@ -1,95 +1,15 @@
+import { Folder, GitBranch, Plus, Search, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
-import { Folder, MoreVertical, Plus, Search, Layers, GitBranch, Clock } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
+import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Projects() {
+  const { data, status } = useRepositoryAnalysis()
   const [search, setSearch] = useState('')
+  if (status === 'analyzing') return <LoadingState title="Preparing project workspace" hint="Waiting for repository analysis" />
 
-  const projects = [
-    { id: 1, name: 'Core Engine (AI)', repos: 4, lastActive: '2h ago', status: 'Healthy', progress: 85 },
-    { id: 2, name: 'Frontend Web App', repos: 2, lastActive: '5h ago', status: 'Warning', progress: 60 },
-    { id: 3, name: 'Data Pipeline', repos: 7, lastActive: '1d ago', status: 'Healthy', progress: 100 },
-    { id: 4, name: 'Mobile Client (iOS)', repos: 1, lastActive: '3d ago', status: 'Critical', progress: 20 },
-  ]
-
-  return (
-    <div className="space-y-6 animate-fade-in-up">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Folder className="size-6 text-violet-500" />
-            Projects
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Group repositories into logical projects to track overall health and intelligence metrics.
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="neo-pressed flex h-9 items-center gap-2 px-3">
-            <Search className="size-4 text-zinc-500" />
-            <input 
-              type="text" 
-              placeholder="Search projects..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent text-sm text-white outline-none placeholder:text-zinc-600 w-48"
-            />
-          </div>
-          <button className="neo-accent flex h-9 items-center gap-2 px-4 text-sm font-semibold transition">
-            <Plus className="size-4" />
-            New Project
-          </button>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <div key={project.id} className="neo-flat flex flex-col p-5 hover:border-violet-500/30 transition-colors cursor-pointer group">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2 neo-pressed rounded-lg">
-                <Layers className="size-5 text-violet-400 group-hover:text-violet-300 transition-colors" />
-              </div>
-              <button className="text-zinc-500 hover:text-white p-1">
-                <MoreVertical className="size-4" />
-              </button>
-            </div>
-            
-            <h3 className="text-lg font-semibold text-zinc-200">{project.name}</h3>
-            
-            <div className="mt-4 flex items-center gap-4 text-xs font-mono text-zinc-500">
-              <span className="flex items-center gap-1.5">
-                <GitBranch className="size-3.5" /> {project.repos} repos
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="size-3.5" /> {project.lastActive}
-              </span>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-zinc-800/50">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-zinc-400 font-medium">System Health</span>
-                <span className={[
-                  'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full neo-pressed',
-                  project.status === 'Healthy' ? 'text-emerald-400' : 
-                  project.status === 'Warning' ? 'text-amber-400' : 'text-red-400'
-                ].join(' ')}>
-                  {project.status}
-                </span>
-              </div>
-              <div className="neo-pressed h-1.5 w-full rounded-full overflow-hidden flex">
-                <div 
-                  className={[
-                    "h-full transition-all duration-1000",
-                    project.status === 'Healthy' ? 'bg-emerald-500' : 
-                    project.status === 'Warning' ? 'bg-amber-500' : 'bg-red-500'
-                  ].join(' ')}
-                  style={{ width: `${project.progress}%` }} 
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  return <div className="space-y-5"><header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="flex items-center gap-3"><Folder className="size-5 text-amber-400" aria-hidden="true" /><h1 className="text-lg font-semibold text-white">Projects</h1></div><p className="mt-1 text-xs text-zinc-500">Group repositories into durable workspaces for health, planning, and delivery.</p></div><button type="button" disabled className="neo-accent inline-flex items-center gap-2 px-3 py-2 text-xs opacity-40"><Plus className="size-3.5" aria-hidden="true" />New project</button></header><div className="neo-pressed flex items-center gap-2 px-3"><Search className="size-4 text-zinc-600" aria-hidden="true" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search projects" className="h-10 w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600" /><span className="text-[10px] text-zinc-700">{search ? 'Local filter' : 'Provider required'}</span></div>{data ? <section className="neo-flat p-5"><div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2"><GitBranch className="size-4 text-sky-400" aria-hidden="true" /><h2 className="text-sm font-medium text-zinc-200">Current repository workspace</h2></div><p className="mt-2 text-lg font-semibold text-zinc-100">{data.repository.owner}/{data.repository.name}</p><p className="mt-1 text-xs text-zinc-500">{data.repository.branch} · {data.repository.files.toLocaleString()} files · {data.repository.lines_of_code.toLocaleString()} lines</p></div><ShieldCheck className="size-5 text-emerald-400" aria-hidden="true" /></div><div className="mt-5 grid gap-3 sm:grid-cols-3"><Detail label="Health" value={`${data.health.score}/100`} /><Detail label="Language" value={data.repository.primary_language || 'Not detected'} /><Detail label="Risks" value={`${data.risks.critical.length + data.risks.warnings.length}`} /></div><Link to="/repository" className="mt-5 inline-flex text-xs text-amber-400 hover:text-amber-300">Open repository overview →</Link></section> : <EmptyState title="No project provider connected" description="Project records, membership, and activity will appear here when the workspace contract is available. Analyze a repository to preview its project-level signals." icon={Folder} />}</div>
 }
+
+function Detail({ label, value }: { label: string; value: string }) { return <div className="neo-pressed p-3"><p className="text-[10px] uppercase tracking-wider text-zinc-600">{label}</p><p className="mt-2 text-sm text-zinc-300">{value}</p></div> }
