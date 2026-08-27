@@ -8,6 +8,7 @@ import {
   Gauge,
   GitBranch,
   History,
+  Waypoints,
   Layers,
   Rocket,
   Settings,
@@ -44,6 +45,7 @@ export const navigationGroups: NavigationGroup[] = [
       { label: 'Repositories', path: '/repository', icon: GitBranch },
       { label: 'Code Intelligence', path: '/intelligence', icon: Brain },
       { label: 'Architecture', path: '/architecture', icon: Layers },
+      { label: 'Change Impact', path: '/impact', icon: Waypoints },
     ],
   },
   {

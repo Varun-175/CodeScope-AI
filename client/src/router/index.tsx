@@ -14,6 +14,7 @@ const RepositoryOverview = lazy(() => import('../pages/RepositoryOverview').then
 const Repository = lazy(() => import('../pages/Repository').then(({ Repository }) => ({ default: Repository })))
 const Intelligence = lazy(() => import('../pages/Intelligence').then(({ Intelligence }) => ({ default: Intelligence })))
 const Architecture = lazy(() => import('../pages/Architecture').then(({ Architecture }) => ({ default: Architecture })))
+const Impact = lazy(() => import('../pages/Impact').then(({ Impact }) => ({ default: Impact })))
 const Planning = lazy(() => import('../pages/Planning').then(({ Planning }) => ({ default: Planning })))
 const Chat = lazy(() => import('../pages/Chat').then(({ Chat }) => ({ default: Chat })))
 const CodeReviews = lazy(() => import('../pages/CodeReviews').then(({ CodeReviews }) => ({ default: CodeReviews })))
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
           { path: 'repository/explore', element: <Repository /> },
           { path: 'intelligence', element: <Intelligence /> },
           { path: 'architecture', element: <Architecture /> },
+          { path: 'impact', element: <Impact /> },
           { path: 'planning', element: <Planning /> },
           { path: 'chat', element: <Chat /> },
           { path: 'reviews', element: <CodeReviews /> },

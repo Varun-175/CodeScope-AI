@@ -392,6 +392,7 @@ export function CodeReviews() {
                   return (
                     <tr
                       key={review.id}
+                      onClick={() => setSelectedReview(review)}
                       className="cursor-pointer border-b border-zinc-200 dark:border-zinc-800/50 transition hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
                     >
                       <td className="px-4 py-3">
