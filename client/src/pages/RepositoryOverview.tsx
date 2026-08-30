@@ -1,10 +1,10 @@
-import { AlertTriangle, ArrowRight, FileCode2, FolderTree, GitBranch, Layers, ShieldCheck } from 'lucide-react'
+import { AlertTriangle, ArrowRight, BookOpen, FileCode2, FolderTree, GitBranch, Layers, Package, Plus, ShieldCheck, TestTube2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 export function RepositoryOverview() {
-  const { data, error, status } = useRepositoryAnalysis()
+  const { data, error, openAnalyzeModal, status } = useRepositoryAnalysis()
 
   if (status === 'analyzing') {
     return <LoadingState title="Analyzing repository" hint="The overview will appear when the analysis completes." />
@@ -12,16 +12,31 @@ export function RepositoryOverview() {
 
   if (!data) {
     return (
-      <EmptyState
-        title="Connect a repository to see its overview"
-        description="Run an analysis from the repository context bar to populate verified repository signals."
-        icon={FolderTree}
-      />
+      <div className="space-y-4">
+        {error ? <ErrorState title="Repository analysis failed" description="No completed repository snapshot is available. Check the repository connection and try again." /> : null}
+        <EmptyState
+          title="Connect a repository to see its overview"
+          description="Run an analysis from the repository context bar to populate verified repository signals."
+          icon={FolderTree}
+        />
+        <div className="flex justify-center">
+          <button type="button" onClick={openAnalyzeModal} className="neo-accent inline-flex h-9 items-center gap-2 px-3 text-sm font-medium">
+            <Plus className="size-4" aria-hidden="true" />
+            Analyze repository
+          </button>
+        </div>
+      </div>
     )
   }
 
   const totalRisks = data.risks.critical.length + data.risks.warnings.length
   const healthTone = data.health.score >= 85 ? 'text-emerald-400' : data.health.score >= 70 ? 'text-amber-400' : 'text-red-400'
+  const nextActions = [
+    data.risks.critical.length > 0 ? { label: 'Review critical risks', detail: `${data.risks.critical.length} critical findings require attention`, href: '/reviews', icon: AlertTriangle } : null,
+    !data.repository.has_tests ? { label: 'Plan test coverage', detail: 'No test-related files were detected', href: '/testing', icon: TestTube2 } : null,
+    !data.repository.readme ? { label: 'Document the repository', detail: 'No README was found in this snapshot', href: '/planning', icon: BookOpen } : null,
+    data.dependency_health.unknown.length > 0 ? { label: 'Review dependencies', detail: `${data.dependency_health.unknown.length} dependency signals are unknown`, href: '/architecture', icon: Package } : null,
+  ].filter((action): action is NonNullable<typeof action> => Boolean(action)).slice(0, 3)
 
   return (
     <div className="space-y-5">
@@ -97,6 +112,41 @@ export function RepositoryOverview() {
             : <p className="text-sm text-zinc-500">No language signals detected.</p>}
         </div>
       </section>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <section className="neo-flat p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Health rationale</h2>
+              <p className="mt-1 text-xs text-zinc-500">Signals contributing to the current score</p>
+            </div>
+            <span className={`font-mono text-lg font-semibold ${healthTone}`}>{data.health.score}</span>
+          </div>
+          <div className="mt-4 space-y-2">
+            {(data.health.details.reasons ?? []).slice(0, 5).map((reason, index) => (
+              <div key={`${reason.reason}-${index}`} className="neo-pressed flex items-center justify-between gap-3 px-3 py-2.5">
+                <span className="text-xs text-zinc-500">{reason.reason}</span>
+                <span className="font-mono text-xs text-zinc-300">{reason.points > 0 ? '+' : ''}{reason.points}</span>
+              </div>
+            ))}
+            {(data.health.details.reasons ?? []).length === 0 && <p className="text-xs text-zinc-600">No score rationale was returned for this snapshot.</p>}
+          </div>
+        </section>
+
+        <section className="neo-flat p-5">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Recommended next steps</h2>
+          <p className="mt-1 text-xs text-zinc-500">Prioritized from verified repository signals</p>
+          <div className="mt-4 space-y-2">
+            {nextActions.length > 0 ? nextActions.map(({ label, detail, href, icon: Icon }) => (
+              <Link key={label} to={href} className="neo-pressed flex items-center gap-3 px-3 py-2.5 transition-colors hover:border-violet-400/40">
+                <Icon className="size-4 shrink-0 text-violet-400" aria-hidden="true" />
+                <span className="min-w-0 flex-1"><span className="block text-xs font-medium text-zinc-300">{label}</span><span className="mt-0.5 block text-[10px] text-zinc-600">{detail}</span></span>
+                <ArrowRight className="size-3 shrink-0 text-zinc-600" aria-hidden="true" />
+              </Link>
+            )) : <p className="text-xs text-emerald-500">No immediate follow-up actions were identified.</p>}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
