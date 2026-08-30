@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { AlertCircle, ArrowRight, Beaker, CheckCircle2, FileCode2, Layers2, ShieldAlert, TestTube2, Zap, XCircle } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Testing() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
 
   const testSignals = useMemo(() => {
     if (!data) return []
@@ -51,16 +51,20 @@ export function Testing() {
 
   if (!data) {
     return (
-      <EmptyState
+      <div className="space-y-4">
+        {error ? <ErrorState title="Analysis failed" description={error} /> : null}
+        <EmptyState
         title="Analyze a repository to inspect testing"
         description="Testing intelligence is scoped to the currently analyzed repository snapshot."
         icon={Beaker}
-      />
+        />
+      </div>
     )
   }
 
   return (
     <div className="space-y-5">
+      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed analysis. Run another analysis to refresh these signals." /> : null}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <div className="flex items-center gap-3">

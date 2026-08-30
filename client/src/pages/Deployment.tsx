@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { AlertTriangle, CheckCircle2, Container, GitBranch, Rocket, Server, ShieldAlert, Zap, XCircle } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 type Readiness = { label: string; detail: string; ready: boolean }
 
 export function Deployment() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
   const readiness = useMemo<Readiness[]>(() => {
     if (!data) return []
     return [
@@ -19,12 +19,13 @@ export function Deployment() {
   }, [data])
 
   if (status === 'analyzing') return <LoadingState title="Preparing deployment readiness" hint="Inspecting repository runtime and release signals" />
-  if (!data) return <EmptyState title="Analyze a repository to prepare delivery" description="Deployment readiness is scoped to the selected repository snapshot." icon={Rocket} />
+  if (!data) return <div className="space-y-4">{error ? <ErrorState title="Analysis failed" description={error} /> : null}<EmptyState title="Analyze a repository to prepare delivery" description="Deployment readiness is scoped to the selected repository snapshot." icon={Rocket} /></div>
 
   const readyCount = readiness.filter((item) => item.ready).length
 
   return (
     <div className="space-y-5">
+      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed analysis. Run another analysis to refresh these signals." /> : null}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <div className="flex items-center gap-3"><Rocket className="size-5 text-sky-400" aria-hidden="true" /><h1 className="text-lg font-semibold text-white">Deployment</h1></div>

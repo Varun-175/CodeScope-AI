@@ -1,9 +1,9 @@
 import { Activity, AlertTriangle, BarChart3, Container, Radio, TrendingUp, Zap } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Observability() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
 
   if (status === 'analyzing') {
     return <LoadingState title="Preparing observability workspace" hint="Waiting for repository analysis signals" />
@@ -11,11 +11,14 @@ export function Observability() {
 
   if (!data) {
     return (
-      <EmptyState
+      <div className="space-y-4">
+        {error ? <ErrorState title="Analysis failed" description={error} /> : null}
+        <EmptyState
         title="Connect a repository to inspect observability"
         description="Runtime metrics, logs, and traces will appear here after an observability provider is configured."
         icon={Radio}
-      />
+        />
+      </div>
     )
   }
 
@@ -69,6 +72,7 @@ export function Observability() {
 
   return (
     <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-5">
+      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed analysis. Run another analysis to refresh these signals." /> : null}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <div className="flex items-center gap-3">
