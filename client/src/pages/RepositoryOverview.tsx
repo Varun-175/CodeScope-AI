@@ -147,6 +147,48 @@ export function RepositoryOverview() {
           </div>
         </section>
       </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <section className="neo-flat p-5 lg:col-span-2">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Largest source files</h2>
+              <p className="mt-1 text-xs text-zinc-500">Potential complexity and review hotspots</p>
+            </div>
+            <Link to="/repository/explore" className="text-[10px] text-violet-400 hover:text-violet-300">Open explorer <ArrowRight className="ml-1 inline size-3" aria-hidden="true" /></Link>
+          </div>
+          <div className="mt-4 space-y-2">
+            {(data.repository.large_files ?? []).slice(0, 5).map((file) => (
+              <div key={file.path} className="neo-pressed flex items-center gap-3 px-3 py-2.5">
+                <FileCode2 className="size-4 shrink-0 text-sky-400" aria-hidden="true" />
+                <span className="min-w-0 flex-1 truncate font-mono text-xs text-zinc-400">{file.path}</span>
+                <span className="shrink-0 font-mono text-xs text-zinc-300">{file.lines.toLocaleString()} lines</span>
+              </div>
+            ))}
+            {(data.repository.large_files ?? []).length === 0 && <p className="text-xs text-zinc-600">No large-file signals were returned.</p>}
+          </div>
+        </section>
+
+        <section className="neo-flat p-5">
+          <div className="flex items-center gap-2">
+            <Package className="size-4 text-amber-400" aria-hidden="true" />
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Dependency posture</h2>
+          </div>
+          <dl className="mt-4 space-y-3">
+            <Detail label="Package manager" value={data.dependency_health.package_manager || 'Not detected'} />
+            <Detail label="Total dependencies" value={data.dependency_health.total_dependencies.toLocaleString()} />
+            <Detail label="Healthy signals" value={data.dependency_health.healthy.length.toLocaleString()} />
+            <Detail label="Unknown signals" value={data.dependency_health.unknown.length.toLocaleString()} />
+          </dl>
+          <div className="mt-4 border-t border-zinc-800/70 pt-3">
+            <p className="text-[10px] uppercase tracking-wider text-zinc-600">Top dependencies</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(data.dependency_health.top_dependencies ?? []).slice(0, 5).map((dependency) => <span key={dependency.name} className="neo-pressed px-2 py-1 font-mono text-[10px] text-zinc-400">{dependency.name}</span>)}
+              {(data.dependency_health.top_dependencies ?? []).length === 0 && <span className="text-xs text-zinc-600">None detected</span>}
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
