@@ -1,9 +1,9 @@
 import { AlertOctagon, ArrowUpRight, Beaker, CheckCircle2, ShieldAlert, XCircle } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Incidents() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
 
   if (status === 'analyzing') return <LoadingState title="Preparing incident signals" hint="Inspecting repository risks and analysis status" />
   if (!data) return <EmptyState title="Analyze a repository to inspect incident signals" description="Incident intelligence is scoped to the currently analyzed repository snapshot. Live incidents and on-call data require an operations provider." icon={Beaker} />
@@ -15,6 +15,7 @@ export function Incidents() {
 
   return (
     <div className="space-y-5">
+      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed incident signals. Run another analysis to refresh this snapshot." /> : null}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2 text-lg font-semibold text-white">
