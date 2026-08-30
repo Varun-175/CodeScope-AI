@@ -1,9 +1,9 @@
 import { CheckCircle2, CircleDashed, GitBranch, Play, Settings, Workflow, XCircle } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Workflows() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
 
   if (status === 'analyzing') return <LoadingState title="Preparing workflow workspace" hint="Inspecting repository entry points and validation signals" />
   if (!data) return <EmptyState title="Analyze a repository to design workflows" description="Workflow design is ready for a provider connection. Start with a repository snapshot to preflight the pipeline." icon={Workflow} />
@@ -18,6 +18,7 @@ export function Workflows() {
 
   return (
     <div className="space-y-5">
+      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed workflow preflight. Run another analysis to refresh these signals." /> : null}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div><div className="flex items-center gap-3"><Workflow className="size-5 text-amber-400" aria-hidden="true" /><h1 className="text-lg font-semibold text-white">Workflows</h1></div><p className="mt-1 text-xs text-zinc-500">Pipeline design for {data.repository.owner}/{data.repository.name} at {data.repository.branch}.</p></div>
         <div className="flex gap-2"><button type="button" disabled className="neo-pressed inline-flex items-center gap-2 px-3 py-2 text-xs text-zinc-600"><Settings className="size-3.5" aria-hidden="true" />Configure provider</button><button type="button" disabled className="neo-accent inline-flex items-center gap-2 px-3 py-2 text-xs opacity-40"><Play className="size-3.5" aria-hidden="true" />Run workflow</button></div>

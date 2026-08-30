@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AlertTriangle, ArrowRight, Calendar, CheckCircle2, Clock, ListTodo, Target } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 type PlanStatus = 'todo' | 'progress' | 'review' | 'done'
 type PlanPriority = 'Critical' | 'High' | 'Medium'
@@ -22,7 +22,7 @@ const COLUMNS: Array<{ id: PlanStatus; name: string; icon: typeof ListTodo; colo
 ]
 
 export function Planning() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
   const [taskStatuses, setTaskStatuses] = useState<Record<string, PlanStatus>>({})
 
   const tasks = useMemo<PlanTask[]>(() => {
@@ -58,6 +58,7 @@ export function Planning() {
 
   return (
     <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-5">
+      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed plan. Run another analysis to refresh the recommendations." /> : null}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <div className="flex items-center gap-3">
@@ -72,7 +73,14 @@ export function Planning() {
       {tasks.length === 0 ? (
         <div className="neo-flat flex flex-1 items-center justify-center"><EmptyState title="No planning signals found" description="The current analysis did not produce risks or follow-up actions." icon={CheckCircle2} /></div>
       ) : (
-        <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Plan summary">
+            <Summary label="Total tasks" value={tasks.length} />
+            <Summary label="Critical" value={tasks.filter((task) => task.priority === 'Critical').length} tone="text-red-400" />
+            <Summary label="High" value={tasks.filter((task) => task.priority === 'High').length} tone="text-amber-400" />
+            <Summary label="Completed" value={tasks.filter((task) => (taskStatuses[task.id] ?? task.status) === 'done').length} tone="text-emerald-400" />
+          </div>
+          <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
           {COLUMNS.map((column) => {
             const Icon = column.icon
             const columnTasks = tasks.filter((task) => (taskStatuses[task.id] ?? task.status) === column.id)
@@ -100,8 +108,13 @@ export function Planning() {
               </section>
             )
           })}
-        </div>
+          </div>
+        </>
       )}
     </div>
   )
+}
+
+function Summary({ label, value, tone = 'text-zinc-200' }: { label: string; value: number; tone?: string }) {
+  return <div className="neo-flat p-3"><p className="text-[10px] uppercase tracking-wider text-zinc-600">{label}</p><p className={`mt-2 font-mono text-xl font-semibold ${tone}`}>{value}</p></div>
 }
