@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { Activity, ArrowRight, GitCommitHorizontal, ShieldAlert, TestTube2, Waypoints } from 'lucide-react'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 
 export function Impact() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
 
   const targets = useMemo(() => {
     if (!data) return []
@@ -27,6 +27,7 @@ export function Impact() {
 
   return (
     <div className="space-y-5">
+      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed analysis. Run another analysis to refresh these signals." /> : null}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <div className="flex items-center gap-3">
