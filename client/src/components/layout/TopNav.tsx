@@ -16,12 +16,16 @@ type TopNavProps = {
   isSidebarCollapsed: boolean
   onMenuClick: () => void
   onToggleSidebar: () => void
+  onOpenCommandPalette: () => void
+  onOpenIntelligencePanel: () => void
 }
 
 export function TopNav({
   isSidebarCollapsed,
   onMenuClick,
   onToggleSidebar,
+  onOpenCommandPalette,
+  onOpenIntelligencePanel,
 }: TopNavProps) {
   const { data, status, openAnalyzeModal } = useRepositoryAnalysis()
   const { user, logout } = useAuth()
@@ -78,10 +82,11 @@ export function TopNav({
         </span>
       </div>
 
-      <div className="neo-pressed ml-auto hidden h-9 w-full max-w-sm items-center gap-2 px-3 text-sm md:flex">
+      <button type="button" onClick={onOpenCommandPalette} className="neo-pressed ml-auto hidden h-9 w-full max-w-sm items-center gap-2 px-3 text-left text-sm text-zinc-500 transition hover:text-zinc-200 md:flex" aria-label="Open command palette">
         <Search className="size-4" aria-hidden="true" />
         <span className="truncate">Search repositories, files, symbols</span>
-      </div>
+        <kbd className="ml-auto hidden rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-600 lg:inline">Ctrl K</kbd>
+      </button>
 
       <button
         type="button"
@@ -94,6 +99,8 @@ export function TopNav({
       </button>
 
       <JobTracker />
+
+      <button type="button" onClick={onOpenIntelligencePanel} className="neo-convex hidden size-9 place-items-center text-zinc-400 hover:text-violet-300 sm:grid" aria-label="Open intelligence panel"><Search className="size-4" aria-hidden="true" /></button>
 
       <div className="relative">
         <button

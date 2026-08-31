@@ -1,0 +1,16 @@
+import { AlertTriangle, ArrowRight, BrainCircuit, FileCode2, ShieldCheck, TestTube2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useRepositoryAnalysis } from '../../contexts/RepositoryAnalysisContext'
+
+type IntelligencePanelProps = { onClose: () => void }
+
+export function IntelligencePanel({ onClose }: IntelligencePanelProps) {
+  const { data } = useRepositoryAnalysis()
+
+  return (
+    <aside className="neo-flat fixed inset-y-0 right-0 z-50 flex w-[min(92vw,360px)] flex-col border-y-0 border-r-0 p-5 shadow-2xl" aria-label="Repository intelligence panel">
+      <div className="flex items-start justify-between gap-3 border-b border-zinc-800/70 pb-4"><div><div className="flex items-center gap-2"><BrainCircuit className="size-4 text-violet-400" aria-hidden="true" /><h2 className="text-sm font-semibold text-zinc-100">Intelligence context</h2></div><p className="mt-1 text-xs text-zinc-500">Current repository snapshot</p></div><button type="button" onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-200">Close</button></div>
+      {data ? <div className="mt-5 space-y-5 overflow-y-auto"><section><p className="text-[10px] uppercase tracking-wider text-zinc-600">Selection</p><p className="mt-2 font-medium text-zinc-200">{data.repository.owner}/{data.repository.name}</p><p className="mt-1 font-mono text-xs text-zinc-500">{data.repository.branch}</p></section><section><p className="text-[10px] uppercase tracking-wider text-zinc-600">Why it matters</p><div className="mt-2 neo-pressed p-3"><div className="flex items-center gap-2"><ShieldCheck className="size-4 text-emerald-400" aria-hidden="true" /><span className="text-sm text-zinc-200">Health {data.health.score}/100</span></div><p className="mt-2 text-xs leading-5 text-zinc-500">{data.health.status}</p></div></section><section><p className="text-[10px] uppercase tracking-wider text-zinc-600">Evidence</p><div className="mt-2 space-y-2"><Link to="/repository/explore" onClick={onClose} className="neo-pressed flex items-center gap-2 p-3 text-xs text-zinc-400"><FileCode2 className="size-3.5 text-sky-400" aria-hidden="true" />{data.repository.parsed_files} parsed files<ArrowRight className="ml-auto size-3" aria-hidden="true" /></Link><Link to="/reviews" onClick={onClose} className="neo-pressed flex items-center gap-2 p-3 text-xs text-zinc-400"><AlertTriangle className="size-3.5 text-amber-400" aria-hidden="true" />{data.risks.critical.length + data.risks.warnings.length} risk signals<ArrowRight className="ml-auto size-3" aria-hidden="true" /></Link><Link to="/testing" onClick={onClose} className="neo-pressed flex items-center gap-2 p-3 text-xs text-zinc-400"><TestTube2 className="size-3.5 text-emerald-400" aria-hidden="true" />{data.repository.has_tests ? 'Tests detected' : 'Tests not detected'}<ArrowRight className="ml-auto size-3" aria-hidden="true" /></Link></div></section><Link to="/intelligence" onClick={onClose} className="neo-accent flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium">Ask CodeScope <ArrowRight className="size-4" aria-hidden="true" /></Link></div> : <div className="flex flex-1 items-center justify-center text-center text-sm text-zinc-500">Analyze a repository to see contextual evidence and next steps.</div>}
+    </aside>
+  )
+}
