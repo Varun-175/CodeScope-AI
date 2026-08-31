@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Brain, CheckCircle2, Database, GitPullRequest, LoaderCircle, Search, Sparkles, XCircle, Zap } from 'lucide-react'
+import { Brain, CheckCircle2, Database, FileCode2, GitPullRequest, LoaderCircle, Network, Search, ShieldAlert, Sparkles, TestTube2, XCircle, Zap } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 import { chatWithRepository, getRepositoryIndexStatus, reindexRepository } from '../services/api/analysis'
 import type { RepositoryIndexStatus } from '../types/analysis'
@@ -83,6 +84,14 @@ export function Intelligence() {
   if (analysisStatus === 'analyzing') return <LoadingState title="Preparing intelligence" hint="Waiting for repository analysis to complete" />
   if (!data) return <EmptyState title="Analyze a repository to use Intelligence" description="Repository context and an indexed snapshot are required for semantic questions." icon={Brain} />
 
+  const deterministicSignals = [
+    { label: 'Source evidence', detail: `${data.repository.parsed_files.toLocaleString()} files parsed in this snapshot`, icon: FileCode2, href: '/repository/explore' },
+    { label: 'Risk evidence', detail: `${data.risks.critical.length + data.risks.warnings.length} critical or warning findings`, icon: ShieldAlert, href: '/reviews' },
+    { label: 'Dependency evidence', detail: `${data.dependency_health.total_dependencies.toLocaleString()} dependencies detected`, icon: Network, href: '/architecture' },
+    { label: 'Test evidence', detail: data.repository.has_tests ? 'Test-related files detected' : 'No test files detected', icon: TestTube2, href: '/testing' },
+  ]
+  const evidenceStrength = indexStatus?.indexed && (indexStatus.doc_count ?? 0) > 0 ? 'Strong' : 'Limited'
+
   return (
     <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-5">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -137,7 +146,7 @@ export function Intelligence() {
             ) : null}
             {isAsking ? <div className="flex items-center gap-2 text-xs text-zinc-500"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" />Searching indexed evidence...</div> : null}
             {queryError ? <div className="neo-pressed border-l-2 border-red-500/70 p-4 text-xs text-red-300">{queryError}</div> : null}
-            {answer ? <div className="max-w-3xl whitespace-pre-wrap text-sm leading-7 text-zinc-300">{answer}</div> : null}
+            {answer ? <div className="space-y-5"><div className="max-w-3xl whitespace-pre-wrap text-sm leading-7 text-zinc-300">{answer}</div><section className="border-t border-zinc-800/70 pt-4" aria-label="Answer evidence"><div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-medium text-zinc-200">Evidence and next steps</h3><p className="mt-1 text-xs text-zinc-500">AI interpretation must be checked against this snapshot.</p></div><span className={`rounded-full border px-2 py-1 text-[10px] ${evidenceStrength === 'Strong' ? 'border-emerald-900/50 text-emerald-400' : 'border-amber-900/50 text-amber-400'}`}>Evidence strength: {evidenceStrength}</span></div><div className="mt-3 grid gap-2 sm:grid-cols-2">{deterministicSignals.map(({ label, detail, icon: Icon, href }) => <Link key={label} to={href} className="neo-pressed flex items-start gap-2 p-3 text-left transition hover:border-violet-400/40"><Icon className="mt-0.5 size-3.5 shrink-0 text-violet-400" aria-hidden="true" /><span><span className="block text-xs font-medium text-zinc-300">{label}</span><span className="mt-0.5 block text-[10px] leading-4 text-zinc-600">{detail}</span></span></Link>)}</div><div className="mt-3 flex flex-wrap gap-2"><Link to="/planning" className="neo-accent px-3 py-2 text-xs font-medium">Create plan from findings</Link><Link to="/impact" className="neo-convex px-3 py-2 text-xs text-zinc-400">Review change impact</Link></div></section></div> : null}
           </div>
 
           <form onSubmit={handleAsk} className="border-t border-zinc-800/70 pt-4">

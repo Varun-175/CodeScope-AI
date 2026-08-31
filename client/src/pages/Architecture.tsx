@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Boxes,
   Network,
@@ -34,10 +35,11 @@ type ArchitectureMetric = {
 
 export function Architecture() {
   const { data, error, status } = useRepositoryAnalysis()
-  const [selectedModule, setSelectedModule] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
   const [expandedLayers, setExpandedLayers] = useState<Set<string>>(new Set())
   const [moduleQuery, setModuleQuery] = useState('')
-  const [layerFilter, setLayerFilter] = useState('all')
+  const selectedModule = searchParams.get('focus')
+  const layerFilter = searchParams.get('layer') ?? 'all'
 
   const architectureModules = useMemo<ArchitectureModule[]>(() => {
     if (!data) return []
@@ -108,6 +110,19 @@ export function Architecture() {
     })
   }
 
+  function updateSelection({ focus, layer }: { focus?: string | null; layer?: string }) {
+    const next = new URLSearchParams(searchParams)
+    if (focus !== undefined) {
+      if (focus) next.set('focus', focus)
+      else next.delete('focus')
+    }
+    if (layer !== undefined) {
+      if (layer === 'all') next.delete('layer')
+      else next.set('layer', layer)
+    }
+    setSearchParams(next, { replace: true })
+  }
+
   if (status === 'analyzing') {
     return <LoadingState title="Analyzing architecture" hint="Collecting modules, layers, and repositories signals" />
   }
@@ -161,7 +176,7 @@ export function Architecture() {
 
         <div className="mt-6">
           {dependencies.length > 0 ? (
-            <DependencyConstellation repositoryName={data.repository.name} dependencies={dependencies} onSelect={setSelectedModule} />
+            <DependencyConstellation repositoryName={data.repository.name} dependencies={dependencies} onSelect={(name) => updateSelection({ focus: name })} />
           ) : (
             <div className="flex min-h-[220px] flex-col items-center justify-center text-center text-zinc-600">
               <Network className="size-6" aria-hidden="true" />
@@ -206,7 +221,7 @@ export function Architecture() {
                       <button
                         key={moduleName}
                         type="button"
-                        onClick={() => module && setSelectedModule(module.name)}
+                        onClick={() => module && updateSelection({ focus: module.name })}
                         className="neo-convex flex items-center gap-2 px-3 py-2 text-sm transition"
                       >
                         <Icon className="size-4 text-zinc-400" />
@@ -226,7 +241,7 @@ export function Architecture() {
           <div><h2 className="text-sm font-medium text-zinc-200">Repository Modules</h2><p className="mt-1 text-xs text-zinc-500">Search and inspect analyzer-identified modules</p></div>
           <div className="flex gap-2">
             <label className="neo-pressed flex items-center gap-2 px-3 py-2"><Search className="size-3.5 text-zinc-600" aria-hidden="true" /><span className="sr-only">Search modules</span><input value={moduleQuery} onChange={(event) => setModuleQuery(event.target.value)} placeholder="Search modules" className="w-32 bg-transparent text-xs text-zinc-300 outline-none placeholder:text-zinc-700" /></label>
-            <label className="sr-only" htmlFor="architecture-layer-filter">Filter architecture layer</label><select id="architecture-layer-filter" value={layerFilter} onChange={(event) => setLayerFilter(event.target.value)} className="neo-pressed px-2 py-2 text-xs text-zinc-400 outline-none"><option value="all">All layers</option>{(data.architecture.layers ?? []).map((layer) => <option key={layer} value={layer}>{layer}</option>)}</select>
+            <label className="sr-only" htmlFor="architecture-layer-filter">Filter architecture layer</label><select id="architecture-layer-filter" value={layerFilter} onChange={(event) => updateSelection({ layer: event.target.value })} className="neo-pressed px-2 py-2 text-xs text-zinc-400 outline-none"><option value="all">All layers</option>{(data.architecture.layers ?? []).map((layer) => <option key={layer} value={layer}>{layer}</option>)}</select>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -236,7 +251,7 @@ export function Architecture() {
               <button
                 key={module.name}
                 type="button"
-                onClick={() => setSelectedModule(module.name)}
+                onClick={() => updateSelection({ focus: module.name })}
                 className={[
                   'group p-5 text-left transition',
                   selectedArchitectureModule?.name === module.name ? 'neo-pressed ring-1 ring-violet-500/50' : 'neo-convex',
