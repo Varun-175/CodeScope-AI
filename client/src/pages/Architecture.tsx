@@ -20,7 +20,7 @@ type ArchitectureModule = {
   icon: typeof Boxes
   files: number
   lines: number
-  dependencies: number
+  dependencies?: number
   description: string
 }
 
@@ -47,7 +47,7 @@ export function Architecture() {
     const directoryMetrics = data.repository.directory_metrics ?? []
 
     const modules = folders.length > 0
-      ? folders.slice(0, 6).map((folder, index) => ({
+      ? folders.slice(0, 12).map((folder, index) => ({
           name: folder.path.replace(/^\//, ''),
           type: layers[index % Math.max(1, layers.length)] || 'Repository Module',
           icon: index % 2 === 0 ? Globe : Database,
@@ -255,7 +255,7 @@ export function Architecture() {
                 <div className="mt-4 flex items-center gap-4 border-t border-zinc-800/50 pt-3 text-xs text-zinc-500">
                   <span>{module.files} files</span>
                   <span>{module.lines.toLocaleString()} LOC</span>
-                  <span>{module.dependencies} deps</span>
+                  {module.dependencies ? <span>{module.dependencies} deps</span> : null}
                 </div>
               </button>
             )
