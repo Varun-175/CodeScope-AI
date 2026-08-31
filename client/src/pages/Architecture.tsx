@@ -8,9 +8,10 @@ import {
   Database,
   Globe,
   Shield,
+  Search,
 } from 'lucide-react'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 import { DependencyConstellation } from '../components/analysis/DependencyConstellation'
 
 type ArchitectureModule = {
@@ -32,15 +33,18 @@ type ArchitectureMetric = {
 }
 
 export function Architecture() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
   const [selectedModule, setSelectedModule] = useState<string | null>(null)
   const [expandedLayers, setExpandedLayers] = useState<Set<string>>(new Set())
+  const [moduleQuery, setModuleQuery] = useState('')
+  const [layerFilter, setLayerFilter] = useState('all')
 
   const architectureModules = useMemo<ArchitectureModule[]>(() => {
     if (!data) return []
 
     const folders = data.repository.folder_structure ?? []
     const layers = data.architecture.layers ?? []
+    const directoryMetrics = data.repository.directory_metrics ?? []
 
     const modules = folders.length > 0
       ? folders.slice(0, 6).map((folder, index) => ({
@@ -48,9 +52,9 @@ export function Architecture() {
           type: layers[index % Math.max(1, layers.length)] || 'Repository Module',
           icon: index % 2 === 0 ? Globe : Database,
           files: folder.files,
-          lines: folder.directories ? folder.files * 120 : folder.files * 80,
-          dependencies: Math.max(1, Math.min(8, Math.round(folder.files / 4))),
-          description: `Repository path derived from ${data.repository.name}`,
+          lines: directoryMetrics.find((metric) => metric.path === folder.path)?.lines ?? 0,
+          dependencies: 0,
+          description: 'Repository module identified from the analyzed folder structure',
         }))
       : (data.architecture.modules ?? []).map((module, index) => ({
           name: module,
@@ -58,8 +62,8 @@ export function Architecture() {
           icon: index % 2 === 0 ? Globe : Shield,
           files: data.repository.files,
           lines: data.repository.lines_of_code,
-          dependencies: Math.max(1, Math.min(6, data.dependency_health.detected.length)),
-          description: `Implementation unit identified in ${data.repository.name}`,
+          dependencies: 0,
+          description: 'Implementation unit identified by the repository analyzer',
         }))
 
     return modules
@@ -113,9 +117,15 @@ export function Architecture() {
   }
 
   const selectedArchitectureModule = architectureModules.find((module) => module.name === selectedModule) ?? architectureModules[0] ?? null
+  const visibleModules = architectureModules.filter((module) => {
+    const matchesQuery = module.name.toLowerCase().includes(moduleQuery.toLowerCase()) || module.type.toLowerCase().includes(moduleQuery.toLowerCase())
+    const matchesLayer = layerFilter === 'all' || module.type === layerFilter
+    return matchesQuery && matchesLayer
+  })
 
   return (
     <div className="space-y-6">
+      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed architecture snapshot. Run another analysis to refresh these signals." /> : null}
       <div className="flex items-center gap-3">
         <Layers className="size-5 text-violet-400" />
         <div>
@@ -160,6 +170,16 @@ export function Architecture() {
             </div>
           )}
         </div>
+        <div className="mt-4 border-t border-zinc-800/70 pt-4">
+          <p className="text-[10px] uppercase tracking-wider text-zinc-600">Accessible dependency list</p>
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full text-left text-xs text-zinc-500">
+              <caption className="sr-only">Dependencies detected in the current repository snapshot</caption>
+              <thead><tr className="border-b border-zinc-800/70 text-[10px] uppercase tracking-wider text-zinc-600"><th className="px-2 py-2 font-medium">Package</th><th className="px-2 py-2 font-medium">Version</th><th className="px-2 py-2 font-medium">Source</th></tr></thead>
+              <tbody>{dependencies.map((dependency) => <tr key={`${dependency.name}-${dependency.version}`} className="border-b border-zinc-900/70"><td className="px-2 py-2 font-mono text-zinc-300">{dependency.name}</td><td className="px-2 py-2 font-mono">{dependency.version || 'Unknown'}</td><td className="px-2 py-2">{dependency.source || 'Analyzer'}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div className="neo-flat p-6">
@@ -202,9 +222,15 @@ export function Architecture() {
       </div>
 
       <div>
-        <h2 className="mb-4 text-sm font-medium text-zinc-200">Repository Modules</h2>
+        <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <div><h2 className="text-sm font-medium text-zinc-200">Repository Modules</h2><p className="mt-1 text-xs text-zinc-500">Search and inspect analyzer-identified modules</p></div>
+          <div className="flex gap-2">
+            <label className="neo-pressed flex items-center gap-2 px-3 py-2"><Search className="size-3.5 text-zinc-600" aria-hidden="true" /><span className="sr-only">Search modules</span><input value={moduleQuery} onChange={(event) => setModuleQuery(event.target.value)} placeholder="Search modules" className="w-32 bg-transparent text-xs text-zinc-300 outline-none placeholder:text-zinc-700" /></label>
+            <label className="sr-only" htmlFor="architecture-layer-filter">Filter architecture layer</label><select id="architecture-layer-filter" value={layerFilter} onChange={(event) => setLayerFilter(event.target.value)} className="neo-pressed px-2 py-2 text-xs text-zinc-400 outline-none"><option value="all">All layers</option>{(data.architecture.layers ?? []).map((layer) => <option key={layer} value={layer}>{layer}</option>)}</select>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {architectureModules.map((module) => {
+          {visibleModules.map((module) => {
             const Icon = module.icon
             return (
               <button
@@ -235,6 +261,7 @@ export function Architecture() {
             )
           })}
         </div>
+        {visibleModules.length === 0 && <p className="neo-pressed p-6 text-center text-xs text-zinc-600">No modules match the current filters.</p>}
         {selectedArchitectureModule && (
           <div className="neo-pressed mt-4 p-4 text-sm text-zinc-400">
             <p className="font-medium text-zinc-200">{selectedArchitectureModule.name}</p>
