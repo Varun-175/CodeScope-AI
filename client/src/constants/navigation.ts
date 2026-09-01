@@ -2,19 +2,19 @@ import {
   Activity,
   AlertTriangle,
   BotMessageSquare,
-  Brain,
-  Building,
+  FileCode2,
   Folder,
   Gauge,
   GitBranch,
+  GitCommitHorizontal,
   History,
-  Waypoints,
   Layers,
   Rocket,
   Settings,
   ShieldAlert,
   Target,
   TestTube,
+  Waypoints,
   Workflow,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -32,46 +32,50 @@ export type NavigationGroup = {
 
 export const navigationGroups: NavigationGroup[] = [
   {
-    label: 'Overview',
+    label: 'WORKSPACE',
     items: [
-      { label: 'Dashboard', path: '/', icon: Gauge },
-      { label: 'Organizations', path: '/organizations', icon: Building },
+      { label: 'Overview', path: '/', icon: Gauge },
       { label: 'Projects', path: '/projects', icon: Folder },
-    ],
-  },
-  {
-    label: 'Code',
-    items: [
       { label: 'Repositories', path: '/repository', icon: GitBranch },
-      { label: 'Code Intelligence', path: '/intelligence', icon: Brain },
+    ],
+  },
+  {
+    label: 'INTELLIGENCE',
+    items: [
+      { label: 'Explore', path: '/repository/explore', icon: FileCode2 },
       { label: 'Architecture', path: '/architecture', icon: Layers },
-      { label: 'Change Impact', path: '/impact', icon: Waypoints },
+      { label: 'Changes', path: '/changes', icon: GitCommitHorizontal },
+      { label: 'Impact', path: '/impact', icon: Waypoints },
+      { label: 'Ask CodeScope', path: '/chat', icon: BotMessageSquare },
     ],
   },
   {
-    label: 'Lifecycle',
+    label: 'ENGINEERING',
     items: [
-      { label: 'Planning', path: '/planning', icon: Target },
-      { label: 'AI Chat', path: '/chat', icon: BotMessageSquare },
-      { label: 'Code Reviews', path: '/reviews', icon: ShieldAlert },
-      { label: 'Testing', path: '/testing', icon: TestTube },
-      { label: 'Deployment', path: '/deployment', icon: Rocket },
+      { label: 'Plans', path: '/planning', icon: Target },
+      { label: 'Reviews', path: '/reviews', icon: ShieldAlert },
+      { label: 'Tests', path: '/testing', icon: TestTube },
     ],
   },
   {
-    label: 'Operations',
+    label: 'DELIVERY',
     items: [
-      { label: 'Observability', path: '/observability', icon: Activity },
+      { label: 'Pipelines', path: '/workflows', icon: Workflow },
+      { label: 'Deployments', path: '/deployment', icon: Rocket },
+    ],
+  },
+  {
+    label: 'OPERATIONS',
+    items: [
+      { label: 'Runtime', path: '/observability', icon: Activity },
       { label: 'Incidents', path: '/incidents', icon: AlertTriangle },
     ],
   },
   {
-    label: 'System',
+    label: 'SYSTEM',
     items: [
-      { label: 'Workflows', path: '/workflows', icon: Workflow },
+      { label: 'Activity', path: '/audit', icon: History },
       { label: 'Settings', path: '/settings', icon: Settings },
-      { label: 'Audit', path: '/audit', icon: History },
     ],
   },
 ]
-
