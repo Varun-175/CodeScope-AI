@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
 import { AlertCircle, ArrowRight, Beaker, CheckCircle2, FileCode2, Layers2, ShieldAlert, TestTube2, Zap, XCircle } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 export function Testing() {
   const { data, error, status } = useRepositoryAnalysis()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const testSignals = useMemo(() => {
     if (!data) return []
@@ -60,6 +62,13 @@ export function Testing() {
         />
       </div>
     )
+  }
+
+  const selectedTarget = priorityTargets.find((target) => target.id === searchParams.get('target')) ?? priorityTargets[0]
+  function selectTarget(id: string) {
+    const next = new URLSearchParams(searchParams)
+    next.set('target', id)
+    setSearchParams(next, { replace: true })
   }
 
   return (
@@ -146,7 +155,7 @@ export function Testing() {
           </div>
           <div className="mt-4 space-y-3">
             {priorityTargets.map((target) => (
-              <div key={target.id} className="neo-pressed flex items-start justify-between gap-3 p-3">
+              <button key={target.id} type="button" onClick={() => selectTarget(target.id)} className={`neo-pressed flex w-full items-start justify-between gap-3 p-3 text-left ${selectedTarget?.id === target.id ? 'ring-1 ring-violet-500/50' : ''}`}>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span
@@ -171,11 +180,13 @@ export function Testing() {
                   )}
                 </div>
                 <ArrowRight className="mt-0.5 size-3 shrink-0 text-zinc-600" aria-hidden="true" />
-              </div>
+              </button>
             ))}
           </div>
         </section>
       )}
+
+      {selectedTarget ? <section className="neo-flat p-5"><div className="flex flex-col justify-between gap-3 border-b border-zinc-800/70 pb-4 sm:flex-row sm:items-start"><div><p className="text-[10px] uppercase tracking-wider text-violet-400">Selected test target</p><h2 className="mt-1 font-mono text-sm text-zinc-200">{selectedTarget.path}</h2><p className="mt-1 text-xs text-zinc-500">{selectedTarget.reason}</p></div><span className="neo-pressed px-2 py-1 text-[10px] text-amber-400">{selectedTarget.priority}</span></div><div className="mt-4 grid gap-5 lg:grid-cols-2"><div><h3 className="text-xs font-medium text-zinc-200">Validation checklist</h3><ul className="mt-3 space-y-2 text-xs text-zinc-400"><li className="neo-pressed p-3">Exercise the primary success path.</li><li className="neo-pressed p-3">Cover failure and boundary behavior.</li><li className="neo-pressed p-3">Verify behavior against the flagged complexity risk.</li></ul></div><div><h3 className="text-xs font-medium text-zinc-200">Related work</h3><div className="mt-3 space-y-2"><Link to="/repository/explore" className="neo-pressed block p-3 text-xs text-zinc-400">Inspect source evidence</Link><Link to="/reviews" className="neo-pressed block p-3 text-xs text-zinc-400">Review related finding</Link><Link to="/planning" className="neo-accent block p-3 text-xs font-medium">Create test plan</Link></div></div></div></section> : null}
 
       <section className="neo-flat p-5">
         <h2 className="text-sm font-medium text-zinc-200">Test execution contract</h2>

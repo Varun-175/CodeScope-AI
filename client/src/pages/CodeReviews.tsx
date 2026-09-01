@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Search,
   SlidersHorizontal,
@@ -19,7 +20,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { EmptyState, LoadingState } from '../components/shared/StatusPanels'
+import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 type Severity = 'critical' | 'warning' | 'info' | 'suggestion'
 type ReviewCategory = 'security' | 'performance' | 'style' | 'bug' | 'maintainability'
@@ -138,6 +139,7 @@ function ReviewDrawer({ review, onClose }: { review: CodeReview; onClose: () => 
               </p>
             </div>
           </div>
+          <div className="border-t border-zinc-800/70 pt-5"><h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-600">Evidence and action</h3><div className="mt-3 flex flex-wrap gap-2"><Link to="/repository/explore" onClick={onClose} className="neo-convex px-3 py-2 text-xs text-zinc-400">Inspect source</Link><Link to={`/planning?finding=${encodeURIComponent(review.id)}`} onClick={onClose} className="neo-accent px-3 py-2 text-xs font-medium">Create remediation plan</Link><Link to="/testing" onClick={onClose} className="neo-convex px-3 py-2 text-xs text-zinc-400">Validate with tests</Link></div></div>
         </div>
       </div>
     </>
@@ -146,13 +148,13 @@ function ReviewDrawer({ review, onClose }: { review: CodeReview; onClose: () => 
 
 // ---------- Main Component ----------
 export function CodeReviews() {
-  const { data, status } = useRepositoryAnalysis()
+  const { data, error, status } = useRepositoryAnalysis()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all')
   const [categoryFilter, setCategoryFilter] = useState<ReviewCategory | 'all'>('all')
   const [sortField, setSortField] = useState<SortField>('severity')
   const [sortDir, setSortDir] = useState<SortDirection>('asc')
-  const [selectedReview, setSelectedReview] = useState<CodeReview | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [page, setPage] = useState(1)
   const pageSize = 5
@@ -248,6 +250,13 @@ export function CodeReviews() {
     else { setSortField(field); setSortDir('asc') }
   }
 
+  function selectReview(review: CodeReview | null) {
+    const next = new URLSearchParams(searchParams)
+    if (review) next.set('finding', review.id)
+    else next.delete('finding')
+    setSearchParams(next, { replace: true })
+  }
+
   const SortIcon = sortDir === 'asc' ? ChevronUp : ChevronDown
 
   // Summary counts
@@ -257,9 +266,11 @@ export function CodeReviews() {
     info: reviews.filter((r) => r.severity === 'info').length,
     suggestion: reviews.filter((r) => r.severity === 'suggestion').length,
   }
+  const selectedReview = reviews.find((review) => review.id === searchParams.get('finding')) ?? null
 
   return (
     <div className="space-y-4">
+      {error && data ? <ErrorState title="Latest analysis failed" description="Showing the last completed review findings. Run another analysis to refresh this snapshot." /> : null}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -392,7 +403,7 @@ export function CodeReviews() {
                   return (
                     <tr
                       key={review.id}
-                      onClick={() => setSelectedReview(review)}
+                      onClick={() => selectReview(review)}
                       className="cursor-pointer border-b border-zinc-200 dark:border-zinc-800/50 transition hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
                     >
                       <td className="px-4 py-3">
@@ -405,7 +416,7 @@ export function CodeReviews() {
                       <td className="hidden px-4 py-3 text-xs text-zinc-500 capitalize lg:table-cell">{CATEGORY_LABELS[review.category]}</td>
                       <td className="hidden px-4 py-3 text-xs text-zinc-600 sm:table-cell">{review.createdAt}</td>
                       <td className="px-4 py-3 text-right">
-                        <button type="button" onClick={() => setSelectedReview(review)} className="neo-convex px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
+                        <button type="button" onClick={() => selectReview(review)} className="neo-convex px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
                           View
                         </button>
                       </td>
@@ -443,7 +454,7 @@ export function CodeReviews() {
 
       {/* Detail Drawer */}
       {selectedReview && (
-        <ReviewDrawer review={selectedReview} onClose={() => setSelectedReview(null)} />
+        <ReviewDrawer review={selectedReview} onClose={() => selectReview(null)} />
       )}
     </div>
   )
