@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, BookOpen, CheckCircle2, Cpu, FileCode2, GitBranch, Layers, Rocket, ShieldAlert, Sparkles, TestTube, Waypoints, Workflow } from 'lucide-react'
+import { ArrowRight, BookOpen, CheckCircle2, FileCode2, GitBranch, Layers, Rocket, ShieldAlert, Sparkles, TestTube, Waypoints, Workflow } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { EmptyDashboardState } from '../components/dashboard/EmptyDashboardState'
 import { RepositoryHeader } from '../components/dashboard/RepositoryHeader'
