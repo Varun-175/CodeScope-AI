@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { X } from 'lucide-react'
+import { X, Sparkles } from 'lucide-react'
 import { navigationGroups, type NavigationItem } from '../../constants/navigation'
 import { Logo } from '../shared/Logo'
 
@@ -27,23 +27,34 @@ function SidebarLink({
       onClick={onClose}
       className={({ isActive }) =>
         [
-          'group relative flex h-9 items-center gap-3 px-3 text-sm font-medium tracking-normal transition duration-200',
-          isCollapsed ? 'justify-center' : '',
+          'group relative flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-xs font-medium tracking-tight transition-all duration-150',
+          isCollapsed ? 'justify-center px-0' : '',
           isActive
-            ? 'neo-pressed text-violet-500 before:absolute before:left-0 before:h-5 before:w-1 before:rounded-r-full before:bg-violet-500'
-            : 'neo-convex text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100',
+            ? 'bg-gradient-to-r from-violet-600/20 via-indigo-600/10 to-transparent text-white font-semibold border-l-2 border-violet-400 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] pl-2'
+            : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]',
         ].join(' ')
       }
       title={isCollapsed ? item.label : undefined}
     >
-      <Icon className="size-4 shrink-0 text-zinc-500 transition group-hover:text-zinc-700 dark:group-hover:text-zinc-200" aria-hidden="true" />
-      {!isCollapsed && <span className="truncate">{item.label}</span>}
+      {({ isActive }) => (
+        <>
+          <Icon
+            className={`size-4 shrink-0 transition-colors duration-150 ${
+              isActive
+                ? 'text-violet-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]'
+                : 'text-zinc-400 group-hover:text-zinc-200'
+            }`}
+            aria-hidden="true"
+          />
+          {!isCollapsed && <span className="truncate">{item.label}</span>}
+        </>
+      )}
     </NavLink>
   )
 }
 
 export function Sidebar({ isCollapsed, isOpen, onClose }: SidebarProps) {
-  const widthClass = isCollapsed ? 'lg:w-20' : 'lg:w-64'
+  const widthClass = isCollapsed ? 'lg:w-16' : 'lg:w-60'
 
   return (
     <>
@@ -51,58 +62,63 @@ export function Sidebar({ isCollapsed, isOpen, onClose }: SidebarProps) {
         <button
           type="button"
           aria-label="Close navigation"
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
           onClick={onClose}
         />
       )}
 
       <aside
         className={[
-          'neo-flat rounded-none border-none fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-[120%] flex-col overflow-y-auto transition duration-300 lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex flex-col overflow-y-auto bg-[#080b11]/95 backdrop-blur-2xl border-r border-white/[0.06] transition-all duration-300 -translate-x-full lg:translate-x-0',
           widthClass,
           isOpen ? 'translate-x-0' : '',
         ].join(' ')}
       >
-        <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-4 shrink-0">
-          <NavLink to="/" className="flex min-w-0 items-center gap-3" onClick={onClose}>
-            <div className="neo-pressed grid size-9 shrink-0 place-items-center">
-              <Logo size={24} />
+        {/* Brand Header */}
+        <div className="flex h-14 items-center justify-between border-b border-white/[0.06] px-3.5 shrink-0">
+          <NavLink to="/" className="flex min-w-0 items-center gap-2.5" onClick={onClose}>
+            <div className="relative grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-violet-600/30 to-indigo-600/20 border border-violet-500/30 shadow-[0_0_15px_rgba(139,92,246,0.25)]">
+              <Logo size={20} />
             </div>
             {!isCollapsed && (
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold tracking-normal text-zinc-900 dark:text-white">
+              <div className="min-w-0">
+                <span className="block truncate text-xs font-bold tracking-tight text-white flex items-center gap-1.5">
                   CodeScope AI
+                  <span className="rounded bg-violet-500/20 px-1 py-0.2 text-[9px] font-mono font-bold text-violet-300 border border-violet-500/30">
+                    V3
+                  </span>
                 </span>
-                <span className="block truncate text-xs font-medium text-zinc-500">
-                  Developer Intelligence
+                <span className="block truncate text-[10px] text-zinc-500 font-medium">
+                  Software Intelligence
                 </span>
-              </span>
+              </div>
             )}
           </NavLink>
 
           <button
             type="button"
             aria-label="Close navigation"
-            className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-white lg:hidden"
+            className="rounded-lg p-1 text-zinc-400 hover:bg-white/[0.06] hover:text-white lg:hidden"
             onClick={onClose}
           >
             <X className="size-4" aria-hidden="true" />
           </button>
         </div>
 
-        <nav className="flex flex-1 flex-col px-3 py-5 pb-20 space-y-6">
+        {/* Navigation Groups */}
+        <nav className="flex flex-1 flex-col px-2.5 py-4 pb-20 space-y-5">
           {navigationGroups.map((group, groupIdx) => (
-            <div key={group.label} className="space-y-1">
+            <div key={group.label} className="space-y-0.5">
               {!isCollapsed && (
-                <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-600">
+                <p className="mb-1.5 px-2.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500/90">
                   {group.label}
                 </p>
               )}
               {isCollapsed && groupIdx !== 0 && (
-                <div className="mx-4 my-2 border-t border-zinc-800" />
+                <div className="mx-2 my-2 border-t border-white/[0.06]" />
               )}
-              
-              <div className="space-y-1.5">
+
+              <div className="space-y-0.5">
                 {group.items.map((item) => (
                   <SidebarLink
                     key={item.path}
