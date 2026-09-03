@@ -12,13 +12,25 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   const commands = useMemo(() => [
     { label: 'Analyze latest repository', detail: 'Start a new repository analysis', icon: Play, action: () => { onClose(); openAnalyzeModal() } },
-    { label: 'Open repository overview', detail: data ? data.repository.name : 'Connect a repository first', icon: FolderTree, action: () => { onClose(); navigate('/repository') } },
+    { label: 'Workspace Overview', detail: 'Go to workspace and project overview', icon: FolderTree, action: () => { onClose(); navigate('/') } },
+    { label: 'Organizations', detail: 'Team management and workspace settings', icon: FolderTree, action: () => { onClose(); navigate('/organizations') } },
+    { label: 'Projects', detail: 'Group repositories into durable workspaces', icon: FolderTree, action: () => { onClose(); navigate('/projects') } },
+    { label: 'Repositories', detail: 'Connected repositories in workspace', icon: GitBranch, action: () => { onClose(); navigate('/repository') } },
     { label: 'Explore source files', detail: 'Browse files and source evidence', icon: FileSearch, action: () => { onClose(); navigate('/repository/explore') } },
     { label: 'Open architecture', detail: 'Inspect modules and dependencies', icon: Network, action: () => { onClose(); navigate('/architecture') } },
+    { label: 'Review changes', detail: 'Commit timeline and snapshot diff', icon: GitBranch, action: () => { onClose(); navigate('/changes') } },
     { label: 'Analyze change impact', detail: 'Review risk and affected targets', icon: Activity, action: () => { onClose(); navigate('/impact') } },
-    { label: 'Ask CodeScope', detail: 'Ask a repository-scoped question', icon: BrainCircuit, action: () => { onClose(); navigate('/intelligence') } },
+    { label: 'Ask CodeScope', detail: 'Ask a repository-scoped question', icon: BrainCircuit, action: () => { onClose(); navigate('/chat') } },
     { label: 'Create a plan', detail: 'Turn repository findings into work', icon: GitBranch, action: () => { onClose(); navigate('/planning') } },
-  ], [data, navigate, onClose, openAnalyzeModal])
+    { label: 'Code Reviews', detail: 'Code review findings and recommendations', icon: Activity, action: () => { onClose(); navigate('/reviews') } },
+    { label: 'Tests', detail: 'Test intelligence and validation checklists', icon: Activity, action: () => { onClose(); navigate('/testing') } },
+    { label: 'Pipelines', detail: 'Workflow actions and deployments', icon: Activity, action: () => { onClose(); navigate('/workflows') } },
+    { label: 'Deployments', detail: 'Environment deployments and targets', icon: Activity, action: () => { onClose(); navigate('/deployment') } },
+    { label: 'Runtime Observability', detail: 'Health and performance metrics', icon: Activity, action: () => { onClose(); navigate('/observability') } },
+    { label: 'Incidents', detail: 'Diagnostic timeline and incidents', icon: Activity, action: () => { onClose(); navigate('/incidents') } },
+    { label: 'System Activity', label2: 'Audit', detail: 'Audit logs and activity history', icon: Activity, action: () => { onClose(); navigate('/audit') } },
+    { label: 'Settings', detail: 'Manage your workspace, integrations, and preferences', icon: Activity, action: () => { onClose(); navigate('/settings') } },
+  ], [navigate, onClose, openAnalyzeModal])
 
   if (!open) return null
   const matchingCommands = commands.filter((command) => `${command.label} ${command.detail}`.toLowerCase().includes(query.toLowerCase()))
