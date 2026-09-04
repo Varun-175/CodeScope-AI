@@ -1,36 +1,23 @@
 import { useState, useMemo } from 'react'
 import {
-  Activity,
   AlertTriangle,
-  ArrowRight,
   Brain,
   CheckCircle2,
-  ChevronRight,
-  Cpu,
-  Database,
-  ExternalLink,
-  FileCode2,
   Flame,
   GitBranch,
-  GitCommitHorizontal,
   GitPullRequest,
   Layers,
   Network,
-  RefreshCw,
   Rocket,
-  Search,
-  Server,
-  Shield,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
   TestTube2,
   Waypoints,
   XCircle,
-  Zap,
 } from 'lucide-react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
+import { Link } from 'react-router-dom'
+import { ErrorState, LoadingState } from '../components/shared/StatusPanels'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 
 type BlastCategory = 'direct' | 'indirect' | 'architectural' | 'test' | 'deployment' | 'runtime'
@@ -213,7 +200,6 @@ const SAMPLE_SCENARIOS: ImpactScenario[] = [
 
 export function Impact() {
   const { data, error, status } = useRepositoryAnalysis()
-  const [searchParams, setSearchParams] = useSearchParams()
   const [activeCategory, setActiveCategory] = useState<BlastCategory>('direct')
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>('pr-129')
 
@@ -224,6 +210,7 @@ export function Impact() {
     const warnings = data.risks.warnings ?? []
     const hotspots = data.risks.complexity_hotspots ?? []
     const allSignals = [...criticalRisks, ...hotspots, ...warnings]
+    const languages = data.repository.languages ?? []
 
     const changedEntities = allSignals.slice(0, 5).map((signal, idx) => ({
       name: signal.path || signal.reason || `Signal #${idx + 1}`,
@@ -245,9 +232,9 @@ export function Impact() {
       author: data.repository.owner,
       timeAgo: 'Live snapshot',
       filesCount: data.repository.files,
-      servicesCount: Math.max(1, data.languages.length),
-      apisCount: data.apis?.length || 4,
-      dbPathsCount: data.database_queries?.length || 1,
+      servicesCount: Math.max(1, languages.length),
+      apisCount: data.repository.entry_points?.length || 2,
+      dbPathsCount: data.repository.directories,
       riskLevel: criticalRisks.length > 0 ? 'CRITICAL' : warnings.length > 0 ? 'HIGH' : 'LOW',
       confidence: 'High',
       summary: `Automated impact radius across ${data.repository.files} files and ${data.dependency_health.total_dependencies} detected dependencies in ${data.repository.branch}.`,
@@ -277,18 +264,18 @@ export function Impact() {
         indirect: {
           title: 'Transitive Consumers',
           count: data.dependency_health.total_dependencies,
-          items: data.dependency_health.outdated.slice(0, 3).map((dep) => ({
+          items: data.dependency_health.detected.slice(0, 3).map((dep) => ({
             name: dep.name,
-            detail: `Version ${dep.current} -> ${dep.latest}`,
+            detail: `Version ${dep.version} (${dep.source})`,
             severity: 'medium',
           })),
         },
         architectural: {
           title: 'Architectural Boundaries',
-          count: data.languages.length,
-          items: data.languages.map((l) => ({
+          count: languages.length,
+          items: languages.map((l) => ({
             name: `${l.language} Subsystem`,
-            detail: `${l.files} files (${l.percentage}%)`,
+            detail: `${l.lines.toLocaleString()} lines analyzed`,
             severity: 'low',
           })),
         },
@@ -312,19 +299,19 @@ export function Impact() {
         },
         runtime: {
           title: 'Runtime & Health Surface',
-          count: data.dependency_health.vulnerable.length,
-          items: data.dependency_health.vulnerable.map((v) => ({
-            name: v.name,
-            detail: `Vulnerability: ${v.vulnerability}`,
-            severity: 'high',
+          count: data.dependency_health.unknown.length,
+          items: data.dependency_health.unknown.map((u) => ({
+            name: u.name,
+            detail: `Dependency signal requiring audit (${u.source})`,
+            severity: 'medium',
           })),
         },
       },
       impactPath: [
         { stage: 'Analyzed Component', entity: `${data.repository.owner}/${data.repository.name}`, type: 'Repository', detail: `${data.repository.files} source files parsed`, risk: 'low' },
-        { stage: 'Architecture Boundary', entity: `${data.languages[0]?.language || 'Main'} Subsystem`, type: 'Language', detail: 'Primary code layer', risk: 'medium' },
+        { stage: 'Architecture Boundary', entity: `${languages[0]?.language || 'Main'} Subsystem`, type: 'Language', detail: 'Primary code layer', risk: 'medium' },
         { stage: 'Identified Risk Hotspots', entity: `${allSignals.length} Signal Targets`, type: 'Static Risk', detail: `${criticalRisks.length} critical findings`, risk: criticalRisks.length > 0 ? 'high' : 'medium' },
-        { stage: 'Dependency Surface', entity: `${data.dependency_health.total_dependencies} Packages`, type: 'Ecosystem', detail: `${data.dependency_health.vulnerable.length} security advisories`, risk: data.dependency_health.vulnerable.length > 0 ? 'high' : 'low' },
+        { stage: 'Dependency Surface', entity: `${data.dependency_health.total_dependencies} Packages`, type: 'Ecosystem', detail: `${data.dependency_health.unknown.length} unknown status dependencies`, risk: data.dependency_health.unknown.length > 0 ? 'medium' : 'low' },
         { stage: 'Test Protection', entity: data.repository.has_tests ? 'Detected' : 'Missing', type: 'Verification', detail: data.repository.has_tests ? 'Test files verified' : 'No test suite', risk: data.repository.has_tests ? 'low' : 'high' },
       ],
       riskFactors: allSignals.slice(0, 4).map((s) => ({
@@ -408,7 +395,6 @@ export function Impact() {
 
       {/* Flagship Change Scope Banner */}
       <section className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-gradient-to-r from-zinc-950 via-zinc-900/90 to-zinc-950 p-6 shadow-xl backdrop-blur-md">
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-radial-gradient from-violet-600/10 to-transparent pointer-events-none" />
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -488,17 +474,13 @@ export function Impact() {
                     </div>
 
                     {/* Protection Badge */}
-                    <div className="flex items-center gap-1.5 self-start rounded-full border px-2.5 py-1 text-xs font-medium backdrop-blur-sm ${
-                      entity.protection.status === 'covered'
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                        : entity.protection.status === 'warning'
-                        ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-                        : 'border-red-500/30 bg-red-500/10 text-red-400'
-                    }">
+                    <div className="flex items-center gap-1.5 self-start rounded-full border px-2.5 py-1 text-xs font-medium backdrop-blur-sm">
                       {entity.protection.status === 'covered' && <CheckCircle2 className="size-3.5 text-emerald-400" />}
                       {entity.protection.status === 'warning' && <AlertTriangle className="size-3.5 text-amber-400" />}
                       {entity.protection.status === 'missing' && <XCircle className="size-3.5 text-red-400" />}
-                      <span>{entity.protection.detail}</span>
+                      <span className={entity.protection.status === 'covered' ? 'text-emerald-400' : entity.protection.status === 'warning' ? 'text-amber-400' : 'text-red-400'}>
+                        {entity.protection.detail}
+                      </span>
                     </div>
                   </div>
 
