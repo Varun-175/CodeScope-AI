@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { FaGithub, FaGoogle } from 'react-icons/fa'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
-import { LoadingState } from '../components/shared/StatusPanels'
+import { ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
 interface IntegrationProvider {
   id: string
@@ -88,6 +88,8 @@ export function Integrations() {
 
   return (
     <div className="space-y-5">
+      {error && <ErrorState title="Integration sync warning" description={error} />}
+
       {/* Header */}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
