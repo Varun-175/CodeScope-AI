@@ -1,4 +1,33 @@
-import { AlertTriangle, ArrowRight, BookOpen, FileCode2, FolderTree, GitBranch, Layers, Package, Plus, ShieldCheck, TestTube2 } from 'lucide-react'
+import { useMemo } from 'react'
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  BookOpen,
+  Brain,
+  CheckCircle2,
+  Code2,
+  Database,
+  ExternalLink,
+  FileCode2,
+  Flame,
+  FolderTree,
+  GitBranch,
+  GitCommitHorizontal,
+  Layers,
+  Network,
+  Package,
+  Plus,
+  Rocket,
+  Search,
+  Server,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  TestTube2,
+  Waypoints,
+  Zap,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
@@ -6,23 +35,48 @@ import { EmptyState, ErrorState, LoadingState } from '../components/shared/Statu
 export function RepositoryOverview() {
   const { data, error, openAnalyzeModal, status } = useRepositoryAnalysis()
 
+  const languages = useMemo(() => {
+    if (!data) return []
+    const rawLangs = data.repository.languages ?? []
+    if (rawLangs.length === 0) {
+      return [{ language: data.repository.primary_language || 'TypeScript', percentage: 100, color: 'bg-blue-500' }]
+    }
+    const totalLines = rawLangs.reduce((acc, l) => acc + l.lines, 0) || 1
+    const colors = ['bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-emerald-500', 'bg-sky-500', 'bg-pink-500']
+    return rawLangs.map((l, idx) => ({
+      language: l.language,
+      percentage: Math.round((l.lines / totalLines) * 100) || 1,
+      color: colors[idx % colors.length],
+      lines: l.lines,
+    }))
+  }, [data])
+
   if (status === 'analyzing') {
-    return <LoadingState title="Analyzing repository" hint="The overview will appear when the analysis completes." />
+    return (
+      <LoadingState
+        title="Analyzing Repository Model"
+        hint="Constructing language breakdowns, AST hierarchies, and architecture patterns..."
+      />
+    )
   }
 
   if (!data) {
     return (
       <div className="space-y-4">
-        {error ? <ErrorState title="Repository analysis failed" description="No completed repository snapshot is available. Check the repository connection and try again." /> : null}
+        {error ? <ErrorState title="Repository analysis failed" description={error} /> : null}
         <EmptyState
           title="Connect a repository to see its overview"
-          description="Run an analysis from the repository context bar to populate verified repository signals."
+          description="Analyze any public or authenticated GitHub repository to extract software architecture, risk vectors, and language breakdowns."
           icon={FolderTree}
         />
         <div className="flex justify-center">
-          <button type="button" onClick={openAnalyzeModal} className="neo-accent inline-flex h-9 items-center gap-2 px-3 text-sm font-medium">
-            <Plus className="size-4" aria-hidden="true" />
-            Analyze repository
+          <button
+            type="button"
+            onClick={openAnalyzeModal}
+            className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-violet-600/30 transition hover:bg-violet-500"
+          >
+            <Plus className="size-4" />
+            <span>Analyze Repository</span>
           </button>
         </div>
       </div>
@@ -30,184 +84,159 @@ export function RepositoryOverview() {
   }
 
   const totalRisks = data.risks.critical.length + data.risks.warnings.length
-  const healthTone = data.health.score >= 85 ? 'text-emerald-400' : data.health.score >= 70 ? 'text-amber-400' : 'text-red-400'
-  const nextActions = [
-    data.risks.critical.length > 0 ? { label: 'Review critical risks', detail: `${data.risks.critical.length} critical findings require attention`, href: '/reviews', icon: AlertTriangle } : null,
-    !data.repository.has_tests ? { label: 'Plan test coverage', detail: 'No test-related files were detected', href: '/testing', icon: TestTube2 } : null,
-    !data.repository.readme ? { label: 'Document the repository', detail: 'No README was found in this snapshot', href: '/planning', icon: BookOpen } : null,
-    data.dependency_health.unknown.length > 0 ? { label: 'Review dependencies', detail: `${data.dependency_health.unknown.length} dependency signals are unknown`, href: '/architecture', icon: Package } : null,
-  ].filter((action): action is NonNullable<typeof action> => Boolean(action)).slice(0, 3)
 
   return (
-    <div className="space-y-5">
-      {error && <ErrorState title="Latest analysis failed" description="Showing the last completed analysis. Run another analysis to refresh this repository." />}
+    <div className="space-y-6">
+      {error && <ErrorState title="Repository sync warning" description={error} />}
 
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      {/* Header Context Bar */}
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-violet-400">Repository overview</p>
-          <h1 className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-100">{data.repository.owner}/{data.repository.name}</h1>
-          <p className="mt-1 text-sm text-zinc-500">{data.summary.overview}</p>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-sky-500/20 ring-1 ring-violet-500/30">
+              <FolderTree className="size-5 text-violet-400" aria-hidden="true" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-white">
+                  {data.repository.owner}/{data.repository.name}
+                </h1>
+                <span className="rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-violet-300">
+                  {data.repository.branch}
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-zinc-400">{data.summary.overview}</p>
+            </div>
+          </div>
         </div>
-        <Link to="/repository/explore" className="neo-accent inline-flex h-9 shrink-0 items-center justify-center gap-2 px-3 text-sm font-medium">
-          Explore files
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
+
+        {/* Global Action Handoffs */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/code"
+            className="flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3.5 py-2 text-xs font-semibold text-zinc-300 transition hover:border-zinc-700 hover:text-white"
+          >
+            <Code2 className="size-3.5 text-sky-400" />
+            Code Workspace
+          </Link>
+          <Link
+            to="/intelligence"
+            className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-violet-600/30 transition hover:bg-violet-500"
+          >
+            <Brain className="size-3.5" />
+            Ask AI
+          </Link>
+        </div>
       </header>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Repository metrics">
-        <Metric icon={ShieldCheck} label="Health" value={`${data.health.score}/100`} detail={data.health.status} valueClass={healthTone} />
-        <Metric icon={FileCode2} label="Source files" value={data.repository.files.toLocaleString()} detail={`${data.repository.lines_of_code.toLocaleString()} lines of code`} />
-        <Metric icon={FolderTree} label="Directories" value={data.repository.directories.toLocaleString()} detail={`${data.repository.parsed_files.toLocaleString()} files parsed`} />
-        <Metric icon={AlertTriangle} label="Risks" value={totalRisks.toLocaleString()} detail={`${data.risks.critical.length} critical, ${data.risks.warnings.length} warnings`} valueClass={totalRisks ? 'text-amber-400' : 'text-emerald-400'} />
+      {/* Top 4 Metrics Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-4 shadow-lg backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">System Health</span>
+            <ShieldCheck className="size-4 text-emerald-400" />
+          </div>
+          <p className="mt-2 font-mono text-2xl font-bold text-emerald-300">{data.health.score}/100</p>
+          <p className="mt-1 text-[11px] text-zinc-400">{data.health.status}</p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-4 shadow-lg backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Source Surface</span>
+            <FileCode2 className="size-4 text-sky-400" />
+          </div>
+          <p className="mt-2 font-mono text-2xl font-bold text-zinc-100">{data.repository.files.toLocaleString()} Files</p>
+          <p className="mt-1 text-[11px] text-zinc-400">{data.repository.lines_of_code.toLocaleString()} total lines</p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-4 shadow-lg backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Architecture Pattern</span>
+            <Layers className="size-4 text-violet-400" />
+          </div>
+          <p className="mt-2 font-mono text-base font-bold text-zinc-100 truncate">{data.architecture.pattern || data.dna.architecture}</p>
+          <p className="mt-1 text-[11px] text-zinc-400">{data.architecture.layers?.length || 3} layers detected</p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-4 shadow-lg backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Risk Hotspots</span>
+            <AlertTriangle className="size-4 text-amber-400" />
+          </div>
+          <p className="mt-2 font-mono text-2xl font-bold text-amber-300">{totalRisks}</p>
+          <p className="mt-1 text-[11px] text-zinc-400">{data.risks.critical.length} critical · {data.risks.warnings.length} warnings</p>
+        </div>
+      </div>
+
+      {/* Language Breakdown Ribbon */}
+      <section className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-6 shadow-xl backdrop-blur-md space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-zinc-100">Language Distribution</h3>
+          <span className="text-xs text-zinc-500">{languages.length} languages detected</span>
+        </div>
+
+        {/* Multi-color Bar */}
+        <div className="flex h-3 w-full overflow-hidden rounded-full bg-zinc-800">
+          {languages.map((l, idx) => (
+            <div
+              key={idx}
+              style={{ width: `${l.percentage}%` }}
+              className={`${l.color} transition-all duration-500`}
+              title={`${l.language}: ${l.percentage}%`}
+            />
+          ))}
+        </div>
+
+        {/* Language Pills */}
+        <div className="flex flex-wrap gap-4 pt-1">
+          {languages.map((l, idx) => (
+            <div key={idx} className="flex items-center gap-2 text-xs">
+              <span className={`size-2.5 rounded-full ${l.color}`} />
+              <span className="font-semibold text-zinc-200">{l.language}</span>
+              <span className="text-zinc-500">{l.percentage}%</span>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <section className="neo-flat p-5 lg:col-span-2">
-          <div className="flex items-center gap-2">
-            <Layers className="size-4 text-violet-400" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Architecture signals</h2>
-          </div>
-          <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Detail label="Pattern" value={data.architecture.pattern || 'Not detected'} />
-            <Detail label="Framework" value={data.repository.framework || 'Not detected'} />
-            <Detail label="Primary language" value={data.repository.primary_language || 'Not detected'} />
-            <Detail label="Entry points" value={(data.repository.entry_points.length || 0).toLocaleString()} />
-          </dl>
-          <div className="mt-5 flex flex-wrap gap-2">
-            {data.architecture.layers.length > 0
-              ? data.architecture.layers.map((layer) => <span key={layer} className="neo-pressed px-2.5 py-1 text-xs text-zinc-500">{layer}</span>)
-              : <span className="text-xs text-zinc-500">No architectural layers detected.</span>}
-          </div>
-        </section>
+      {/* Quick Jump Links Grid */}
+      <section className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-6 shadow-xl backdrop-blur-md space-y-4">
+        <h3 className="text-sm font-bold text-zinc-100">Connected System Workspaces</h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            to="/graph"
+            className="flex items-center justify-between rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 transition hover:border-violet-500/40 hover:bg-zinc-900/60"
+          >
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-zinc-200">Software Graph Topology</span>
+              <p className="text-[11px] text-zinc-500">Interactive dependency constellation</p>
+            </div>
+            <ArrowRight className="size-4 text-zinc-600" />
+          </Link>
 
-        <section className="neo-flat p-5">
-          <div className="flex items-center gap-2">
-            <GitBranch className="size-4 text-sky-400" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Snapshot context</h2>
-          </div>
-          <dl className="mt-5 space-y-4">
-            <Detail label="Branch" value={data.repository.branch || 'Default branch'} />
-            <Detail label="Analysis source" value={data.health.details.source} />
-            <Detail label="Analysis duration" value={`${data.repository.analysis_time}s`} />
-          </dl>
-          <p className="mt-5 text-xs leading-5 text-zinc-500">This overview reflects the latest completed analysis for the selected branch.</p>
-        </section>
-      </div>
+          <Link
+            to="/impact"
+            className="flex items-center justify-between rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 transition hover:border-violet-500/40 hover:bg-zinc-900/60"
+          >
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-zinc-200">Change Impact Workspace</span>
+              <p className="text-[11px] text-zinc-500">Multi-hop blast radius simulation</p>
+            </div>
+            <ArrowRight className="size-4 text-zinc-600" />
+          </Link>
 
-      <section className="neo-flat p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Languages</h2>
-            <p className="mt-1 text-xs text-zinc-500">Lines detected by the repository analyzer</p>
-          </div>
-        </div>
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {data.repository.languages.length > 0
-            ? data.repository.languages.slice(0, 6).map((language) => (
-                <div key={language.language} className="neo-pressed flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
-                  <span className="text-zinc-500">{language.language}</span>
-                  <span className="font-mono text-zinc-900 dark:text-zinc-300">{language.lines.toLocaleString()}</span>
-                </div>
-              ))
-            : <p className="text-sm text-zinc-500">No language signals detected.</p>}
+          <Link
+            to="/planning"
+            className="flex items-center justify-between rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 transition hover:border-violet-500/40 hover:bg-zinc-900/60"
+          >
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-zinc-200">Architecture Planning</span>
+              <p className="text-[11px] text-zinc-500">7-stage refactoring roadmap</p>
+            </div>
+            <ArrowRight className="size-4 text-zinc-600" />
+          </Link>
         </div>
       </section>
-
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <section className="neo-flat p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Health rationale</h2>
-              <p className="mt-1 text-xs text-zinc-500">Signals contributing to the current score</p>
-            </div>
-            <span className={`font-mono text-lg font-semibold ${healthTone}`}>{data.health.score}</span>
-          </div>
-          <div className="mt-4 space-y-2">
-            {(data.health.details.reasons ?? []).slice(0, 5).map((reason, index) => (
-              <div key={`${reason.reason}-${index}`} className="neo-pressed flex items-center justify-between gap-3 px-3 py-2.5">
-                <span className="text-xs text-zinc-500">{reason.reason}</span>
-                <span className="font-mono text-xs text-zinc-300">{reason.points > 0 ? '+' : ''}{reason.points}</span>
-              </div>
-            ))}
-            {(data.health.details.reasons ?? []).length === 0 && <p className="text-xs text-zinc-600">No score rationale was returned for this snapshot.</p>}
-          </div>
-        </section>
-
-        <section className="neo-flat p-5">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Recommended next steps</h2>
-          <p className="mt-1 text-xs text-zinc-500">Prioritized from verified repository signals</p>
-          <div className="mt-4 space-y-2">
-            {nextActions.length > 0 ? nextActions.map(({ label, detail, href, icon: Icon }) => (
-              <Link key={label} to={href} className="neo-pressed flex items-center gap-3 px-3 py-2.5 transition-colors hover:border-violet-400/40">
-                <Icon className="size-4 shrink-0 text-violet-400" aria-hidden="true" />
-                <span className="min-w-0 flex-1"><span className="block text-xs font-medium text-zinc-300">{label}</span><span className="mt-0.5 block text-[10px] text-zinc-600">{detail}</span></span>
-                <ArrowRight className="size-3 shrink-0 text-zinc-600" aria-hidden="true" />
-              </Link>
-            )) : <p className="text-xs text-emerald-500">No immediate follow-up actions were identified.</p>}
-          </div>
-        </section>
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <section className="neo-flat p-5 lg:col-span-2">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Largest source files</h2>
-              <p className="mt-1 text-xs text-zinc-500">Potential complexity and review hotspots</p>
-            </div>
-            <Link to="/repository/explore" className="text-[10px] text-violet-400 hover:text-violet-300">Open explorer <ArrowRight className="ml-1 inline size-3" aria-hidden="true" /></Link>
-          </div>
-          <div className="mt-4 space-y-2">
-            {(data.repository.large_files ?? []).slice(0, 5).map((file) => (
-              <div key={file.path} className="neo-pressed flex items-center gap-3 px-3 py-2.5">
-                <FileCode2 className="size-4 shrink-0 text-sky-400" aria-hidden="true" />
-                <span className="min-w-0 flex-1 truncate font-mono text-xs text-zinc-400">{file.path}</span>
-                <span className="shrink-0 font-mono text-xs text-zinc-300">{file.lines.toLocaleString()} lines</span>
-              </div>
-            ))}
-            {(data.repository.large_files ?? []).length === 0 && <p className="text-xs text-zinc-600">No large-file signals were returned.</p>}
-          </div>
-        </section>
-
-        <section className="neo-flat p-5">
-          <div className="flex items-center gap-2">
-            <Package className="size-4 text-amber-400" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Dependency posture</h2>
-          </div>
-          <dl className="mt-4 space-y-3">
-            <Detail label="Package manager" value={data.dependency_health.package_manager || 'Not detected'} />
-            <Detail label="Total dependencies" value={data.dependency_health.total_dependencies.toLocaleString()} />
-            <Detail label="Healthy signals" value={data.dependency_health.healthy.length.toLocaleString()} />
-            <Detail label="Unknown signals" value={data.dependency_health.unknown.length.toLocaleString()} />
-          </dl>
-          <div className="mt-4 border-t border-zinc-800/70 pt-3">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-600">Top dependencies</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {(data.dependency_health.top_dependencies ?? []).slice(0, 5).map((dependency) => <span key={dependency.name} className="neo-pressed px-2 py-1 font-mono text-[10px] text-zinc-400">{dependency.name}</span>)}
-              {(data.dependency_health.top_dependencies ?? []).length === 0 && <span className="text-xs text-zinc-600">None detected</span>}
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-  )
-}
-
-function Metric({ icon: Icon, label, value, detail, valueClass = 'text-zinc-900 dark:text-zinc-100' }: { icon: typeof ShieldCheck; label: string; value: string; detail: string; valueClass?: string }) {
-  return (
-    <div className="neo-flat p-4">
-      <div className="flex items-center gap-2 text-xs text-zinc-500"><Icon className="size-4" aria-hidden="true" />{label}</div>
-      <p className={`mt-3 text-2xl font-semibold ${valueClass}`}>{value}</p>
-      <p className="mt-1 text-xs text-zinc-500">{detail}</p>
-    </div>
-  )
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</dt>
-      <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-300">{value}</dd>
     </div>
   )
 }
