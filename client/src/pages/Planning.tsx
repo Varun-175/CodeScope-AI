@@ -1,140 +1,373 @@
 import { useMemo, useState } from 'react'
-import { AlertTriangle, ArrowRight, Calendar, CheckCircle2, Clock, FileSearch, ListChecks, ListTodo, ShieldCheck, Target } from 'lucide-react'
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  BookOpen,
+  Brain,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Code2,
+  Database,
+  ExternalLink,
+  Flame,
+  GitBranch,
+  Layers,
+  ListChecks,
+  ListTodo,
+  Network,
+  Rocket,
+  Search,
+  Server,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TestTube2,
+  Zap,
+} from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
+import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 
 type PlanStatus = 'todo' | 'progress' | 'review' | 'done'
 type PlanPriority = 'Critical' | 'High' | 'Medium'
-type PlanTask = {
+
+interface ArchitecturalPlan {
   id: string
   title: string
-  detail: string
+  goal: string
   priority: PlanPriority
   status: PlanStatus
-  source: string
+  riskReduction: string
+  affectedEntities: {
+    name: string
+    type: 'service' | 'symbol' | 'schema' | 'api'
+    path: string
+    link: string
+  }[]
+  constraints: string[]
+  implementationSteps: {
+    id: string
+    title: string
+    detail: string
+    completed: boolean
+    assignedTo?: string
+  }[]
+  requiredTests: {
+    name: string
+    suite: string
+    status: 'passing' | 'pending' | 'missing'
+  }[]
+  deploymentStrategy: {
+    stage: string
+    detail: string
+  }[]
+  observabilityChecklist: {
+    metric: string
+    threshold: string
+    alertConfigured: boolean
+  }[]
 }
 
-const COLUMNS: Array<{ id: PlanStatus; name: string; icon: typeof ListTodo; color: string }> = [
-  { id: 'todo', name: 'To Do', icon: ListTodo, color: 'text-zinc-400' },
-  { id: 'progress', name: 'In Progress', icon: Clock, color: 'text-amber-400' },
-  { id: 'review', name: 'In Review', icon: Target, color: 'text-sky-400' },
-  { id: 'done', name: 'Done', icon: CheckCircle2, color: 'text-emerald-400' },
+const SAMPLE_PLANS: ArchitecturalPlan[] = [
+  {
+    id: 'PLAN-001',
+    title: 'Decouple Payment Gateway Direct Database Coupling',
+    goal: 'Eliminate direct SQL mutations inside PaymentClient by introducing an asynchronous event-driven transactional outbox pattern.',
+    priority: 'Critical',
+    status: 'progress',
+    riskReduction: 'Eliminates 3 architectural boundary violations and reduces lock contention by 65%',
+    affectedEntities: [
+      { name: 'PaymentClient.ts', type: 'symbol', path: 'src/clients/payment.client.ts', link: '/code' },
+      { name: 'BillingService', type: 'service', path: 'src/services/billing', link: '/entities' },
+      { name: '0024_outbox_events.sql', type: 'schema', path: 'db/migrations', link: '/code' },
+    ],
+    constraints: [
+      'Zero downtime migration — existing payments must process without interruption',
+      'API Backward Compatibility: Mobile clients continue using v1 signature until v2 deprecation window',
+      'P95 latency overhead of outbox worker must not exceed 25ms',
+    ],
+    implementationSteps: [
+      { id: 's1', title: 'Create transactional outbox PostgreSQL table', detail: 'Migration with CONCURRENTLY indexing', completed: true, assignedTo: 'alex-chen' },
+      { id: 's2', title: 'Implement OutboxPublisher event dispatcher', detail: 'Publish payment.authorized events to Kafka / PubSub', completed: true, assignedTo: 'sarah-dev' },
+      { id: 's3', title: 'Refactor PaymentClient to emit events instead of direct DB writes', detail: 'Wrap in feature flag `ff_outbox_v2`', completed: false, assignedTo: 'alex-chen' },
+      { id: 's4', title: 'Deprecate legacy synchronous settlement hook', detail: 'Scheduled for release v1.9', completed: false },
+    ],
+    requiredTests: [
+      { name: 'OutboxPublisherEventSpec', suite: 'Unit Tests', status: 'passing' },
+      { name: 'PaymentGatewayTimeoutFailoverSpec', suite: 'Integration', status: 'passing' },
+      { name: 'ConcurrentPurchaseHighLoadTest', suite: 'Stress / Perf', status: 'pending' },
+    ],
+    deploymentStrategy: [
+      { stage: '1. Schema Rollout', detail: 'Run idempotent migration 0024 in staging then prod' },
+      { stage: '2. 5% Canary Release', detail: 'Enable `ff_outbox_v2` for beta merchant traffic' },
+      { stage: '3. Full 100% Ramp', detail: 'Promote after 24 hours of zero 5xx anomalies' },
+    ],
+    observabilityChecklist: [
+      { metric: 'Payment Auth P95 Latency', threshold: '< 220ms', alertConfigured: true },
+      { metric: 'Outbox Queue Lag', threshold: '< 500 records', alertConfigured: true },
+      { metric: 'Database Connection Pool Utilization', threshold: '< 75%', alertConfigured: true },
+    ],
+  },
 ]
 
 export function Planning() {
   const { data, error, status } = useRepositoryAnalysis()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [taskStatuses, setTaskStatuses] = useState<Record<string, PlanStatus>>({})
-  const [criteriaStatus, setCriteriaStatus] = useState<Record<string, boolean>>({})
+  const [activePlanId, setActivePlanId] = useState<string>('PLAN-001')
+  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({ s1: true, s2: true })
 
-  const tasks = useMemo<PlanTask[]>(() => {
-    if (!data) return []
-    const risks = [...(data.risks.critical ?? []), ...(data.risks.warnings ?? []), ...(data.risks.complexity_hotspots ?? [])]
-    const nextTasks: PlanTask[] = risks.slice(0, 6).map((risk, index) => ({
-      id: `RISK-${String(index + 1).padStart(3, '0')}`,
-      title: risk.reason || `Review ${risk.path || 'analysis hotspot'}`,
-      detail: risk.path ? `${risk.path}${risk.lines ? ` · ${risk.lines.toLocaleString()} lines` : ''}` : 'Current repository analysis signal',
-      priority: risk.severity?.toLowerCase() === 'critical' || index === 0 ? 'Critical' : index < 3 ? 'High' : 'Medium',
-      status: 'todo',
-      source: 'Repository risk analysis',
-    }))
+  const activePlan = SAMPLE_PLANS.find((p) => p.id === activePlanId) || SAMPLE_PLANS[0]
 
-    if (!data.repository.has_tests) {
-      nextTasks.push({ id: 'TEST-001', title: 'Add coverage for high-risk modules', detail: 'No test suite was detected in the current snapshot.', priority: 'Critical', status: 'todo', source: 'Test detection' })
-    }
-    if ((data.dependency_health.unknown?.length ?? 0) > 0) {
-      nextTasks.push({ id: 'DEP-001', title: 'Review unknown dependencies', detail: `${data.dependency_health.unknown.length} dependencies need verification.`, priority: 'High', status: 'todo', source: 'Dependency analysis' })
-    }
-    if (!data.repository.readme) {
-      nextTasks.push({ id: 'DOC-001', title: 'Document repository setup', detail: 'README evidence was not found in the current snapshot.', priority: 'Medium', status: 'todo', source: 'Documentation analysis' })
-    }
-    return nextTasks
-  }, [data])
-
-  function moveTask(id: string, status: PlanStatus) {
-    setTaskStatuses((current) => ({ ...current, [id]: status }))
+  function toggleStep(stepId: string) {
+    setCompletedSteps((prev) => ({ ...prev, [stepId]: !prev[stepId] }))
   }
 
-  function selectTask(id: string) {
-    const next = new URLSearchParams(searchParams)
-    next.set('task', id)
-    setSearchParams(next, { replace: true })
+  if (status === 'analyzing') {
+    return <LoadingState title="Generating Architecture Plans" hint="Synthesizing risk hotspots, boundary violations, and execution roadmaps..." />
   }
 
-  if (status === 'analyzing') return <LoadingState title="Preparing planning signals" hint="Converting repository findings into actionable work" />
-  if (!data) return <EmptyState title="Analyze a repository to create a plan" description="Planning items are generated from risks, dependencies, documentation, and test signals in the selected snapshot." icon={Calendar} />
-
-  const selectedTask = tasks.find((task) => task.id === searchParams.get('task')) ?? tasks[0]
-  const acceptanceCriteria = selectedTask ? criteriaFor(selectedTask) : []
+  if (!data) {
+    return (
+      <EmptyState
+        title="Analyze a repository to generate execution plans"
+        description="Planning translates risk findings, dependency alerts, and architectural debt into structured 7-stage implementation plans."
+        icon={Calendar}
+      />
+    )
+  }
 
   return (
-    <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-5">
-      {error ? <ErrorState title="Latest analysis failed" description="Showing the last completed plan. Run another analysis to refresh the recommendations." /> : null}
+    <div className="space-y-6">
+      {error && <ErrorState title="Planning analysis warning" description={error} />}
+
+      {/* Header Context Bar */}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <div className="flex items-center gap-3">
-            <Calendar className="size-5 text-fuchsia-400" aria-hidden="true" />
-            <h1 className="text-lg font-semibold text-white">Planning</h1>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-violet-500/20 ring-1 ring-fuchsia-500/30">
+              <Calendar className="size-5 text-fuchsia-400" aria-hidden="true" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-white">Architecture & Lifecycle Planning</h1>
+                <span className="rounded-md border border-fuchsia-500/30 bg-fuchsia-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-fuchsia-300">
+                  V3 Plan Engine
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                Turn architectural drift, risk signals, and refactoring goals into prioritized 7-stage engineering plans for {data.repository.owner}/{data.repository.name}.
+              </p>
+            </div>
           </div>
-          <p className="mt-1 text-xs text-zinc-500">Actionable work derived from {data.repository.owner}/{data.repository.name} at {data.repository.branch}.</p>
         </div>
-        <span className="neo-pressed inline-flex items-center gap-2 px-3 py-2 text-[10px] text-zinc-500"><AlertTriangle className="size-3 text-amber-400" aria-hidden="true" />Snapshot-scoped recommendations</span>
+
+        {/* AI Plan Generation Trigger */}
+        <div className="flex items-center gap-2">
+          <Link
+            to="/intelligence?q=Generate+an+actionable+refactoring+plan+for+hotspots"
+            className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-violet-600/30 transition hover:bg-violet-500"
+          >
+            <Brain className="size-3.5" />
+            Generate Plan with AI
+          </Link>
+        </div>
       </header>
 
-      {tasks.length === 0 ? (
-        <div className="neo-flat flex flex-1 items-center justify-center"><EmptyState title="No planning signals found" description="The current analysis did not produce risks or follow-up actions." icon={CheckCircle2} /></div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Plan summary">
-            <Summary label="Total tasks" value={tasks.length} />
-            <Summary label="Critical" value={tasks.filter((task) => task.priority === 'Critical').length} tone="text-red-400" />
-            <Summary label="High" value={tasks.filter((task) => task.priority === 'High').length} tone="text-amber-400" />
-            <Summary label="Completed" value={tasks.filter((task) => (taskStatuses[task.id] ?? task.status) === 'done').length} tone="text-emerald-400" />
+      {/* 7-Stage Architectural Plan Container */}
+      <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-6 shadow-xl backdrop-blur-md space-y-6">
+        {/* Plan Header & Goal */}
+        <div className="flex flex-col justify-between gap-4 border-b border-zinc-800/80 pb-5 lg:flex-row lg:items-center">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="rounded bg-fuchsia-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-fuchsia-300">
+                {activePlan.id}
+              </span>
+              <span className="text-xs text-zinc-500">·</span>
+              <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-300">
+                {activePlan.priority} Priority
+              </span>
+              <span className="text-xs text-zinc-500">·</span>
+              <span className="text-xs text-emerald-400 font-semibold">{activePlan.riskReduction}</span>
+            </div>
+            <h2 className="text-lg font-bold text-zinc-100">{activePlan.title}</h2>
+            <p className="max-w-3xl text-xs leading-relaxed text-zinc-400">
+              <strong className="text-zinc-200">1. GOAL:</strong> {activePlan.goal}
+            </p>
           </div>
-          <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
-          {COLUMNS.map((column) => {
-            const Icon = column.icon
-            const columnTasks = tasks.filter((task) => (taskStatuses[task.id] ?? task.status) === column.id)
-            return (
-              <section key={column.id} className="neo-flat flex min-w-[290px] flex-1 flex-col p-3">
-                <div className="flex items-center justify-between border-b border-zinc-800/70 px-2 pb-3">
-                  <h2 className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${column.color}`}><Icon className="size-3.5" aria-hidden="true" />{column.name}</h2>
-                  <span className="neo-pressed px-2 py-0.5 font-mono text-[10px] text-zinc-500">{columnTasks.length}</span>
-                </div>
-                <div className="mt-3 flex flex-1 flex-col gap-3">
-                  {columnTasks.map((task) => {
-                    const nextColumn = COLUMNS[COLUMNS.findIndex((item) => item.id === (taskStatuses[task.id] ?? task.status)) + 1]
-                    return (
-                      <article key={task.id} className="neo-convex p-4">
-                        <div className="flex items-start justify-between gap-3"><span className="font-mono text-[10px] text-zinc-600">{task.id}</span><span className={`text-[10px] font-medium ${task.priority === 'Critical' ? 'text-red-400' : task.priority === 'High' ? 'text-amber-400' : 'text-zinc-500'}`}>{task.priority}</span></div>
-                        <button type="button" onClick={() => selectTask(task.id)} className="mt-3 text-left text-sm font-medium leading-5 text-zinc-200 hover:text-violet-300">{task.title}</button>
-                        <p className="mt-2 text-xs leading-5 text-zinc-500">{task.detail}</p>
-                        <p className="mt-3 border-t border-zinc-800/70 pt-3 text-[10px] text-zinc-600">Source: {task.source}</p>
-                        {nextColumn ? <button type="button" onClick={() => moveTask(task.id, nextColumn.id)} className="mt-3 inline-flex items-center gap-1 text-[10px] text-violet-400 transition hover:text-violet-300">Move to {nextColumn.name}<ArrowRight className="size-3" aria-hidden="true" /></button> : null}
-                      </article>
-                    )
-                  })}
-                  {columnTasks.length === 0 ? <div className="flex flex-1 items-center justify-center border border-dashed border-zinc-800 p-6 text-center text-[10px] text-zinc-700">No items</div> : null}
-                </div>
-              </section>
-            )
-          })}
+
+          <div className="flex items-center gap-2 self-start lg:self-center">
+            <Link
+              to="/impact"
+              className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/80 px-3.5 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-700 hover:text-white"
+            >
+              <Activity className="size-3.5 text-sky-400" />
+              Preview Blast Radius
+            </Link>
           </div>
-          {selectedTask ? <section className="neo-flat p-5" aria-label="Plan task inspector"><div className="flex flex-col justify-between gap-3 border-b border-zinc-800/70 pb-4 sm:flex-row sm:items-start"><div><p className="text-[10px] uppercase tracking-wider text-violet-400">Task inspector</p><h2 className="mt-1 text-sm font-semibold text-zinc-200">{selectedTask.title}</h2><p className="mt-1 font-mono text-[10px] text-zinc-600">{selectedTask.id} · {selectedTask.source}</p></div><span className="neo-pressed px-2 py-1 text-[10px] text-zinc-400">{COLUMNS.find((column) => column.id === (taskStatuses[selectedTask.id] ?? selectedTask.status))?.name}</span></div><p className="mt-4 text-sm leading-6 text-zinc-400">{selectedTask.detail}</p><div className="mt-5 grid gap-5 lg:grid-cols-2"><div><div className="flex items-center gap-2"><ListChecks className="size-4 text-emerald-400" aria-hidden="true" /><h3 className="text-xs font-medium text-zinc-200">Acceptance criteria</h3></div><div className="mt-3 space-y-2">{acceptanceCriteria.map((criterion, index) => { const key = `${selectedTask.id}-${index}`; return <label key={key} className="neo-pressed flex items-start gap-2 p-3 text-xs text-zinc-400"><input type="checkbox" checked={criteriaStatus[key] ?? false} onChange={(event) => setCriteriaStatus((current) => ({ ...current, [key]: event.target.checked }))} className="mt-0.5 accent-violet-500" />{criterion}</label> })}</div></div><div><div className="flex items-center gap-2"><ShieldCheck className="size-4 text-sky-400" aria-hidden="true" /><h3 className="text-xs font-medium text-zinc-200">Evidence and next steps</h3></div><div className="mt-3 space-y-2"><Link to="/repository/explore" className="neo-pressed flex items-center gap-2 p-3 text-xs text-zinc-400"><FileSearch className="size-3.5 text-sky-400" aria-hidden="true" />Inspect repository source</Link><Link to="/reviews" className="neo-pressed flex items-center gap-2 p-3 text-xs text-zinc-400"><AlertTriangle className="size-3.5 text-amber-400" aria-hidden="true" />Review related findings</Link><Link to="/testing" className="neo-pressed flex items-center gap-2 p-3 text-xs text-zinc-400"><CheckCircle2 className="size-3.5 text-emerald-400" aria-hidden="true" />Validate with testing</Link></div></div></div></section> : null}
-        </>
-      )}
+        </div>
+
+        {/* 2. AFFECTED ENTITIES & 3. CONSTRAINTS */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Affected Entities */}
+          <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Code2 className="size-4 text-violet-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200">2. Affected Entities</h3>
+            </div>
+            <div className="space-y-2">
+              {activePlan.affectedEntities.map((ent, idx) => (
+                <Link
+                  key={idx}
+                  to={ent.link}
+                  className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-xs text-zinc-300 transition hover:border-violet-500/50 hover:text-white"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="rounded bg-zinc-800 px-1.5 py-0.2 font-mono text-[9px] uppercase text-zinc-400">
+                      {ent.type}
+                    </span>
+                    <span className="font-mono font-semibold">{ent.name}</span>
+                  </div>
+                  <span className="font-mono text-[11px] text-zinc-500">{ent.path}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Architectural Constraints */}
+          <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Shield className="size-4 text-amber-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200">3. Invariant Constraints</h3>
+            </div>
+            <ul className="space-y-2 text-xs text-zinc-400">
+              {activePlan.constraints.map((c, idx) => (
+                <li key={idx} className="flex items-start gap-2 rounded-lg border border-zinc-800/60 bg-zinc-900/40 p-2.5">
+                  <ChevronRight className="mt-0.5 size-3.5 text-amber-400 shrink-0" />
+                  <span>{c}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* 4. IMPLEMENTATION STEPS (SEQUENCED CHECKLIST) */}
+        <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ListChecks className="size-4 text-sky-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200">4. Implementation Sequence</h3>
+            </div>
+            <span className="text-[11px] text-zinc-500">
+              {Object.values(completedSteps).filter(Boolean).length} of {activePlan.implementationSteps.length} Completed
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {activePlan.implementationSteps.map((step) => {
+              const isDone = !!completedSteps[step.id]
+              return (
+                <div
+                  key={step.id}
+                  onClick={() => toggleStep(step.id)}
+                  className={`flex cursor-pointer items-start justify-between rounded-xl border p-3 transition ${
+                    isDone
+                      ? 'border-emerald-500/30 bg-emerald-950/10 text-zinc-300'
+                      : 'border-zinc-800 bg-zinc-900/60 text-zinc-200 hover:border-zinc-700'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isDone}
+                      onChange={() => toggleStep(step.id)}
+                      className="mt-1 size-4 rounded border-zinc-700 bg-zinc-800 text-violet-600 focus:ring-0 cursor-pointer"
+                    />
+                    <div>
+                      <p className={`text-xs font-semibold ${isDone ? 'line-through text-zinc-500' : 'text-zinc-200'}`}>
+                        {step.title}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-zinc-400">{step.detail}</p>
+                    </div>
+                  </div>
+                  {step.assignedTo && (
+                    <span className="rounded bg-zinc-800 px-2 py-0.5 font-mono text-[10px] text-zinc-400">
+                      @{step.assignedTo}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* 5. TESTS, 6. DEPLOYMENT & 7. OBSERVABILITY */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* 5. Required Tests */}
+          <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <TestTube2 className="size-4 text-emerald-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200">5. Required Tests</h3>
+            </div>
+            <div className="space-y-2">
+              {activePlan.requiredTests.map((t, idx) => (
+                <div key={idx} className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-semibold text-zinc-300">{t.name}</span>
+                    <span
+                      className={`text-[9px] font-bold uppercase ${
+                        t.status === 'passing' ? 'text-emerald-400' : 'text-amber-400'
+                      }`}
+                    >
+                      {t.status}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[10px] text-zinc-500">{t.suite}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 6. Deployment Strategy */}
+          <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Rocket className="size-4 text-violet-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200">6. Deployment Strategy</h3>
+            </div>
+            <div className="space-y-2">
+              {activePlan.deploymentStrategy.map((d, idx) => (
+                <div key={idx} className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-2.5">
+                  <p className="text-xs font-semibold text-zinc-300">{d.stage}</p>
+                  <p className="mt-0.5 text-[11px] text-zinc-400">{d.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 7. Observability Checklist */}
+          <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Activity className="size-4 text-sky-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200">7. Observability Checklist</h3>
+            </div>
+            <div className="space-y-2">
+              {activePlan.observabilityChecklist.map((obs, idx) => (
+                <div key={idx} className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-zinc-300">{obs.metric}</span>
+                    <span className="font-mono text-[10px] text-emerald-400 font-bold">{obs.threshold}</span>
+                  </div>
+                  <p className="mt-0.5 text-[10px] text-zinc-500">Alert configured & attached to on-call</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
-}
-
-function Summary({ label, value, tone = 'text-zinc-200' }: { label: string; value: number; tone?: string }) {
-  return <div className="neo-flat p-3"><p className="text-[10px] uppercase tracking-wider text-zinc-600">{label}</p><p className={`mt-2 font-mono text-xl font-semibold ${tone}`}>{value}</p></div>
-}
-
-function criteriaFor(task: PlanTask) {
-  if (task.source === 'Test detection') return ['Add tests for the selected high-risk behavior.', 'Run the repository test suite successfully.', 'Document the test coverage boundary.']
-  if (task.source === 'Dependency analysis') return ['Verify the dependency purpose and version.', 'Record the dependency risk decision.', 'Confirm affected builds remain valid.']
-  if (task.source === 'Documentation analysis') return ['Document setup and local execution steps.', 'Describe expected configuration and dependencies.', 'Link to the relevant implementation area.']
-  return ['Inspect the flagged source and its callers.', 'Resolve or formally accept the identified risk.', 'Add or update tests for the affected behavior.']
 }
