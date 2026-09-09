@@ -1,16 +1,20 @@
 import { useState } from 'react'
 import {
+  AlignJustify,
+  Grid,
+  ListFilter,
+  LogOut,
   PanelLeft,
   Play,
   Search,
   SidebarClose,
   SidebarOpen,
-  LogOut,
   Sparkles,
   Zap,
 } from 'lucide-react'
 import { useRepositoryAnalysis } from '../../contexts/RepositoryAnalysisContext'
 import { useAuth } from '../../contexts/AuthContext'
+import { useDensity } from '../../contexts/DensityContext'
 import { Logo } from '../shared/Logo'
 import { JobTracker } from './JobTracker'
 
@@ -30,8 +34,10 @@ export function TopNav({
   onOpenIntelligencePanel,
 }: TopNavProps) {
   const { data, status, openAnalyzeModal } = useRepositoryAnalysis()
+  const { density, setDensity } = useDensity()
   const { user, logout } = useAuth()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isDensityMenuOpen, setIsDensityMenuOpen] = useState(false)
 
   const initials = user?.name
     ? user.name
@@ -122,6 +128,60 @@ export function TopNav({
       </button>
 
       <JobTracker />
+
+      {/* Density Selector */}
+      <div className="relative hidden md:block">
+        <button
+          type="button"
+          onClick={() => setIsDensityMenuOpen(!isDensityMenuOpen)}
+          className="grid size-8 place-items-center rounded-lg bg-white/[0.04] border border-white/[0.06] text-zinc-400 hover:border-violet-500/40 hover:text-white transition"
+          aria-label="Adjust UI density"
+          title={`Density: ${density}`}
+        >
+          <ListFilter className="size-3.5" />
+        </button>
+
+        {isDensityMenuOpen && (
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-40 bg-transparent cursor-default"
+              onClick={() => setIsDensityMenuOpen(false)}
+            />
+            <div className="absolute right-0 mt-2 z-50 w-44 rounded-xl border border-white/[0.08] bg-[#0c101a] p-1.5 shadow-2xl backdrop-blur-2xl">
+              <span className="block px-2.5 py-1 text-[10px] uppercase font-mono tracking-wider text-zinc-500">
+                Display Density
+              </span>
+              {(
+                [
+                  { id: 'comfortable', label: 'Comfortable' },
+                  { id: 'compact', label: 'Compact' },
+                  { id: 'ultra-compact', label: 'Ultra Compact' },
+                ] as const
+              ).map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => {
+                    setDensity(d.id)
+                    setIsDensityMenuOpen(false)
+                  }}
+                  className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-left transition ${
+                    density === d.id
+                      ? 'bg-violet-600/20 text-violet-300 font-semibold'
+                      : 'text-zinc-300 hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <span>{d.label}</span>
+                  {density === d.id && (
+                    <span className="size-1.5 rounded-full bg-violet-400" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Quick AI Investigation Button */}
       <button

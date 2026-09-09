@@ -6,7 +6,11 @@ import { TopNav } from '../components/layout/TopNav'
 import { RepositoryContextBar } from '../components/layout/RepositoryContextBar'
 import { CommandPalette } from '../components/layout/CommandPalette'
 import { IntelligencePanel } from '../components/layout/IntelligencePanel'
+import { InspectorDrawer } from '../components/layout/InspectorDrawer'
+import { MobileNav } from '../components/layout/MobileNav'
 import { RepositoryAnalysisProvider } from '../contexts/RepositoryAnalysisContext'
+import { InspectorProvider } from '../contexts/InspectorContext'
+import { DensityProvider } from '../contexts/DensityContext'
 
 export function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -30,41 +34,55 @@ export function AppLayout() {
   }, [])
 
   return (
-    <RepositoryAnalysisProvider>
-      <div className="min-h-screen bg-transparent text-zinc-900 dark:text-zinc-100">
-        <Sidebar
-          isCollapsed={isSidebarCollapsed}
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+    <DensityProvider>
+      <RepositoryAnalysisProvider>
+        <InspectorProvider>
+          <div className="min-h-screen bg-transparent text-zinc-900 dark:text-zinc-100 pb-16 lg:pb-0">
+            <Sidebar
+              isCollapsed={isSidebarCollapsed}
+              isOpen={isSidebarOpen}
+              onClose={() => setIsSidebarOpen(false)}
+            />
 
-        <div
-          className={
-            isSidebarCollapsed
-              ? 'min-h-screen transition-[padding] duration-200 lg:pl-20'
-              : 'min-h-screen transition-[padding] duration-200 lg:pl-64'
-          }
-        >
-          <TopNav
-            isSidebarCollapsed={isSidebarCollapsed}
-            onMenuClick={() => setIsSidebarOpen(true)}
-            onToggleSidebar={() => setIsSidebarCollapsed((value) => !value)}
-            onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-            onOpenIntelligencePanel={() => setIsIntelligencePanelOpen(true)}
-          />
+            <div
+              className={
+                isSidebarCollapsed
+                  ? 'min-h-screen transition-[padding] duration-200 lg:pl-20'
+                  : 'min-h-screen transition-[padding] duration-200 lg:pl-64'
+              }
+            >
+              <TopNav
+                isSidebarCollapsed={isSidebarCollapsed}
+                onMenuClick={() => setIsSidebarOpen(true)}
+                onToggleSidebar={() => setIsSidebarCollapsed((value) => !value)}
+                onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+                onOpenIntelligencePanel={() => setIsIntelligencePanelOpen(true)}
+              />
 
-          <main className="min-h-[calc(100vh-4rem)] px-4 py-6 sm:px-6 lg:px-8">
-            <div className="mx-auto w-full max-w-7xl animate-fade-in-up">
-              <RepositoryContextBar />
-              <Outlet />
+              <main className="min-h-[calc(100vh-4rem)] px-4 py-6 sm:px-6 lg:px-8">
+                <div className="mx-auto w-full max-w-7xl animate-fade-in-up">
+                  <RepositoryContextBar />
+                  <Outlet />
+                </div>
+              </main>
             </div>
-          </main>
-        </div>
 
-        <AnalyzeRepositoryModal />
-        <CommandPalette open={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
-        {isIntelligencePanelOpen ? <IntelligencePanel onClose={() => setIsIntelligencePanelOpen(false)} /> : null}
-      </div>
-    </RepositoryAnalysisProvider>
+            {/* Mobile Bottom Navigation */}
+            <MobileNav onOpenSidebar={() => setIsSidebarOpen(true)} />
+
+            {/* Global Overlays & Drawers */}
+            <AnalyzeRepositoryModal />
+            <CommandPalette
+              open={isCommandPaletteOpen}
+              onClose={() => setIsCommandPaletteOpen(false)}
+            />
+            {isIntelligencePanelOpen ? (
+              <IntelligencePanel onClose={() => setIsIntelligencePanelOpen(false)} />
+            ) : null}
+            <InspectorDrawer />
+          </div>
+        </InspectorProvider>
+      </RepositoryAnalysisProvider>
+    </DensityProvider>
   )
 }

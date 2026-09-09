@@ -61,8 +61,10 @@ export const router = createBrowserRouter([
           { path: 'architecture', element: <Architecture /> },
           { path: 'entities', element: <Entities /> },
           { path: 'entities/:entityId', element: <Entities /> },
+          { path: 'entities/*', element: <Entities /> },
           { path: 'code', element: <Repository /> },
           { path: 'code/:fileId', element: <Repository /> },
+          { path: 'code/*', element: <Repository /> },
 
           // EVOLVE
           { path: 'timeline', element: <Timeline /> },
@@ -76,10 +78,13 @@ export const router = createBrowserRouter([
           { path: 'reviews', element: <CodeReviews /> },
           { path: 'testing', element: <Testing /> },
           { path: 'deployments', element: <Deployment /> },
+          { path: 'deployments/:deploymentId', element: <Deployment /> },
 
           // OPERATE
           { path: 'operations', element: <Observability /> },
+          { path: 'operations/:operationId', element: <Observability /> },
           { path: 'incidents', element: <Incidents /> },
+          { path: 'incidents/:incidentId', element: <Incidents /> },
 
           // SYSTEM
           { path: 'repositories', element: <RepositoryOverview /> },
