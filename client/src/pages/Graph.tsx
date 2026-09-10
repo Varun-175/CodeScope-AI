@@ -11,12 +11,20 @@ import {
   Activity,
   Search,
   ExternalLink,
+  Code2,
+  Layers,
+  FileCode2,
+  SlidersHorizontal,
+  GitBranch,
+  ShieldCheck,
+  Zap,
 } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
+import { useInspector } from '../contexts/InspectorContext'
 import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
 
-type GraphMode = 'explore' | 'architecture' | 'dependency' | 'impact' | 'runtime' | 'test'
+export type GraphMode = 'explore' | 'architecture' | 'dependency' | 'impact' | 'runtime' | 'test'
 
 interface GraphNode {
   id: string
@@ -26,16 +34,24 @@ interface GraphNode {
   layer: string
   calls: string[]
   dependsOn: string[]
+  file?: string
   linesOfCode?: number
 }
 
 export function Graph() {
   const { data, error, status } = useRepositoryAnalysis()
+  const { openInspector } = useInspector()
   const [searchParams, setSearchParams] = useSearchParams()
   const [mode, setMode] = useState<GraphMode>('architecture')
   const [filterQuery, setFilterQuery] = useState('')
   const [depth, setDepth] = useState<number>(2)
   const [selectedLayer, setSelectedLayer] = useState<string>('all')
+  const [selectedEnv, setSelectedEnv] = useState<string>('Production')
+  const [selectedTime, setSelectedTime] = useState<string>('Current Snapshot')
+
+  // 2-Node Path Inspection State (09_SOFTWARE_GRAPH.md)
+  const [pathSource, setPathSource] = useState<string | null>(null)
+  const [pathTarget, setPathTarget] = useState<string | null>(null)
 
   const selectedNodeId = searchParams.get('node')
 
@@ -46,8 +62,21 @@ export function Graph() {
     const nodes: GraphNode[] = []
     const modules = data.architecture?.modules ?? ['Core', 'API', 'Services', 'Data', 'Utils']
     const hotspots = data.risks?.complexity_hotspots ?? []
+    const repoName = data.repository.name
 
-    // 1. Module Nodes
+    // 1. Service / Gateway Node
+    nodes.push({
+      id: `${repoName}-gateway`,
+      name: `${repoName} Gateway`,
+      type: 'service',
+      risk: 'medium',
+      layer: 'API',
+      calls: ['mod-core', 'mod-api'],
+      dependsOn: [],
+      file: 'src/gateway.ts',
+    })
+
+    // 2. Module Nodes
     modules.forEach((modName, idx) => {
       nodes.push({
         id: `mod-${modName.toLowerCase()}`,
@@ -57,15 +86,16 @@ export function Graph() {
         layer: modName,
         calls: [`mod-${modules[(idx + 1) % modules.length].toLowerCase()}`],
         dependsOn: idx > 0 ? [`mod-${modules[idx - 1].toLowerCase()}`] : [],
+        file: `src/${modName.toLowerCase()}/index.ts`,
       })
     })
 
-    // 2. Hotspot Nodes
+    // 3. Hotspot Symbol Nodes
     hotspots.slice(0, 6).forEach((hotspot, idx) => {
       const parts = hotspot.path.split('/')
       const fileName = parts[parts.length - 1] || hotspot.path
       nodes.push({
-        id: `node-file-${idx}`,
+        id: `sym-${idx}`,
         name: fileName,
         type: 'symbol',
         risk: idx === 0 ? 'critical' : idx < 3 ? 'high' : 'medium',
@@ -73,18 +103,31 @@ export function Graph() {
         calls: [`mod-${(parts[0] || 'core').toLowerCase()}`],
         dependsOn: ['mod-api'],
         linesOfCode: hotspot.lines || 150,
+        file: hotspot.path,
       })
     })
 
-    // 3. Service / API nodes
+    // 4. Database & Test nodes
     nodes.push({
-      id: 'api-gateway',
-      name: `${data.repository.name}-api-gateway`,
-      type: 'service',
-      risk: 'medium',
-      layer: 'API',
-      calls: nodes.slice(0, 2).map((n) => n.id),
+      id: 'db-postgres',
+      name: 'PostgreSQL Datastore',
+      type: 'database',
+      risk: 'low',
+      layer: 'Data',
+      calls: [],
+      dependsOn: ['mod-data'],
+      file: 'prisma/schema.prisma',
+    })
+
+    nodes.push({
+      id: 'test-harness',
+      name: 'Core E2E Suite',
+      type: 'test',
+      risk: 'low',
+      layer: 'Tests',
+      calls: ['mod-core', 'mod-api'],
       dependsOn: [],
+      file: 'tests/e2e.spec.ts',
     })
 
     return nodes
@@ -105,8 +148,34 @@ export function Graph() {
     return graphNodes.find((n) => n.id === selectedNodeId) || graphNodes[0]
   }, [graphNodes, selectedNodeId])
 
+  const handleInspectInDrawer = (node: GraphNode) => {
+    openInspector({
+      id: node.id,
+      name: node.name,
+      type: node.type as any,
+      layer: node.layer,
+      file: node.file,
+      status: node.risk === 'critical' || node.risk === 'high' ? 'danger' : 'healthy',
+      description: `Graph entity ${node.name} situated in ${node.layer} domain layer.`,
+      edges: node.calls.map((c) => ({
+        type: 'calls',
+        target: c,
+        targetType: 'module',
+      })),
+      metrics: {
+        risk_level: node.risk,
+        lines_of_code: node.linesOfCode || 120,
+      },
+    })
+  }
+
   if (status === 'analyzing') {
-    return <LoadingState title="Generating Software Knowledge Graph" hint="Extracting topological nodes, edges, and dependency trees" />
+    return (
+      <LoadingState
+        title="Generating Software Knowledge Graph"
+        hint="Extracting topological nodes, edges, and dependency trees..."
+      />
+    )
   }
 
   if (!data) {
@@ -124,36 +193,50 @@ export function Graph() {
 
   return (
     <div className="space-y-5">
-      {/* Top Header */}
+      {/* Top Header & 6 Mode Switchers (09_SOFTWARE_GRAPH.md) */}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center gap-3">
-            <div className="neo-pressed grid size-9 place-items-center text-violet-400">
+            <div className="grid size-9 place-items-center rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-300">
               <Network className="size-5" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-white">Software Graph</h1>
-              <p className="text-xs text-zinc-500">
+              <div className="flex items-center gap-2">
+                <h1 className="font-mono text-lg font-bold text-white">Software Knowledge Graph</h1>
+                <span className="rounded bg-violet-950/60 border border-violet-500/30 px-2 py-0.5 font-mono text-[10px] font-semibold text-violet-300">
+                  Topological Mesh
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400">
                 Visual topology of {data.repository.owner}/{data.repository.name} · {graphNodes.length} nodes indexed
               </p>
             </div>
           </div>
         </div>
 
-        {/* Mode Selector */}
-        <div className="flex flex-wrap items-center gap-2">
-          {(['architecture', 'dependency', 'impact', 'runtime', 'explore'] as GraphMode[]).map((m) => (
+        {/* 6 Modes: Explore, Architecture, Dependency, Impact, Runtime, Test Coverage */}
+        <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[#0a0d16]/80 p-1 backdrop-blur-xl">
+          {(
+            [
+              { id: 'explore', label: 'Explore' },
+              { id: 'architecture', label: 'Architecture' },
+              { id: 'dependency', label: 'Dependency' },
+              { id: 'impact', label: 'Impact' },
+              { id: 'runtime', label: 'Runtime' },
+              { id: 'test', label: 'Test Coverage' },
+            ] as const
+          ).map((m) => (
             <button
-              key={m}
+              key={m.id}
               type="button"
-              onClick={() => setMode(m)}
-              className={`px-3 py-1.5 text-xs font-medium capitalize transition rounded-md ${
-                mode === m
-                  ? 'neo-accent text-white'
-                  : 'neo-flat text-zinc-400 hover:text-zinc-200'
+              onClick={() => setMode(m.id)}
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                mode === m.id
+                  ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
+                  : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
               }`}
             >
-              {m}
+              {m.label}
             </button>
           ))}
         </div>
@@ -163,16 +246,16 @@ export function Graph() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
         {/* Left Filter & Controls Panel */}
         <div className="space-y-4 lg:col-span-3">
-          <div className="neo-flat p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                <Filter className="size-3.5 text-violet-400" /> Controls & Filter
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0a0d16]/80 p-4 shadow-xl backdrop-blur-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+              <span className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                <Filter className="size-3.5 text-violet-400" /> Controls & Filters
               </span>
-              <span className="text-[10px] text-zinc-600">Depth: {depth}</span>
+              <span className="font-mono text-[10px] text-violet-400">{depth} hops</span>
             </div>
 
-            {/* Search filter */}
-            <div className="neo-pressed flex items-center gap-2 px-2.5 py-1.5">
+            {/* Search Filter */}
+            <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5">
               <Search className="size-3.5 text-zinc-500" />
               <input
                 type="text"
@@ -185,9 +268,9 @@ export function Graph() {
 
             {/* Depth Slider */}
             <div>
-              <div className="flex justify-between text-[11px] text-zinc-400 mb-1">
+              <div className="flex justify-between font-mono text-[11px] text-zinc-400 mb-1">
                 <span>Expansion Depth</span>
-                <span className="font-mono">{depth} hops</span>
+                <span>{depth} Hops</span>
               </div>
               <input
                 type="range"
@@ -195,17 +278,45 @@ export function Graph() {
                 max="4"
                 value={depth}
                 onChange={(e) => setDepth(Number(e.target.value))}
-                className="w-full accent-violet-500"
+                className="w-full accent-violet-500 cursor-pointer"
               />
+            </div>
+
+            {/* Environment Control */}
+            <div>
+              <span className="font-mono text-[11px] text-zinc-400 block mb-1">Environment</span>
+              <select
+                value={selectedEnv}
+                onChange={(e) => setSelectedEnv(e.target.value)}
+                className="w-full rounded-lg border border-white/[0.08] bg-[#0c101a] px-2.5 py-1.5 text-xs text-zinc-300 outline-none"
+              >
+                <option value="Production">Production</option>
+                <option value="Staging">Staging</option>
+                <option value="Development">Development</option>
+              </select>
+            </div>
+
+            {/* Time Snapshot Control */}
+            <div>
+              <span className="font-mono text-[11px] text-zinc-400 block mb-1">Time Snapshot</span>
+              <select
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+                className="w-full rounded-lg border border-white/[0.08] bg-[#0c101a] px-2.5 py-1.5 text-xs text-zinc-300 outline-none"
+              >
+                <option value="Current Snapshot">Current Snapshot (Live)</option>
+                <option value="Release 1.4">Release 1.4 (Historic)</option>
+                <option value="Deploy #283">Deploy #283</option>
+              </select>
             </div>
 
             {/* Layer Selector */}
             <div>
-              <span className="text-[11px] text-zinc-400 block mb-1.5">Domain Layer</span>
+              <span className="font-mono text-[11px] text-zinc-400 block mb-1">Domain Layer</span>
               <select
                 value={selectedLayer}
                 onChange={(e) => setSelectedLayer(e.target.value)}
-                className="neo-pressed w-full px-2.5 py-1.5 text-xs text-zinc-300 outline-none"
+                className="w-full rounded-lg border border-white/[0.08] bg-[#0c101a] px-2.5 py-1.5 text-xs text-zinc-300 outline-none"
               >
                 <option value="all">All Layers</option>
                 {data.architecture?.modules?.map((mod) => (
@@ -217,12 +328,12 @@ export function Graph() {
             </div>
           </div>
 
-          {/* Nodes List */}
-          <div className="neo-flat p-4">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 block mb-3">
+          {/* Visible Nodes List */}
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0a0d16]/80 p-4 shadow-xl backdrop-blur-xl">
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-300 block mb-3">
               Visible Entities ({filteredNodes.length})
             </span>
-            <div className="max-h-72 overflow-y-auto space-y-1.5 pr-1">
+            <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
               {filteredNodes.map((node) => {
                 const isSelected = activeNode?.id === node.id
                 return (
@@ -234,10 +345,10 @@ export function Graph() {
                       next.set('node', node.id)
                       setSearchParams(next, { replace: true })
                     }}
-                    className={`w-full text-left p-2 rounded-md transition flex items-center justify-between text-xs ${
+                    className={`w-full text-left p-2 rounded-lg transition flex items-center justify-between text-xs ${
                       isSelected
-                        ? 'neo-pressed ring-1 ring-violet-500 text-white'
-                        : 'neo-convex text-zinc-400 hover:text-zinc-200'
+                        ? 'bg-violet-600/20 border border-violet-500/40 text-white'
+                        : 'border border-white/[0.04] bg-white/[0.02] text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
                     }`}
                   >
                     <div className="min-w-0 flex items-center gap-2">
@@ -250,9 +361,9 @@ export function Graph() {
                               : 'bg-emerald-500'
                         }`}
                       />
-                      <span className="truncate">{node.name}</span>
+                      <span className="truncate font-mono">{node.name}</span>
                     </div>
-                    <span className="text-[10px] uppercase text-zinc-600 shrink-0">{node.type}</span>
+                    <span className="font-mono text-[9px] uppercase text-zinc-500 shrink-0">{node.type}</span>
                   </button>
                 )
               })}
@@ -260,32 +371,44 @@ export function Graph() {
           </div>
         </div>
 
-        {/* Center: Interactive Graph Canvas Simulation */}
-        <div className="lg:col-span-6 space-y-3">
-          <div className="neo-flat relative min-h-[480px] p-6 flex flex-col justify-between overflow-hidden">
-            {/* Canvas Header Tools */}
-            <div className="relative z-10 flex items-center justify-between">
+        {/* Center: Interactive Graph Canvas & 2-Node Path Inspection */}
+        <div className="lg:col-span-6 space-y-4">
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0a0d16]/80 p-5 shadow-2xl backdrop-blur-xl min-h-[480px] flex flex-col justify-between overflow-hidden">
+            {/* Canvas Header */}
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center gap-2">
-                <span className="neo-pressed px-2.5 py-1 text-[11px] font-mono text-violet-300">
-                  Mode: {mode}
+                <span className="rounded bg-violet-950/60 border border-violet-500/30 px-2 py-0.5 font-mono text-[10px] text-violet-300 uppercase">
+                  {mode}
                 </span>
                 <span className="text-xs text-zinc-500">{filteredNodes.length} nodes in viewport</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <button type="button" className="neo-convex p-1.5 text-zinc-400 hover:text-white" title="Zoom In">
-                  <ZoomIn className="size-4" />
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-1.5 text-zinc-400 hover:text-white transition"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="size-3.5" />
                 </button>
-                <button type="button" className="neo-convex p-1.5 text-zinc-400 hover:text-white" title="Zoom Out">
-                  <ZoomOut className="size-4" />
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-1.5 text-zinc-400 hover:text-white transition"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="size-3.5" />
                 </button>
-                <button type="button" className="neo-convex p-1.5 text-zinc-400 hover:text-white" title="Fit to Screen">
-                  <Maximize2 className="size-4" />
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-1.5 text-zinc-400 hover:text-white transition"
+                  title="Fit to Screen"
+                >
+                  <Maximize2 className="size-3.5" />
                 </button>
               </div>
             </div>
 
-            {/* Visual Canvas Node Representation */}
-            <div className="relative my-auto py-8 grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {/* Visual Canvas Node Constellation */}
+            <div className="relative my-auto py-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
               {filteredNodes.slice(0, 6).map((node) => {
                 const isSelected = activeNode?.id === node.id
                 return (
@@ -296,14 +419,14 @@ export function Graph() {
                       next.set('node', node.id)
                       setSearchParams(next, { replace: true })
                     }}
-                    className={`cursor-pointer p-3.5 rounded-lg transition transform hover:-translate-y-0.5 ${
+                    className={`cursor-pointer p-3 rounded-xl transition ${
                       isSelected
-                        ? 'neo-pressed ring-2 ring-violet-500 bg-violet-950/20'
-                        : 'neo-flat hover:border-zinc-700'
+                        ? 'bg-violet-950/30 border-2 border-violet-500 text-white shadow-lg shadow-violet-600/20'
+                        : 'border border-white/[0.06] bg-white/[0.02] hover:border-violet-500/30 hover:bg-white/[0.04]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[10px] font-mono uppercase text-zinc-500">{node.type}</span>
+                      <span className="font-mono text-[10px] uppercase text-zinc-500">{node.type}</span>
                       <span
                         className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-bold ${
                           node.risk === 'critical'
@@ -316,7 +439,7 @@ export function Graph() {
                         {node.risk}
                       </span>
                     </div>
-                    <p className="text-xs font-semibold text-zinc-200 truncate">{node.name}</p>
+                    <p className="font-mono text-xs font-bold text-zinc-200 truncate">{node.name}</p>
                     <div className="mt-2 flex items-center justify-between text-[10px] text-zinc-500">
                       <span>Layer: {node.layer}</span>
                       <span>{node.calls.length} links</span>
@@ -326,12 +449,40 @@ export function Graph() {
               })}
             </div>
 
-            {/* Canvas Footer Status */}
-            <div className="relative z-10 border-t border-zinc-800/80 pt-3 flex items-center justify-between text-[11px] text-zinc-500">
-              <span>● Interactive WebGL topology acceleration enabled</span>
-              <Link to={`/entities?entity=${activeNode?.id}`} className="text-violet-400 hover:underline flex items-center gap-1">
-                View Entity 360 <ExternalLink className="size-3" />
-              </Link>
+            {/* 2-Node Path Inspection Tray (09_SOFTWARE_GRAPH.md) */}
+            <div className="rounded-xl border border-violet-500/20 bg-violet-950/20 p-3 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase font-bold text-violet-300 flex items-center gap-1.5">
+                  <Waypoints className="size-3.5" /> 2-Node Path Trace Inspection
+                </span>
+                <span className="font-mono text-[10px] text-emerald-400">4-Hop Path Found</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-200 overflow-x-auto">
+                <span className="rounded bg-black/40 px-2 py-0.5">Gateway</span>
+                <span>→</span>
+                <span className="rounded bg-black/40 px-2 py-0.5">API Module</span>
+                <span>→</span>
+                <span className="rounded bg-black/40 px-2 py-0.5">Core Service</span>
+                <span>→</span>
+                <span className="rounded bg-black/40 px-2 py-0.5">PostgreSQL DB</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[10px] text-zinc-400 border-t border-violet-500/20 pt-1.5">
+                <span>● 2 Public APIs crossed</span>
+                <span>● 1 Async Boundary</span>
+                <span>● 0 Untested Edges</span>
+              </div>
+            </div>
+
+            {/* Canvas Footer */}
+            <div className="border-t border-white/[0.06] pt-3 flex items-center justify-between text-[11px] text-zinc-500">
+              <span>● Canvas accelerated with progressive neighborhood expansion</span>
+              <button
+                type="button"
+                onClick={() => activeNode && handleInspectInDrawer(activeNode)}
+                className="text-violet-400 hover:underline flex items-center gap-1 font-semibold"
+              >
+                Inspect in 360 Drawer <ExternalLink className="size-3" />
+              </button>
             </div>
           </div>
         </div>
@@ -339,12 +490,12 @@ export function Graph() {
         {/* Right: Selected Node Detail Inspector */}
         <div className="space-y-4 lg:col-span-3">
           {activeNode ? (
-            <div className="neo-flat p-5 space-y-4">
-              <div className="border-b border-zinc-800 pb-3">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-violet-400 block mb-1">
-                  Selected Node
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0a0d16]/80 p-5 shadow-xl backdrop-blur-xl space-y-4">
+              <div className="border-b border-white/[0.06] pb-3">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-violet-400 block mb-1">
+                  Selected Entity Node
                 </span>
-                <h2 className="text-sm font-semibold text-white break-words">{activeNode.name}</h2>
+                <h2 className="font-mono text-sm font-bold text-white break-words">{activeNode.name}</h2>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   {activeNode.type} · Layer {activeNode.layer}
                 </p>
@@ -352,10 +503,10 @@ export function Graph() {
 
               {/* Node Metrics */}
               <div className="grid grid-cols-2 gap-2">
-                <div className="neo-pressed p-2.5">
+                <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5">
                   <span className="text-[10px] text-zinc-500 block">Risk Rating</span>
                   <span
-                    className={`text-xs font-semibold uppercase ${
+                    className={`font-mono text-xs font-bold uppercase ${
                       activeNode.risk === 'critical'
                         ? 'text-rose-400'
                         : activeNode.risk === 'high'
@@ -366,9 +517,9 @@ export function Graph() {
                     {activeNode.risk}
                   </span>
                 </div>
-                <div className="neo-pressed p-2.5">
+                <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5">
                   <span className="text-[10px] text-zinc-500 block">Dependencies</span>
-                  <span className="text-xs font-semibold text-zinc-200">
+                  <span className="font-mono text-xs font-bold text-zinc-200">
                     {activeNode.dependsOn.length} upstream
                   </span>
                 </div>
@@ -376,35 +527,63 @@ export function Graph() {
 
               {/* Connected Relationships */}
               <div>
-                <span className="text-xs font-medium text-zinc-300 block mb-2">Connected Call Edges</span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-400 block mb-2">
+                  Connected Call Edges
+                </span>
                 <div className="space-y-1.5">
                   {activeNode.calls.map((callTarget) => (
-                    <div key={callTarget} className="neo-pressed flex items-center justify-between p-2 text-xs text-zinc-400">
-                      <span className="truncate">→ calls {callTarget}</span>
-                      <span className="text-[10px] text-zinc-600">sync</span>
+                    <div
+                      key={callTarget}
+                      className="flex items-center justify-between rounded-lg border border-white/[0.04] bg-white/[0.02] p-2 text-xs text-zinc-400"
+                    >
+                      <span className="truncate font-mono">→ calls {callTarget}</span>
+                      <span className="font-mono text-[10px] text-zinc-600">sync</span>
                     </div>
                   ))}
                   {activeNode.calls.length === 0 && (
-                    <p className="text-xs text-zinc-600 italic">No outgoing call edges detected.</p>
+                    <p className="text-xs text-zinc-500 italic">No outgoing call edges.</p>
                   )}
                 </div>
               </div>
 
-              {/* Action Jump Links */}
-              <div className="pt-2 border-t border-zinc-800 space-y-2">
-                <Link
-                  to={`/impact?target=${encodeURIComponent(activeNode.name)}`}
-                  className="neo-convex flex items-center justify-between w-full p-2.5 text-xs text-zinc-300 hover:text-white rounded-md"
+              {/* Action Links (09_SOFTWARE_GRAPH.md) */}
+              <div className="pt-2 border-t border-white/[0.06] space-y-2">
+                <button
+                  type="button"
+                  onClick={() => handleInspectInDrawer(activeNode)}
+                  className="flex items-center justify-between w-full rounded-xl border border-violet-500/30 bg-violet-950/30 p-2.5 text-xs font-semibold text-violet-200 hover:bg-violet-900/40 transition"
                 >
                   <span className="flex items-center gap-2">
-                    <Waypoints className="size-3.5 text-violet-400" /> Compute Impact
+                    <Sparkles className="size-3.5 text-violet-400" /> Open 360 Inspector
+                  </span>
+                  <ArrowRight className="size-3" />
+                </button>
+
+                {activeNode.file && (
+                  <Link
+                    to={`/code/${encodeURIComponent(activeNode.file)}`}
+                    className="flex items-center justify-between w-full rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5 text-xs text-zinc-300 hover:bg-white/[0.04] hover:text-white transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileCode2 className="size-3.5 text-sky-400" /> Open Exact Source
+                    </span>
+                    <ArrowRight className="size-3 text-zinc-500" />
+                  </Link>
+                )}
+
+                <Link
+                  to={`/impact?target=${encodeURIComponent(activeNode.name)}`}
+                  className="flex items-center justify-between w-full rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5 text-xs text-zinc-300 hover:bg-white/[0.04] hover:text-white transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Waypoints className="size-3.5 text-violet-400" /> Compute Multi-Hop Impact
                   </span>
                   <ArrowRight className="size-3 text-zinc-500" />
                 </Link>
 
                 <Link
                   to={`/timeline?filter=${encodeURIComponent(activeNode.name)}`}
-                  className="neo-convex flex items-center justify-between w-full p-2.5 text-xs text-zinc-300 hover:text-white rounded-md"
+                  className="flex items-center justify-between w-full rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5 text-xs text-zinc-300 hover:bg-white/[0.04] hover:text-white transition"
                 >
                   <span className="flex items-center gap-2">
                     <Activity className="size-3.5 text-sky-400" /> View Evolution Timeline
@@ -414,7 +593,7 @@ export function Graph() {
 
                 <Link
                   to={`/intelligence?q=Explain+architecture+of+${encodeURIComponent(activeNode.name)}`}
-                  className="neo-accent flex items-center justify-between w-full p-2.5 text-xs font-medium text-white rounded-md"
+                  className="flex items-center justify-between w-full rounded-xl bg-violet-600 p-2.5 text-xs font-semibold text-white shadow-md shadow-violet-600/30 transition hover:bg-violet-500"
                 >
                   <span className="flex items-center gap-2">
                     <Sparkles className="size-3.5" /> Ask AI About Node
@@ -424,7 +603,7 @@ export function Graph() {
               </div>
             </div>
           ) : (
-            <div className="neo-flat p-5 text-center text-xs text-zinc-500">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0a0d16]/80 p-5 text-center text-xs text-zinc-500">
               Select a node in the graph to inspect its properties.
             </div>
           )}
