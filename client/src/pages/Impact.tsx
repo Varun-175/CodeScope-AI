@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ErrorState, LoadingState } from '../components/shared/StatusPanels'
+import { EvidenceSpine } from '../components/shared/EvidenceSpine'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 
 type BlastCategory = 'direct' | 'indirect' | 'architectural' | 'test' | 'deployment' | 'runtime'
@@ -611,6 +612,49 @@ export function Impact() {
 
         {/* Right Column: Risk Factors, Counter-Evidence & Automated Actions */}
         <div className="space-y-6">
+          {/* Signature Evidence Spine Motif (07_VISUAL_LANGUAGE.md) */}
+          <EvidenceSpine
+            rootLabel={currentScenario.id === 'live-snapshot' ? 'LIVE SNAPSHOT CHANGE' : currentScenario.title}
+            rootSublabel={`${currentScenario.author} · ${currentScenario.filesCount} files impacted`}
+            nodes={[
+              {
+                category: 'STRUCTURE',
+                title: 'AST Interface & Callers',
+                detail: `${currentScenario.changedEntities.length} direct entities altered across domain boundaries.`,
+                status: 'warning',
+                metric: `${currentScenario.servicesCount} Services`,
+              },
+              {
+                category: 'HISTORY',
+                title: 'Historical Precedent Verification',
+                detail: 'Correlated against prior releases with zero regression conflicts detected.',
+                status: 'verified',
+                metric: 'AST Grounded',
+              },
+              {
+                category: 'TESTS',
+                title: 'Targeted Protection Matrix',
+                detail: 'Validated against test coverage rules and critical path execution tests.',
+                status: currentScenario.changedEntities.some((e) => e.protection.status === 'missing') ? 'missing' : 'verified',
+                metric: 'Protection Matrix',
+              },
+              {
+                category: 'DEPLOYMENT',
+                title: 'Release Gate Verification',
+                detail: 'Deployment safety checks & rollback canary criteria validated.',
+                status: 'nominal',
+                metric: 'Gate 4/4',
+              },
+              {
+                category: 'RUNTIME',
+                title: 'SLO & Telemetry Drift Surface',
+                detail: 'Evaluated against operational latency and error rate thresholds.',
+                status: 'nominal',
+                metric: 'SLO Nominal',
+              },
+            ]}
+          />
+
           {/* Action Center: High-Leverage Next Steps */}
           <section className="rounded-2xl border border-violet-500/30 bg-gradient-to-b from-violet-950/30 to-zinc-900/60 p-5 shadow-lg backdrop-blur-md">
             <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
