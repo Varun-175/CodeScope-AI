@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { EmptyState, ErrorState, LoadingState } from '../components/shared/StatusPanels'
+import { EvidenceSpine } from '../components/shared/EvidenceSpine'
 import { useRepositoryAnalysis } from '../contexts/RepositoryAnalysisContext'
 
 interface IncidentCase {
@@ -292,6 +293,49 @@ export function Incidents() {
               </div>
             </div>
           </section>
+
+          {/* Signature Evidence Spine Motif (07_VISUAL_LANGUAGE.md) */}
+          <EvidenceSpine
+            rootLabel={`INCIDENT ${activeIncident.id.toUpperCase()}`}
+            rootSublabel={`${activeIncident.serviceTree[0]?.name} · Started ${activeIncident.startedAt}`}
+            nodes={[
+              {
+                category: 'STRUCTURE',
+                title: 'AST Symbol Trace',
+                detail: `Stack trace points to ${activeIncident.codeTrace.symbol} in ${activeIncident.codeTrace.service}.`,
+                status: 'warning',
+                metric: 'Symbol Grounded',
+              },
+              {
+                category: 'HISTORY',
+                title: 'Historical Regression Match',
+                detail: activeIncident.priorIncidents[0]?.title || 'Prior incident precedent found.',
+                status: 'verified',
+                metric: 'INC-188 Precedent',
+              },
+              {
+                category: 'TESTS',
+                title: 'Test Protection Gap',
+                detail: 'Missing targeted backoff jitter unit test on PaymentClient connection pool.',
+                status: 'missing',
+                metric: 'Gap Identified',
+              },
+              {
+                category: 'DEPLOYMENT',
+                title: 'Deployment Correlation',
+                detail: `${activeIncident.codeTrace.deployment} pushed commit ${activeIncident.codeTrace.commit} 14m prior to outage.`,
+                status: 'warning',
+                metric: activeIncident.codeTrace.deployment,
+              },
+              {
+                category: 'RUNTIME',
+                title: 'Runtime Telemetry Drift',
+                detail: '504 Gateway Timeouts exceeded 1.2% threshold on /v2/payments/charge.',
+                status: 'warning',
+                metric: 'HTTP 504 Spike',
+              },
+            ]}
+          />
         </div>
 
         {/* Causality Timeline & Ranked Hypotheses */}
